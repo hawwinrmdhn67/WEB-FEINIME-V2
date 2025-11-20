@@ -1,17 +1,106 @@
-[00:00:01.386] Server  LOG      ✓ Ready in 916ms
-[00:00:11.888] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:14.265] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:14.265] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1763/150638l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:14.265] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1208/94745.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:14.265] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1935/127974.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:14.265] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1517/100633.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:14.265] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/3/72078.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:00:14.265] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1245/116760.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:01:07.069] Browser WARN    [API] Rate limit hit for https://api.jikan.moe/v4/top/anime?page=2&limit=25. Retrying in 1000ms...
-[00:01:31.312] Server  LOG      ✓ Compiled in 99ms
-[00:01:54.575] Browser WARN    Image with src "https://cdn.myanimelist.net/s/common/userimages/53f73ecd-4aa3-47f2-9397-e24692e3e446_42x62_i?s=f49029b34d87086c1cf27e2446f9182d" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:01:54.575] Browser WARN    Image with src "https://cdn.myanimelist.net/s/common/userimages/ab00b526-9c36-4d49-94fb-cf5fbd7a67cf_42x62_i?s=6c7c2f7b734668f469cca35504189d07" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:01:54.575] Browser WARN    Image with src "https://cdn.myanimelist.net/s/common/userimages/987abdbf-7284-4728-b18b-13b98a701008_42x62_i?s=e1fbf493fa5d22cb28ac38f87b09a20b" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:01:54.575] Browser WARN    Image with src "https://cdn.myanimelist.net/s/common/userimages/312fb853-f14a-476d-aa69-f34faee8d114_225w?s=c958c3fe2c2930d6789582ba81861e84" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:01:54.965] Browser WARN    Image with src "https://cdn.myanimelist.net/images/kaomoji_mal_white.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
-[00:01:54.966] Browser WARN    Image with src "https://cdn.myanimelist.net/s/common/userimages/64e69ee0-8216-46c6-aaf1-8952ca5ca6b2_42x62_i?s=f2e6e6659d2dcb124c7832a6604b627c" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:01.893] Server  LOG      ✓ Ready in 1351ms
+[00:00:07.549] Server  LOG      ○ Compiling / ...
+[00:00:09.749] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:10.079] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:10.079] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1763/150638l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:10.079] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1208/94745.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:10.079] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1935/127974.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:10.080] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1517/100633.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:10.080] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/3/72078.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:10.080] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1245/116760.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:18.698] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.747] Server  ERROR   C:\Coding\FeinimeV2\.next\dev\server\chunks\ssr\node_modules_050e78b9._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.752] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\base-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.761] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\next-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.763] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\dev\next-dev-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.765] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\trace\trace.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.767] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\router-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.773] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\start-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.780] Server  ERROR    ⨯ Error: The default export is not a React Component in "/layout"
+[00:00:18.858] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.860] Server  ERROR   C:\Coding\FeinimeV2\.next\dev\server\chunks\ssr\node_modules_050e78b9._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.862] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\base-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.863] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\next-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.883] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\dev\next-dev-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.885] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\trace\trace.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.886] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\router-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.886] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\start-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.890] Server  ERROR    ⨯ Error: The default export is not a React Component in "/layout"
+[00:00:18.979] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.986] Server  ERROR   C:\Coding\FeinimeV2\.next\dev\server\chunks\ssr\node_modules_050e78b9._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:18.995] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\base-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.000] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\next-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.005] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\dev\next-dev-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.018] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\trace\trace.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.028] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\router-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.032] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\start-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.047] Server  ERROR    ⨯ Error: The default export is not a React Component in "/layout"
+[00:00:19.062] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\compiled\next-server\app-page-turbo.runtime.dev.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.066] Server  ERROR   C:\Coding\FeinimeV2\.next\dev\server\chunks\ssr\node_modules_050e78b9._.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.068] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\base-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.080] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\next-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.083] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\dev\next-dev-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.091] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\trace\trace.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.097] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\router-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.112] Server  ERROR   C:\Coding\FeinimeV2\node_modules\next\dist\server\lib\start-server.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+[00:00:19.116] Server  ERROR    ⨯ Error: The default export is not a React Component in "/layout"
+[00:00:20.023] Server  LOG      ✓ Compiled in 1072ms
+[00:00:20.942] Browser ERROR   uncaughtError: Error: The default export is not a React Component in "/layout"
+[00:00:27.237] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:27.593] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:27.593] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1763/150638l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:27.593] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1208/94745.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:27.593] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1935/127974.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:27.593] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1517/100633.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:27.594] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/3/72078.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:27.594] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1245/116760.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:05:38.261] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:05:38.585] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:05:38.585] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1763/150638l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:05:38.585] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1208/94745.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:05:38.585] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1935/127974.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:05:38.585] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1517/100633.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:05:38.585] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/3/72078.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:05:38.585] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1245/116760.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:08:02.980] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:08:03.327] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1015/138006l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:08:03.327] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1763/150638l.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:08:03.327] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1208/94745.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:08:03.327] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1935/127974.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:08:03.327] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1517/100633.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:08:03.327] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/3/72078.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:08:03.327] Browser WARN    Image with src "https://cdn.myanimelist.net/images/anime/1245/116760.jpg" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:09:40.895] Server  LOG      ✓ Compiled in 123ms
+[00:09:41.185] Browser ERROR   ./components/navbar.tsx:120:20
+Parsing ecmascript source code failed
+  118 |                 Feinime
+  119 |               </span>
+> 120 |             </Link>
+      |                    ^
+> 121 |
+      | ^
+> 122 |             {/* Desktop Menu */}
+      | ^^^^^^^^^^^^^
+  123 |             <div className="hidden md:flex items-center gap-8">
+  124 |               <Link href="/" className="text-foreground hover:text-primary transition-colors text-sm font-medium">Home</Link>
+  125 |               <Link href="/trending" className="text-foreground hover:text-primary transition-colors text-sm font-medium">Trending</Link>
+
+Expected '</', got 'jsx text (
+
+            )'
+
+Import trace:
+  Server Component:
+    ./components/navbar.tsx
+    ./app/page.tsx
+[00:09:47.061] Server  LOG      ✓ Compiled in 83ms
+[00:09:53.439] Server  LOG      ✓ Compiled in 104ms
+[00:09:58.562] Server  LOG      ✓ Compiled in 99ms
+[00:10:41.149] Server  LOG      ✓ Compiled in 80ms
+[00:10:42.857] Server  LOG      ✓ Compiled in 101ms
+[00:10:49.793] Server  LOG      ✓ Compiled in 83ms
+[00:10:51.287] Server  LOG      ✓ Compiled in 80ms
+[00:10:57.590] Server  LOG      ✓ Compiled in 92ms
+[00:11:08.722] Server  LOG      ✓ Compiled in 97ms
+[00:11:13.285] Server  LOG      ✓ Compiled in 95ms
+[00:11:14.361] Server  LOG      ✓ Compiled in 86ms

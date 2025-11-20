@@ -112,21 +112,8 @@ const metadata = {
     description: 'thousands of anime with Feinime. Experience modern UI with advanced search, filters, and personalized recommendations.',
     generator: 'v0.app',
     icons: {
-        icon: [
-            {
-                url: '/icon-light-32x32.png',
-                media: '(prefers-color-scheme: light)'
-            },
-            {
-                url: '/icon-dark-32x32.png',
-                media: '(prefers-color-scheme: dark)'
-            },
-            {
-                url: '/icon.svg',
-                type: 'image/svg+xml'
-            }
-        ],
-        apple: '/apple-icon.png'
+        icon: '/feinime.jpg',
+        apple: '/feinime.jpg'
     }
 };
 function RootLayout({ children }) {
@@ -139,17 +126,17 @@ function RootLayout({ children }) {
                 children: children
             }, void 0, false, {
                 fileName: "[project]/app/layout.tsx",
-                lineNumber: 40,
+                lineNumber: 27,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/app/layout.tsx",
-            lineNumber: 39,
+            lineNumber: 26,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/app/layout.tsx",
-        lineNumber: 38,
+        lineNumber: 25,
         columnNumber: 5
     }, this);
 }

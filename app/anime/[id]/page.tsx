@@ -403,7 +403,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
 
             {/* Brand */}
             <div className="text-center md:text-left">
-              <span className="font-bold text-xl tracking-tight">FeinimeList</span>
+              <span className="font-bold text-xl tracking-tight">Feinime</span>
             </div>
 
             {/* Navigation Links */}

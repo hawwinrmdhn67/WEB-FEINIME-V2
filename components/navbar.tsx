@@ -101,8 +101,12 @@ export function Navbar() {
 
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center neon-glow">
-                <span className="text-white font-bold text-lg">F</span>
+              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                <img
+                  src="/feinime.jpg" // ganti dengan file foto kamu di folder public
+                  alt="Logo Feinime"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-xl font-bold text-foreground hidden sm:inline group-hover:text-primary transition-colors">
                 Feinime

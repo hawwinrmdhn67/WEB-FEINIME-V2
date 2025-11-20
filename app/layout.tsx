@@ -11,21 +11,8 @@ export const metadata: Metadata = {
   description: 'thousands of anime with Feinime. Experience modern UI with advanced search, filters, and personalized recommendations.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/feinime.jpg', // satu logo dari public/logo.png
+    apple: '/feinime.jpg', // juga bisa digunakan untuk Apple
   },
 }
 
