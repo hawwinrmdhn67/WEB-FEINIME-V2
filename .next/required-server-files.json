@@ -108,7 +108,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "C:\\Coding\\FeinimeList",
+    "outputFileTracingRoot": "C:\\Coding\\FeinimeV2",
     "cacheComponents": false,
     "cacheLife": {
       "default": {
@@ -298,11 +298,11 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.mjs",
     "turbopack": {
-      "root": "C:\\Coding\\FeinimeList"
+      "root": "C:\\Coding\\FeinimeV2"
     },
     "distDirRoot": ".next"
   },
-  "appDir": "C:\\Coding\\FeinimeList",
+  "appDir": "C:\\Coding\\FeinimeV2",
   "relativeAppDir": "",
   "files": [
     ".next\\routes-manifest.json",
