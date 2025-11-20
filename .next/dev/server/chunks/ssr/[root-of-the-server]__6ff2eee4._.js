@@ -169,6 +169,7 @@ function ThemeToggle() {
 "[project]/lib/api.ts [app-ssr] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
+// lib/api.ts
 __turbopack_context__.s([
     "getAnimeByGenre",
     ()=>getAnimeByGenre,
@@ -194,32 +195,26 @@ __turbopack_context__.s([
     ()=>searchAnime
 ]);
 const JIKAN_API_BASE = 'https://api.jikan.moe/v4';
-// ==========================================
-// 2. HELPER FUNCTIONS (RETRY LOGIC)
-// ==========================================
+// =========================
+// 2. HELPER FUNCTIONS
+// =========================
 const delay = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
-/**
- * Fungsi Fetch Pintar dengan Auto-Retry dan Exponential Backoff 
- * untuk menangani Rate Limit Jikan API (429).
- */ async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
+async function fetchWithRetry(url, options = {}, retries = 3, backoff = 1000) {
     try {
-        // Delay kecil global untuk menghindari rate limit agresif Jikan
         await delay(300);
         const res = await fetch(url, options);
-        // Jika terkena Rate Limit (429), retry
         if (res.status === 429 && retries > 0) {
-            console.warn(`[API] Rate limit hit for ${url}. Retrying in ${backoff}ms...`);
+            console.warn(`[API] Rate limit hit for ${url}, retrying in ${backoff}ms...`);
             await delay(backoff);
             return fetchWithRetry(url, options, retries - 1, backoff * 2);
         }
         return res;
-    } catch (error) {
-        // Retry pada error jaringan
+    } catch (err) {
         if (retries > 0) {
             await delay(backoff);
             return fetchWithRetry(url, options, retries - 1, backoff * 2);
         }
-        throw error;
+        throw err;
     }
 }
 async function getAnimeDetail(mal_id) {
@@ -229,11 +224,10 @@ async function getAnimeDetail(mal_id) {
                 revalidate: 3600
             }
         });
-        if (res.status === 404) return null;
         if (!res.ok) return null;
         const data = await res.json();
         return data.data;
-    } catch (error) {
+    } catch (err) {
         return null;
     }
 }
@@ -247,7 +241,7 @@ async function getAnimeCharacters(mal_id) {
         if (!res.ok) return [];
         const data = await res.json();
         return data.data.sort((a, b)=>a.role === 'Main' ? -1 : 1).slice(0, 12);
-    } catch (error) {
+    } catch  {
         return [];
     }
 }
@@ -261,7 +255,7 @@ async function getAnimeReviews(mal_id) {
         if (!res.ok) return [];
         const data = await res.json();
         return data.data.slice(0, 6);
-    } catch (error) {
+    } catch  {
         return [];
     }
 }
@@ -275,7 +269,7 @@ async function getAnimeStatistics(mal_id) {
         if (!res.ok) return null;
         const data = await res.json();
         return data.data;
-    } catch (error) {
+    } catch  {
         return null;
     }
 }
@@ -286,11 +280,10 @@ async function getMangaDetail(mal_id) {
                 revalidate: 3600
             }
         });
-        if (res.status === 404) return null;
-        if (!res.ok) throw new Error('Failed');
+        if (!res.ok) return null;
         const data = await res.json();
         return data.data;
-    } catch (error) {
+    } catch  {
         return null;
     }
 }
@@ -308,7 +301,6 @@ async function getTopAnime() {
                 }
             })
         ]);
-        if (!res1.ok || !res2.ok) throw new Error('Failed');
         const data1 = await res1.json();
         const data2 = await res2.json();
         return {
@@ -318,7 +310,7 @@ async function getTopAnime() {
             ],
             pagination: data1.pagination
         };
-    } catch (error) {
+    } catch  {
         return {
             data: []
         };
@@ -338,7 +330,6 @@ async function getPopularAnime() {
                 }
             })
         ]);
-        if (!res1.ok || !res2.ok) throw new Error('Failed');
         const data1 = await res1.json();
         const data2 = await res2.json();
         return {
@@ -348,7 +339,7 @@ async function getPopularAnime() {
             ],
             pagination: data1.pagination
         };
-    } catch (error) {
+    } catch  {
         return {
             data: []
         };
@@ -361,9 +352,9 @@ async function getSeasonNow(page = 1) {
                 revalidate: 86400
             }
         });
-        if (!res.ok) throw new Error('Failed');
-        return await res.json();
-    } catch (error) {
+        const data = await res.json();
+        return data;
+    } catch  {
         return {
             data: []
         };
@@ -372,18 +363,15 @@ async function getSeasonNow(page = 1) {
 async function searchAnime(query, page = 1, signal) {
     try {
         const url = `${JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=25&sfw=true`;
-        // Pass signal ke fetchWithRetry agar request bisa di-cancel
         const res = await fetchWithRetry(url, {
             signal,
             next: {
                 revalidate: 300
             }
         });
-        if (!res.ok) return {
-            data: []
-        };
-        return await res.json();
-    } catch (error) {
+        const data = await res.json();
+        return data;
+    } catch  {
         return {
             data: []
         };
@@ -396,10 +384,9 @@ async function getGenres() {
                 revalidate: 86400
             }
         });
-        if (!res.ok) throw new Error('Failed');
         const data = await res.json();
         return data.data;
-    } catch (error) {
+    } catch  {
         return [];
     }
 }
@@ -433,7 +420,7 @@ async function getAnimeByGenre(genreId) {
                 current_page: 1
             }
         };
-    } catch (error) {
+    } catch  {
         return {
             data: []
         };
@@ -570,7 +557,7 @@ function Navbar() {
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "text-xl font-bold text-foreground hidden sm:inline group-hover:text-primary transition-colors",
-                                            children: "FeinimeList"
+                                            children: "Feinime"
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
                                             lineNumber: 107,

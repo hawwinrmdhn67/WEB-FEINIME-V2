@@ -108,8 +108,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$theme$2d$provi
 ;
 ;
 const metadata = {
-    title: 'FeinimeList - Check update & search for all anime',
-    description: 'Discover and stream thousands of anime with AnimeFlow. Experience modern UI with advanced search, filters, and personalized recommendations.',
+    title: 'Feinime',
+    description: 'thousands of anime with Feinime. Experience modern UI with advanced search, filters, and personalized recommendations.',
     generator: 'v0.app',
     icons: {
         icon: [
