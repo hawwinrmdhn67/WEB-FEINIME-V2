@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/anime/[id]/page": "/anime/[id]",
+  "/api/search/route": "/api/search",
+  "/genres/page": "/genres",
+  "/manga/[id]/page": "/manga/[id]",
+  "/page": "/",
+  "/popular/page": "/popular",
+  "/search/page": "/search",
+  "/seasonal/page": "/seasonal",
+  "/trending/page": "/trending"
+}

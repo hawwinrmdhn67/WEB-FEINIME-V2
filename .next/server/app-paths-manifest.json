@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/anime/[id]/page": "app/anime/[id]/page.js",
+  "/api/search/route": "app/api/search/route.js",
+  "/genres/page": "app/genres/page.js",
+  "/manga/[id]/page": "app/manga/[id]/page.js",
+  "/page": "app/page.js",
+  "/popular/page": "app/popular/page.js",
+  "/search/page": "app/search/page.js",
+  "/seasonal/page": "app/seasonal/page.js",
+  "/trending/page": "app/trending/page.js"
+}
