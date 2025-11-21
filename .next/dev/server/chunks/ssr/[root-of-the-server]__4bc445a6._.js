@@ -391,42 +391,44 @@ const RelatedContent = ({ relations })=>{
             }, void 0, false, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
                 lineNumber: 45,
-                columnNumber: 7
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4",
-                children: relations.map((rel, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "bg-card border border-border rounded-xl overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow",
+                children: relations.map((rel, index)=>// Card Content: rounded-lg statis + z-10
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "bg-card rounded-lg overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow z-10",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "bg-secondary/30 px-4 py-2 border-b border-border flex items-center gap-2",
+                                className: "bg-secondary/30 px-4 py-2 flex items-center gap-2",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$link$2d$2$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Link2$3e$__["Link2"], {
                                         size: 16,
                                         className: "text-primary"
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 55,
-                                        columnNumber: 15
+                                        lineNumber: 56,
+                                        columnNumber: 8
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         className: "font-bold text-sm text-foreground uppercase tracking-wide",
                                         children: rel.relation
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 56,
-                                        columnNumber: 15
+                                        lineNumber: 57,
+                                        columnNumber: 8
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 54,
-                                columnNumber: 13
+                                lineNumber: 55,
+                                columnNumber: 7
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "p-2 flex flex-col gap-1",
                                 children: rel.entry.map((entry)=>{
-                                    const commonClasses = "flex items-center justify-between gap-2 p-2 rounded-md hover:bg-secondary/50 transition-colors group";
+                                    // Item list: rounded-md statis
+                                    const commonClasses = "flex items-center justify-between gap-2 p-2 rounded-md hover:bg-secondary/50 transition-colors group focus:outline-none";
                                     const textClasses = "text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors line-clamp-1";
                                     // 1. ANIME
                                     if (entry.type === 'anime') {
@@ -442,36 +444,36 @@ const RelatedContent = ({ relations })=>{
                                                             className: "text-blue-500 shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                                            lineNumber: 71,
-                                                            columnNumber: 25
+                                                            lineNumber: 73,
+                                                            columnNumber: 13
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: textClasses,
                                                             children: entry.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                                            lineNumber: 72,
-                                                            columnNumber: 25
+                                                            lineNumber: 74,
+                                                            columnNumber: 13
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 70,
-                                                    columnNumber: 23
+                                                    lineNumber: 72,
+                                                    columnNumber: 12
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-[10px] font-bold text-blue-500/70 bg-blue-500/10 px-1.5 py-0.5 rounded",
+                                                    className: "text-[10px] font-bold text-blue-500 bg-blue-500/20 px-1.5 py-0.5 rounded dark:bg-blue-500/10",
                                                     children: "TV"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 74,
-                                                    columnNumber: 23
+                                                    lineNumber: 76,
+                                                    columnNumber: 12
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, entry.mal_id, true, {
                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 69,
-                                            columnNumber: 21
+                                            lineNumber: 71,
+                                            columnNumber: 11
                                         }, ("TURBOPACK compile-time value", void 0));
                                     } else if (entry.type === 'manga') {
                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
@@ -486,36 +488,36 @@ const RelatedContent = ({ relations })=>{
                                                             className: "text-green-500 shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                                            lineNumber: 84,
-                                                            columnNumber: 25
+                                                            lineNumber: 86,
+                                                            columnNumber: 13
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: textClasses,
                                                             children: entry.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                                            lineNumber: 85,
-                                                            columnNumber: 25
+                                                            lineNumber: 87,
+                                                            columnNumber: 13
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 83,
-                                                    columnNumber: 23
+                                                    lineNumber: 85,
+                                                    columnNumber: 12
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-[10px] font-bold text-green-500/70 bg-green-500/10 px-1.5 py-0.5 rounded",
+                                                    className: "text-[10px] font-bold text-green-500 bg-green-500/20 px-1.5 py-0.5 rounded dark:bg-green-500/10",
                                                     children: "Manga"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 87,
-                                                    columnNumber: 23
+                                                    lineNumber: 89,
+                                                    columnNumber: 12
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, entry.mal_id, true, {
                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 82,
-                                            columnNumber: 21
+                                            lineNumber: 84,
+                                            columnNumber: 11
                                         }, ("TURBOPACK compile-time value", void 0));
                                     } else {
                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -532,60 +534,60 @@ const RelatedContent = ({ relations })=>{
                                                             className: "text-muted-foreground shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                                            lineNumber: 97,
-                                                            columnNumber: 25
+                                                            lineNumber: 99,
+                                                            columnNumber: 13
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: textClasses,
                                                             children: entry.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                                            lineNumber: 98,
-                                                            columnNumber: 25
+                                                            lineNumber: 100,
+                                                            columnNumber: 13
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 96,
-                                                    columnNumber: 23
+                                                    lineNumber: 98,
+                                                    columnNumber: 12
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "text-[10px] uppercase text-muted-foreground/70 bg-secondary px-1.5 py-0.5 rounded border border-border",
+                                                    className: "text-[10px] uppercase text-muted-foreground/70 bg-secondary px-1.5 py-0.5 rounded",
                                                     children: entry.type
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 100,
-                                                    columnNumber: 23
+                                                    lineNumber: 102,
+                                                    columnNumber: 12
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, entry.mal_id, true, {
                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 95,
-                                            columnNumber: 21
+                                            lineNumber: 97,
+                                            columnNumber: 11
                                         }, ("TURBOPACK compile-time value", void 0));
                                     }
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 60,
-                                columnNumber: 13
+                                lineNumber: 61,
+                                columnNumber: 7
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, index, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 51,
-                        columnNumber: 11
+                        lineNumber: 52,
+                        columnNumber: 6
                     }, ("TURBOPACK compile-time value", void 0)))
             }, void 0, false, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
                 lineNumber: 49,
-                columnNumber: 7
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/app/anime/[id]/page.tsx",
         lineNumber: 44,
-        columnNumber: 5
+        columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
 };
 // --- KOMPONEN CHARACTER LIST ---
@@ -607,35 +609,37 @@ const CharacterList = ({ characters })=>{
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 122,
-                        columnNumber: 20
+                        lineNumber: 124,
+                        columnNumber: 16
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 121,
-                columnNumber: 7
+                lineNumber: 123,
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4",
                 children: characters.map((char)=>{
                     const va = char.voice_actors.find((v)=>v.language === 'Japanese') || char.voice_actors[0];
-                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "group relative bg-card rounded-lg overflow-hidden border border-border shadow-sm hover:shadow-md transition-all",
+                    return(// Card Wrapper: rounded-lg statis + z-10
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "group relative bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all focus:outline-none z-10",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "relative aspect-[3/4] w-full overflow-hidden",
+                                className: "relative aspect-[3/4] w-full overflow-hidden rounded-t-lg",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
                                         src: char.character.images.jpg.image_url,
                                         alt: char.character.name,
                                         fill: true,
-                                        className: "object-cover group-hover:scale-105 transition-transform duration-300",
+                                        // TAMBAH gpu-accelerate untuk menstabilkan scale
+                                        className: "object-cover group-hover:scale-105 transition-transform duration-300 rounded-t-lg gpu-accelerate",
                                         sizes: "(max-width: 768px) 50vw, 15vw"
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 130,
-                                        columnNumber: 17
+                                        lineNumber: 134,
+                                        columnNumber: 9
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "absolute top-2 right-2",
@@ -644,19 +648,19 @@ const CharacterList = ({ characters })=>{
                                             children: char.role
                                         }, void 0, false, {
                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 138,
-                                            columnNumber: 19
+                                            lineNumber: 143,
+                                            columnNumber: 10
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 137,
-                                        columnNumber: 17
+                                        lineNumber: 142,
+                                        columnNumber: 9
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 129,
-                                columnNumber: 15
+                                lineNumber: 133,
+                                columnNumber: 8
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "p-3",
@@ -667,8 +671,8 @@ const CharacterList = ({ characters })=>{
                                         children: char.character.name
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 146,
-                                        columnNumber: 17
+                                        lineNumber: 151,
+                                        columnNumber: 9
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     va && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "mt-1 flex items-center justify-between text-xs text-muted-foreground",
@@ -679,46 +683,46 @@ const CharacterList = ({ characters })=>{
                                                 children: va.person.name
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 151,
-                                                columnNumber: 21
+                                                lineNumber: 156,
+                                                columnNumber: 11
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-[9px] border border-border px-1 rounded opacity-70",
+                                                className: "text-[9px] px-1 rounded opacity-70 dark:text-foreground/80",
                                                 children: "JP"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 152,
-                                                columnNumber: 21
+                                                lineNumber: 157,
+                                                columnNumber: 11
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 150,
-                                        columnNumber: 19
+                                        lineNumber: 155,
+                                        columnNumber: 10
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 145,
-                                columnNumber: 15
+                                lineNumber: 150,
+                                columnNumber: 8
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, char.character.mal_id, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 128,
-                        columnNumber: 13
-                    }, ("TURBOPACK compile-time value", void 0));
+                        lineNumber: 131,
+                        columnNumber: 7
+                    }, ("TURBOPACK compile-time value", void 0)));
                 })
             }, void 0, false, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 124,
-                columnNumber: 7
+                lineNumber: 126,
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/app/anime/[id]/page.tsx",
-        lineNumber: 120,
-        columnNumber: 5
+        lineNumber: 122,
+        columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
 };
 // --- KOMPONEN STATISTICS ---
@@ -733,188 +737,188 @@ const StatsSection = ({ stats })=>{
                 children: "Statistics"
             }, void 0, false, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 171,
-                columnNumber: 7
+                lineNumber: 176,
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "bg-card border border-border p-4 rounded-xl flex flex-col items-center text-center hover:border-blue-500/50 transition-colors",
+                        className: "bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none z-10 gpu-accelerate",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$eye$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Eye$3e$__["Eye"], {
                                 className: "text-blue-500 mb-2",
                                 size: 24
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 174,
-                                columnNumber: 11
+                                lineNumber: 180,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xs text-muted-foreground uppercase font-bold",
                                 children: "Watching"
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 175,
-                                columnNumber: 11
+                                lineNumber: 181,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-lg font-bold text-foreground",
                                 children: formatNumber(stats.watching)
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 176,
-                                columnNumber: 11
+                                lineNumber: 182,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 173,
-                        columnNumber: 9
+                        lineNumber: 179,
+                        columnNumber: 5
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "bg-card border border-border p-4 rounded-xl flex flex-col items-center text-center hover:border-green-500/50 transition-colors",
+                        className: "bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none z-10 gpu-accelerate",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2d$big$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle$3e$__["CheckCircle"], {
                                 className: "text-green-500 mb-2",
                                 size: 24
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 179,
-                                columnNumber: 11
+                                lineNumber: 185,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xs text-muted-foreground uppercase font-bold",
                                 children: "Completed"
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 180,
-                                columnNumber: 11
+                                lineNumber: 186,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-lg font-bold text-foreground",
                                 children: formatNumber(stats.completed)
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 181,
-                                columnNumber: 11
+                                lineNumber: 187,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 178,
-                        columnNumber: 9
+                        lineNumber: 184,
+                        columnNumber: 5
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "bg-card border border-border p-4 rounded-xl flex flex-col items-center text-center hover:border-yellow-500/50 transition-colors",
+                        className: "bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none z-10 gpu-accelerate",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$pause$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__PauseCircle$3e$__["PauseCircle"], {
                                 className: "text-yellow-500 mb-2",
                                 size: 24
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 184,
-                                columnNumber: 11
+                                lineNumber: 190,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xs text-muted-foreground uppercase font-bold",
                                 children: "On Hold"
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 185,
-                                columnNumber: 11
+                                lineNumber: 191,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-lg font-bold text-foreground",
                                 children: formatNumber(stats.on_hold)
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 186,
-                                columnNumber: 11
+                                lineNumber: 192,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 183,
-                        columnNumber: 9
+                        lineNumber: 189,
+                        columnNumber: 5
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "bg-card border border-border p-4 rounded-xl flex flex-col items-center text-center hover:border-red-500/50 transition-colors",
+                        className: "bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none z-10 gpu-accelerate",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$x$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__XCircle$3e$__["XCircle"], {
                                 className: "text-red-500 mb-2",
                                 size: 24
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 189,
-                                columnNumber: 11
+                                lineNumber: 195,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xs text-muted-foreground uppercase font-bold",
                                 children: "Dropped"
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 190,
-                                columnNumber: 11
+                                lineNumber: 196,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-lg font-bold text-foreground",
                                 children: formatNumber(stats.dropped)
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 191,
-                                columnNumber: 11
+                                lineNumber: 197,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 188,
-                        columnNumber: 9
+                        lineNumber: 194,
+                        columnNumber: 5
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "bg-card border border-border p-4 rounded-xl flex flex-col items-center text-center hover:border-purple-500/50 transition-colors",
+                        className: "bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none z-10 gpu-accelerate",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
                                 className: "text-purple-500 mb-2",
                                 size: 24
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 194,
-                                columnNumber: 11
+                                lineNumber: 200,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xs text-muted-foreground uppercase font-bold",
                                 children: "Plan to Watch"
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 195,
-                                columnNumber: 11
+                                lineNumber: 201,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-lg font-bold text-foreground",
                                 children: formatNumber(stats.plan_to_watch)
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 196,
-                                columnNumber: 11
+                                lineNumber: 202,
+                                columnNumber: 6
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 193,
-                        columnNumber: 9
+                        lineNumber: 199,
+                        columnNumber: 5
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 172,
-                columnNumber: 7
+                lineNumber: 177,
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/app/anime/[id]/page.tsx",
-        lineNumber: 170,
-        columnNumber: 5
+        lineNumber: 175,
+        columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
 };
 // --- KOMPONEN REVIEWS ---
@@ -936,19 +940,20 @@ const ReviewsSection = ({ reviews })=>{
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 210,
-                        columnNumber: 17
+                        lineNumber: 216,
+                        columnNumber: 13
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 209,
-                columnNumber: 7
+                lineNumber: 215,
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "grid grid-cols-1 md:grid-cols-2 gap-6",
-                children: reviews.map((review, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "bg-card border border-border rounded-xl p-5 flex flex-col gap-4 hover:shadow-md transition-shadow",
+                children: reviews.map((review, idx)=>// Card Review: rounded-xl statis + z-10 + hover shadow
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "bg-card rounded-xl p-5 flex flex-col gap-4 hover:shadow-md transition-shadow shadow-sm focus:outline-none z-10 gpu-accelerate",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "flex justify-between items-start",
@@ -965,13 +970,13 @@ const ReviewsSection = ({ reviews })=>{
                                                     className: "object-cover"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 218,
-                                                    columnNumber: 19
+                                                    lineNumber: 225,
+                                                    columnNumber: 10
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 217,
-                                                columnNumber: 17
+                                                lineNumber: 224,
+                                                columnNumber: 9
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
@@ -980,28 +985,28 @@ const ReviewsSection = ({ reviews })=>{
                                                         children: review.user.username
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 226,
-                                                        columnNumber: 19
+                                                        lineNumber: 233,
+                                                        columnNumber: 10
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-xs text-muted-foreground",
                                                         children: new Date(review.date).toLocaleDateString()
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 227,
-                                                        columnNumber: 19
+                                                        lineNumber: 234,
+                                                        columnNumber: 10
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 225,
-                                                columnNumber: 17
+                                                lineNumber: 232,
+                                                columnNumber: 9
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 216,
-                                        columnNumber: 15
+                                        lineNumber: 223,
+                                        columnNumber: 8
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded text-sm font-bold text-primary",
@@ -1011,76 +1016,76 @@ const ReviewsSection = ({ reviews })=>{
                                                 className: "fill-current"
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 231,
-                                                columnNumber: 17
+                                                lineNumber: 238,
+                                                columnNumber: 9
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             " ",
                                             review.score
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 230,
-                                        columnNumber: 15
+                                        lineNumber: 237,
+                                        columnNumber: 8
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 215,
-                                columnNumber: 13
+                                lineNumber: 222,
+                                columnNumber: 7
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "text-sm text-muted-foreground leading-relaxed line-clamp-4 relative",
                                 children: [
                                     review.review,
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "absolute bottom-0 left-0 w-full h-6 bg-gradient-to-t from-card to-transparent"
+                                        className: "absolute bottom-0 left-0 w-full h-6 bg-gradient-to-t from-background to-transparent"
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 236,
-                                        columnNumber: 15
+                                        lineNumber: 243,
+                                        columnNumber: 8
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 234,
-                                columnNumber: 13
+                                lineNumber: 241,
+                                columnNumber: 7
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                                 href: review.url,
                                 target: "_blank",
                                 rel: "noopener noreferrer",
-                                className: "text-xs text-primary font-semibold hover:underline flex items-center gap-1 mt-auto",
+                                className: "text-xs text-primary font-semibold hover:underline flex items-center gap-1 mt-auto focus:outline-none",
                                 children: [
                                     "Read Full Review ",
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$external$2d$link$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__ExternalLink$3e$__["ExternalLink"], {
                                         size: 10
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 239,
-                                        columnNumber: 32
+                                        lineNumber: 246,
+                                        columnNumber: 25
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 238,
-                                columnNumber: 13
+                                lineNumber: 245,
+                                columnNumber: 7
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, idx, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 214,
-                        columnNumber: 11
+                        lineNumber: 221,
+                        columnNumber: 6
                     }, ("TURBOPACK compile-time value", void 0)))
             }, void 0, false, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 212,
-                columnNumber: 7
+                lineNumber: 218,
+                columnNumber: 4
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/app/anime/[id]/page.tsx",
-        lineNumber: 208,
-        columnNumber: 5
+        lineNumber: 214,
+        columnNumber: 3
     }, ("TURBOPACK compile-time value", void 0));
 };
 async function AnimePage({ params }) {
@@ -1123,13 +1128,13 @@ async function AnimePage({ params }) {
                 className: "fixed top-0 left-0 w-full z-50",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Navbar"], {}, void 0, false, {
                     fileName: "[project]/app/anime/[id]/page.tsx",
-                    lineNumber: 289,
-                    columnNumber: 9
+                    lineNumber: 296,
+                    columnNumber: 5
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 288,
-                columnNumber: 7
+                lineNumber: 295,
+                columnNumber: 4
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "relative h-112 md:h-128 w-full overflow-hidden",
@@ -1138,56 +1143,55 @@ async function AnimePage({ params }) {
                         src: imageUrl,
                         alt: "Anime background",
                         fill: true,
-                        className: "object-cover blur-sm opacity-60 dark:opacity-40",
+                        className: "object-cover blur-sm opacity-60 dark:opacity-30 gpu-accelerate",
                         quality: 80,
                         priority: true
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 294,
-                        columnNumber: 9
+                        lineNumber: 301,
+                        columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 295,
-                        columnNumber: 9
+                        lineNumber: 302,
+                        columnNumber: 5
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 293,
-                columnNumber: 7
+                lineNumber: 300,
+                columnNumber: 4
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 md:-mt-48 grid grid-cols-1 md:grid-cols-3 gap-8 pb-12",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "relative w-full max-w-[240px] mx-auto md:mx-0",
+                        className: "relative w-full max-w-[240px] mx-auto md:mx-0 aspect-[2/3]",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "shadow-2xl rounded-lg overflow-hidden border-4 border-background group transition-transform duration-500 hover:scale-105 bg-card",
+                            className: "shadow-2xl rounded-lg overflow-hidden group transition-transform duration-500 hover:scale-105 bg-card h-full w-full focus:outline-none gpu-accelerate",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
                                 src: imageUrl,
                                 alt: anime.title,
-                                /* FIX IMAGE RATIO HERE */ width: 0,
-                                height: 0,
+                                fill: true,
                                 sizes: "(max-width: 768px) 100vw, 300px",
-                                className: "w-full h-auto object-cover",
+                                className: "object-cover w-full h-full rounded-lg",
                                 priority: true
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 304,
-                                columnNumber: 13
+                                lineNumber: 312,
+                                columnNumber: 7
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/anime/[id]/page.tsx",
-                            lineNumber: 303,
-                            columnNumber: 11
+                            lineNumber: 311,
+                            columnNumber: 6
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 302,
-                        columnNumber: 9
+                        lineNumber: 309,
+                        columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "md:col-span-2 text-center md:text-left flex flex-col justify-end gap-4 pb-2",
@@ -1199,28 +1203,28 @@ async function AnimePage({ params }) {
                                         children: anime.title
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 319,
-                                        columnNumber: 13
+                                        lineNumber: 325,
+                                        columnNumber: 7
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                         className: "text-lg text-muted-foreground font-medium",
                                         children: titleEnglish
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 320,
-                                        columnNumber: 13
+                                        lineNumber: 326,
+                                        columnNumber: 7
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 318,
-                                columnNumber: 11
+                                lineNumber: 324,
+                                columnNumber: 6
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "grid grid-cols-2 md:grid-cols-4 gap-3 mt-2",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm",
+                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg shadow-sm focus:outline-none z-10",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex items-center gap-1 text-sm text-muted-foreground mb-1",
@@ -1230,32 +1234,32 @@ async function AnimePage({ params }) {
                                                         className: "text-yellow-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 324,
-                                                        columnNumber: 91
+                                                        lineNumber: 331,
+                                                        columnNumber: 84
                                                     }, this),
                                                     " Rating"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 324,
-                                                columnNumber: 15
+                                                lineNumber: 331,
+                                                columnNumber: 8
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "text-lg font-bold text-foreground",
                                                 children: score
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 325,
-                                                columnNumber: 15
+                                                lineNumber: 332,
+                                                columnNumber: 8
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 323,
-                                        columnNumber: 13
+                                        lineNumber: 330,
+                                        columnNumber: 7
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm",
+                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg shadow-sm focus:outline-none z-10",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex items-center gap-1 text-sm text-muted-foreground mb-1",
@@ -1265,32 +1269,32 @@ async function AnimePage({ params }) {
                                                         className: "text-blue-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 328,
-                                                        columnNumber: 91
+                                                        lineNumber: 335,
+                                                        columnNumber: 84
                                                     }, this),
                                                     " Episodes"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 328,
-                                                columnNumber: 15
+                                                lineNumber: 335,
+                                                columnNumber: 8
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "text-lg font-bold text-foreground",
                                                 children: episodes
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 329,
-                                                columnNumber: 15
+                                                lineNumber: 336,
+                                                columnNumber: 8
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 327,
-                                        columnNumber: 13
+                                        lineNumber: 334,
+                                        columnNumber: 7
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm",
+                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg shadow-sm focus:outline-none z-10",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex items-center gap-1 text-sm text-muted-foreground mb-1",
@@ -1300,32 +1304,32 @@ async function AnimePage({ params }) {
                                                         className: "text-red-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 332,
-                                                        columnNumber: 91
+                                                        lineNumber: 339,
+                                                        columnNumber: 84
                                                     }, this),
                                                     " Source"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 332,
-                                                columnNumber: 15
+                                                lineNumber: 339,
+                                                columnNumber: 8
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "text-lg font-bold text-foreground",
                                                 children: source
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 333,
-                                                columnNumber: 15
+                                                lineNumber: 340,
+                                                columnNumber: 8
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 331,
-                                        columnNumber: 13
+                                        lineNumber: 338,
+                                        columnNumber: 7
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg border border-border shadow-sm",
+                                        className: "flex flex-col items-center md:items-start bg-card/80 backdrop-blur-sm p-3 rounded-lg shadow-sm focus:outline-none z-10",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex items-center gap-1 text-sm text-muted-foreground mb-1",
@@ -1335,55 +1339,55 @@ async function AnimePage({ params }) {
                                                         className: "text-purple-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 336,
-                                                        columnNumber: 91
+                                                        lineNumber: 343,
+                                                        columnNumber: 84
                                                     }, this),
                                                     " Year"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 336,
-                                                columnNumber: 15
+                                                lineNumber: 343,
+                                                columnNumber: 8
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "text-lg font-bold text-foreground",
                                                 children: year
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 337,
-                                                columnNumber: 15
+                                                lineNumber: 344,
+                                                columnNumber: 8
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 335,
-                                        columnNumber: 13
+                                        lineNumber: 342,
+                                        columnNumber: 7
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 322,
-                                columnNumber: 11
+                                lineNumber: 328,
+                                columnNumber: 6
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$anime$2d$action$2d$buttons$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
                                 animeId: animeId,
                                 trailerUrl: trailerUrl
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 340,
-                                columnNumber: 11
+                                lineNumber: 347,
+                                columnNumber: 6
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 317,
-                        columnNumber: 9
+                        lineNumber: 323,
+                        columnNumber: 5
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 299,
-                columnNumber: 7
+                lineNumber: 306,
+                columnNumber: 4
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "relative max-w-6xl mx-auto mt-4 space-y-12 pb-20",
@@ -1391,17 +1395,17 @@ async function AnimePage({ params }) {
                     genres.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "px-4 sm:px-6 lg:px-8 flex flex-wrap gap-2",
                         children: genres.map((genre)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "px-4 py-1.5 bg-secondary text-secondary-foreground font-medium text-sm rounded-full hover:bg-secondary/80 transition-colors cursor-default",
+                                className: "px-4 py-1.5 bg-secondary text-secondary-foreground font-medium text-sm rounded-full hover:bg-secondary/80 transition-colors cursor-default focus:outline-none",
                                 children: genre.name
                             }, genre.mal_id, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 351,
-                                columnNumber: 15
+                                lineNumber: 358,
+                                columnNumber: 8
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 349,
-                        columnNumber: 11
+                        lineNumber: 356,
+                        columnNumber: 6
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
                         className: "px-4 sm:px-6 lg:px-8",
@@ -1411,22 +1415,22 @@ async function AnimePage({ params }) {
                                 children: "Synopsis"
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 360,
-                                columnNumber: 11
+                                lineNumber: 367,
+                                columnNumber: 6
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-muted-foreground leading-relaxed whitespace-pre-line text-base md:text-lg",
                                 children: synopsis
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 361,
-                                columnNumber: 11
+                                lineNumber: 368,
+                                columnNumber: 6
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 359,
-                        columnNumber: 9
+                        lineNumber: 366,
+                        columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
                         className: "px-4 sm:px-6 lg:px-8",
@@ -1436,14 +1440,14 @@ async function AnimePage({ params }) {
                                 children: "Airing Details"
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 368,
-                                columnNumber: 11
+                                lineNumber: 375,
+                                columnNumber: 6
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "grid grid-cols-1 sm:grid-cols-3 gap-4 bg-card/50 p-6 rounded-xl border border-border",
+                                className: "grid grid-cols-1 sm:grid-cols-3 gap-4 bg-card/50 p-6 rounded-xl",
                                 children: [
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex items-center gap-3",
+                                        className: "flex items-center gap-3 focus:outline-none",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "p-2 bg-green-100 dark:bg-green-900/30 rounded-full text-green-600 dark:text-green-400",
@@ -1451,13 +1455,13 @@ async function AnimePage({ params }) {
                                                     size: 20
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 372,
-                                                    columnNumber: 17
+                                                    lineNumber: 379,
+                                                    columnNumber: 9
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 371,
-                                                columnNumber: 15
+                                                lineNumber: 378,
+                                                columnNumber: 8
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
@@ -1466,31 +1470,31 @@ async function AnimePage({ params }) {
                                                         children: "Status"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 374,
-                                                        columnNumber: 20
+                                                        lineNumber: 381,
+                                                        columnNumber: 13
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-foreground font-medium",
                                                         children: status
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 374,
-                                                        columnNumber: 95
+                                                        lineNumber: 381,
+                                                        columnNumber: 88
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 374,
-                                                columnNumber: 15
+                                                lineNumber: 381,
+                                                columnNumber: 8
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 370,
-                                        columnNumber: 13
+                                        lineNumber: 377,
+                                        columnNumber: 7
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex items-center gap-3",
+                                        className: "flex items-center gap-3 focus:outline-none",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-600 dark:text-blue-400",
@@ -1498,13 +1502,13 @@ async function AnimePage({ params }) {
                                                     size: 20
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 378,
-                                                    columnNumber: 17
+                                                    lineNumber: 385,
+                                                    columnNumber: 9
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 377,
-                                                columnNumber: 15
+                                                lineNumber: 384,
+                                                columnNumber: 8
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
@@ -1513,31 +1517,31 @@ async function AnimePage({ params }) {
                                                         children: "Aired From"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 380,
-                                                        columnNumber: 20
+                                                        lineNumber: 387,
+                                                        columnNumber: 13
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-foreground font-medium",
                                                         children: airedFrom
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 380,
-                                                        columnNumber: 99
+                                                        lineNumber: 387,
+                                                        columnNumber: 92
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 380,
-                                                columnNumber: 15
+                                                lineNumber: 387,
+                                                columnNumber: 8
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 376,
-                                        columnNumber: 13
+                                        lineNumber: 383,
+                                        columnNumber: 7
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex items-center gap-3",
+                                        className: "flex items-center gap-3 focus:outline-none",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "p-2 bg-orange-100 dark:bg-orange-900/30 rounded-full text-orange-600 dark:text-orange-400",
@@ -1545,13 +1549,13 @@ async function AnimePage({ params }) {
                                                     size: 20
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 384,
-                                                    columnNumber: 17
+                                                    lineNumber: 391,
+                                                    columnNumber: 9
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 383,
-                                                columnNumber: 15
+                                                lineNumber: 390,
+                                                columnNumber: 8
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 children: [
@@ -1560,77 +1564,77 @@ async function AnimePage({ params }) {
                                                         children: "Aired To"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 386,
-                                                        columnNumber: 20
+                                                        lineNumber: 393,
+                                                        columnNumber: 13
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-foreground font-medium",
                                                         children: airedTo
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 386,
-                                                        columnNumber: 97
+                                                        lineNumber: 393,
+                                                        columnNumber: 90
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 386,
-                                                columnNumber: 15
+                                                lineNumber: 393,
+                                                columnNumber: 8
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 382,
-                                        columnNumber: 13
+                                        lineNumber: 389,
+                                        columnNumber: 7
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 369,
-                                columnNumber: 11
+                                lineNumber: 376,
+                                columnNumber: 6
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 367,
-                        columnNumber: 9
+                        lineNumber: 374,
+                        columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(StatsSection, {
                         stats: stats
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 391,
-                        columnNumber: 9
+                        lineNumber: 398,
+                        columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(CharacterList, {
                         characters: characters
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 392,
-                        columnNumber: 9
+                        lineNumber: 399,
+                        columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(ReviewsSection, {
                         reviews: reviews
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 393,
-                        columnNumber: 9
+                        lineNumber: 400,
+                        columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(RelatedContent, {
                         relations: relations
                     }, void 0, false, {
                         fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 394,
-                        columnNumber: 9
+                        lineNumber: 401,
+                        columnNumber: 5
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 345,
-                columnNumber: 7
+                lineNumber: 352,
+                columnNumber: 4
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("footer", {
-                className: "border-t border-border bg-card mt-auto",
+                className: "bg-card mt-auto shadow-inner",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12",
                     children: [
@@ -1641,16 +1645,16 @@ async function AnimePage({ params }) {
                                     className: "text-center md:text-left",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         className: "font-bold text-xl tracking-tight",
-                                        children: "FeinimeList"
+                                        children: "Feinime"
                                     }, void 0, false, {
                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 406,
-                                        columnNumber: 15
+                                        lineNumber: 412,
+                                        columnNumber: 8
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                    lineNumber: 405,
-                                    columnNumber: 13
+                                    lineNumber: 411,
+                                    columnNumber: 7
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
                                     className: "flex flex-wrap justify-center md:justify-start gap-4 md:gap-6 text-sm text-muted-foreground",
@@ -1663,32 +1667,32 @@ async function AnimePage({ params }) {
                                         'FAQ'
                                     ].map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                                             href: "#",
-                                            className: "hover:text-primary transition-colors",
+                                            className: "hover:text-primary transition-colors focus:outline-none",
                                             children: item
                                         }, item, false, {
                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 412,
-                                            columnNumber: 17
+                                            lineNumber: 418,
+                                            columnNumber: 9
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                    lineNumber: 410,
-                                    columnNumber: 13
+                                    lineNumber: 416,
+                                    columnNumber: 7
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "flex justify-center md:justify-start items-center gap-4",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                                             href: "#",
-                                            className: "text-muted-foreground hover:text-[#1DA1F2] transition-colors",
+                                            className: "text-muted-foreground hover:text-[#1DA1F2] transition-colors focus:outline-none",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "sr-only",
                                                     children: "Twitter"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 428,
-                                                    columnNumber: 17
+                                                    lineNumber: 434,
+                                                    columnNumber: 9
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                                     className: "w-5 h-5",
@@ -1698,96 +1702,96 @@ async function AnimePage({ params }) {
                                                         d: "M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.564-2.005.974-3.127 1.195-.897-.955-2.178-1.55-3.594-1.55-2.717 0-4.92 2.204-4.92 4.917 0 .39.045.765.127 1.124-4.087-.205-7.72-2.164-10.148-5.144-.424.722-.666 1.561-.666 2.475 0 1.708.87 3.214 2.188 4.099-.807-.025-1.566-.248-2.229-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.376 4.604 3.416-1.68 1.319-3.809 2.105-6.102 2.105-.396 0-.779-.023-1.158-.067 2.189 1.402 4.768 2.217 7.548 2.217 9.051 0 14-7.496 14-13.986 0-.21 0-.42-.015-.63 1.009-.73 1.884-1.64 2.584-2.675z"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 430,
-                                                        columnNumber: 19
+                                                        lineNumber: 436,
+                                                        columnNumber: 10
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 429,
-                                                    columnNumber: 17
+                                                    lineNumber: 435,
+                                                    columnNumber: 9
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 424,
-                                            columnNumber: 15
+                                            lineNumber: 430,
+                                            columnNumber: 8
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
                                             href: "#",
-                                            className: "text-muted-foreground hover:text-[#5865F2] transition-colors",
+                                            className: "text-muted-foreground hover:text-[#5865F2] transition-colors focus:outline-none",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "sr-only",
                                                     children: "Discord"
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 437,
-                                                    columnNumber: 17
+                                                    lineNumber: 443,
+                                                    columnNumber: 9
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                                     className: "w-5 h-5",
                                                     viewBox: "0 0 71 55",
                                                     fill: "currentColor",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
-                                                        d: "M60.1 4.55A59 59 0 0 0 46.92 0c-.65 1.14-1.39 2.59-1.9 3.74a42 42 0 0 0-17 0C27.5 2.6 26.76 1.15 26.1 0A58.8 58.8 0 0 0 10.9 4.55C2.68 19.28.08 33.43 1.3 47.36c11.04 8.16 21.56 6.06 21.56 6.06 1.44-1.84 2.56-3.78 3.44-5.7-6.16-1.84-8.52-4.52-8.52-4.52.72.48 1.44.92 2.16 1.3 4.92 2.52 10.12 3.78 15.44 3.78s10.52-1.26 15.44-3.78c.72-.38 1.44-.82 2.16-1.3 0 0-2.36 2.68-8.52 4.52.88 1.92 2 3.86 3.44 5.7 0 0 10.52 2.1 21.56-6.06 1.22-13.92-1.38-28.07-9.6-42.8ZM24.76 37.34c-3.12 0-5.68-2.82-5.68-6.28 0-3.46 2.52-6.28 5.68-6.28 3.18 0 5.74 2.82 5.68 6.28 0 3.46-2.5 6.28-5.68 6.28Zm21.48 0c-3.12 0-5.68-2.82-5.68-6.28 0-3.46 2.52-6.28 5.68-6.28 3.18 0 5.74 2.82 5.68 6.28 0 3.46-2.5 6.28-5.68 6.28Z"
+                                                        d: "M60.1 4.55A59 59 0 0 0 46.92 0c-.65 1.14-1.39 2.59-1.9 3.74a42 42 0 0 0-17 0C27.5 2.6 26.76 1.15 26.1 0A58.8 58.8 0 0 0 10.9 4.55C2.68 19.28.08 33.43 1.3 47.36c11.04 8.16 21.56 6.06 21.56 6.06 1.44-1.84 2.56-3.78 3.44-5.7-6.16-1.84-8.52-4.52-8.52-4.52.72.48 1.44.92 2.16 1.3 4.92 2.52 10.12 3.78 15.44 3.78s10.52-1.26 15.44-3.78c.72-.38 1.44-.82 2.16-1.3 0 0-2.36 2.68-8.52 4.52.88 1.92 2 3.86 3.44 5.7 0 0 10.52 2.1 21.56-6.06 1.22-13.92-1.38-28.07-9.6-42.8ZM24.76 37.34c-3.12 0-5.68-2.82-5.68-6.28 0-3.46 2.52-6.28 5.68-6.28 3.18 0 5.74 2.82 5.68 6.28 0 3.46-2.5 6.28-5.68 6.28Z"
                                                     }, void 0, false, {
                                                         fileName: "[project]/app/anime/[id]/page.tsx",
-                                                        lineNumber: 439,
-                                                        columnNumber: 19
+                                                        lineNumber: 445,
+                                                        columnNumber: 10
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                                    lineNumber: 438,
-                                                    columnNumber: 17
+                                                    lineNumber: 444,
+                                                    columnNumber: 9
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 433,
-                                            columnNumber: 15
+                                            lineNumber: 439,
+                                            columnNumber: 8
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/app/anime/[id]/page.tsx",
-                                    lineNumber: 423,
-                                    columnNumber: 13
+                                    lineNumber: 429,
+                                    columnNumber: 7
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/app/anime/[id]/page.tsx",
-                            lineNumber: 402,
-                            columnNumber: 11
+                            lineNumber: 408,
+                            columnNumber: 6
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "border-t border-border mt-8 pt-6 text-center text-muted-foreground text-sm",
+                            className: "mt-8 pt-6 text-center text-muted-foreground text-sm",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 children: "Feinime © 2025. All rights reserved."
                             }, void 0, false, {
                                 fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 448,
-                                columnNumber: 13
+                                lineNumber: 454,
+                                columnNumber: 7
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/app/anime/[id]/page.tsx",
-                            lineNumber: 447,
-                            columnNumber: 11
+                            lineNumber: 453,
+                            columnNumber: 6
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/app/anime/[id]/page.tsx",
-                    lineNumber: 399,
-                    columnNumber: 9
+                    lineNumber: 406,
+                    columnNumber: 5
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 398,
-                columnNumber: 7
+                lineNumber: 405,
+                columnNumber: 4
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/anime/[id]/page.tsx",
-        lineNumber: 286,
-        columnNumber: 5
+        lineNumber: 293,
+        columnNumber: 3
     }, this);
 }
 }),

@@ -31,6 +31,7 @@ export default function AnimeActionButtons({ animeId, trailerUrl }: AnimeActionB
 
   return (
     <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
+      
       {/* Trailer Button */}
       {trailerUrl ? (
         <Button 

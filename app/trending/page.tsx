@@ -6,6 +6,8 @@ import { Navbar } from '@/components/navbar'
 import { AnimeCard } from '@/components/anime-card'
 import { SkeletonGrid } from '@/components/skeleton-loader'
 
+// Asumsi: AnimeCard menerima props `rank: number` dan menampilkannya sebagai badge.
+
 export default function TrendingPage() {
   const [animes, setAnimes] = useState<Anime[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,6 +47,7 @@ export default function TrendingPage() {
         ) : animes.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {animes.map((anime, index) => (
+              // Mengirimkan rank sebagai prop.
               <AnimeCard key={anime.mal_id} anime={anime} rank={index + 1} />
             ))}
           </div>
@@ -79,7 +82,7 @@ export default function TrendingPage() {
               ))}
             </nav>
 
-            {/* Social Icons */}
+            {/* Social Icons (SVG paths dipersingkat) */}
             <div className="flex justify-center md:justify-start items-center gap-4">
               <a
                 href="#"

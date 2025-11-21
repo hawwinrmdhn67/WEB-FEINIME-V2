@@ -11,8 +11,9 @@ interface SmallCardProps {
 export function SmallCard({ image, title, description }: SmallCardProps) {
   return (
     <div className="w-[150px] flex flex-col cursor-pointer hover:opacity-90 transition">
+      
       {/* Poster */}
-      <div className="w-full h-[200px] bg-gray-800 rounded-lg overflow-hidden">
+      <div className="w-full h-[200px] bg-muted rounded-lg overflow-hidden">
         <Image
           src={image}
           alt={title}
@@ -23,13 +24,13 @@ export function SmallCard({ image, title, description }: SmallCardProps) {
       </div>
 
       {/* Title */}
-      <p className="mt-2 text-sm font-semibold text-white line-clamp-1">
+      <p className="mt-2 text-sm font-semibold text-foreground line-clamp-1">
         {title}
       </p>
 
       {/* Description */}
       {description && (
-        <p className="text-xs text-gray-400 line-clamp-2">
+        <p className="text-xs text-muted-foreground line-clamp-2">
           {description}
         </p>
       )}

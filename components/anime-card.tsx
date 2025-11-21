@@ -22,8 +22,8 @@ export interface Anime {
 interface AnimeCardProps {
   anime: Anime;
   rank?: number;
-  className?: string
-  imgClassName?: string
+  className?: string;
+  imgClassName?: string;
 }
 
 export function AnimeCard({ anime, rank }: AnimeCardProps) {
@@ -33,9 +33,7 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
     "https://placehold.co/300x450/333333/FFFFFF?text=No+Image";
 
   const displayScore = anime.score != null ? anime.score.toFixed(1) : "N/A";
-  const displayEpisodes =
-    anime.episodes != null ? `${anime.episodes} Ep` : "Ongoing";
-
+  const displayEpisodes = anime.episodes != null ? `${anime.episodes} Ep` : "Ongoing";
   const displayType = anime.type || "Anime";
   const typeLabel =
     displayType.toLowerCase() === "movie"
@@ -44,15 +42,13 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
       ? "TV Anime"
       : displayType;
 
-  const TypeIcon =
-    displayType.toLowerCase() === "movie" ? Clapperboard : Tv;
-
+  const TypeIcon = displayType.toLowerCase() === "movie" ? Clapperboard : Tv;
   const displayStatus = anime.status || "Unknown";
 
   return (
-    <Link href={`/anime/${anime.mal_id}`}>
+      <Link href={`/anime/${anime.mal_id}`}>
       <div className="group relative flex flex-col h-full cursor-pointer rounded-xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-        
+
         {/* IMAGE */}
         <div className="relative w-full aspect-[2/3] overflow-hidden rounded-t-xl">
           <img
@@ -65,19 +61,32 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
                 "https://placehold.co/300x450/333333/FFFFFF?text=No+Image")
             }
           />
-
+          
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
+
           {/* TYPE BADGE */}
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/60 text-white px-2 py-1 rounded-full backdrop-blur-sm text-xs font-semibold shadow-md border border-white/10 transition-all duration-300 group-hover:bg-black/80">
-            <TypeIcon size={12} />
-            {typeLabel}
+          <div className="
+              absolute top-2 left-2 flex items-center gap-1 
+              bg-background/70 px-2 py-1 rounded-full 
+              backdrop-blur-sm text-xs font-semibold shadow-sm
+              border border-border/60 
+              transition-all duration-300 group-hover:bg-background/90
+            ">
+            <TypeIcon size={12} className="opacity-80" />
+            <span>{typeLabel}</span>
           </div>
 
           {/* SCORE BADGE */}
           {anime.score != null && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 text-white px-2 py-1 rounded-full backdrop-blur-sm text-xs font-semibold shadow-md border border-white/10 transition-all duration-300 group-hover:bg-black/80">
+            <div className="
+                absolute top-2 right-2 flex items-center gap-1
+                bg-background/70 px-2 py-1 rounded-full 
+                backdrop-blur-sm text-xs font-semibold shadow-sm
+                border border-border/60 
+                transition-all duration-300 group-hover:bg-background/90
+              ">
               <Star size={12} className="text-yellow-400 fill-yellow-400" />
               {displayScore}
             </div>
@@ -85,13 +94,19 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
 
           {/* RANK BADGE */}
           {rank && (
-            <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded-md border border-white/20 shadow-sm backdrop-blur-sm">
+            <div className="
+                absolute bottom-2 left-2 
+                bg-primary text-primary-foreground 
+                text-xs font-bold px-2 py-1 rounded-md 
+                border border-primary/40 shadow-sm
+                backdrop-blur-sm
+              ">
               #{rank}
             </div>
           )}
         </div>
 
-        {/* CONTENT */}
+         {/* CONTENT */}
         <div className="p-3 flex flex-col flex-1 bg-card border-t border-border/40">
           <h3 className="font-semibold text-sm sm:text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2">
             {anime.title}

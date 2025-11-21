@@ -19,7 +19,9 @@ export default function SearchPage() {
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
 
-  // Fetch awal
+  // ---------------------------------------
+  // 🔍 Fetch awal
+  // ---------------------------------------
   useEffect(() => {
     if (!query) {
       setAnimes([])
@@ -30,10 +32,13 @@ export default function SearchPage() {
     const fetchInitial = async () => {
       setLoading(true)
       setPage(1)
+
       try {
         const res = await searchAnime(query, 1)
-        setAnimes(res.data || [])
-        setHasMore((res.data || []).length === 24)
+        const data = res.data || []
+
+        setAnimes(data)
+        setHasMore(data.length === 24)
       } catch (err) {
         console.error('Search failed:', err)
         setAnimes([])
@@ -42,21 +47,27 @@ export default function SearchPage() {
       }
     }
 
-    const timeoutId = setTimeout(() => fetchInitial(), 500)
+    const timeoutId = setTimeout(fetchInitial, 500)
     return () => clearTimeout(timeoutId)
   }, [query])
 
-  // Load more
+  // ---------------------------------------
+  // 📥 Load More
+  // ---------------------------------------
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore) return
+
     setLoadingMore(true)
     const nextPage = page + 1
+
     try {
       const res = await searchAnime(query, nextPage)
-      if (res.data && res.data.length > 0) {
-        setAnimes(prev => [...prev, ...res.data])
+      const newData = res.data || []
+
+      if (newData.length > 0) {
+        setAnimes(prev => [...prev, ...newData])
         setPage(nextPage)
-        if (res.data.length < 24) setHasMore(false)
+        setHasMore(newData.length === 24)
       } else {
         setHasMore(false)
       }
@@ -72,10 +83,13 @@ export default function SearchPage() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        {/* Header */}
         <div className="text-center md:text-left mb-10">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Search Results
           </h1>
+
           <p className="text-muted-foreground">
             {query
               ? `Showing results for "${query}"`
@@ -83,10 +97,13 @@ export default function SearchPage() {
           </p>
         </div>
 
+        {/* Loading State */}
         {loading ? (
           <SkeletonGrid />
+
         ) : animes.length > 0 ? (
           <>
+            {/* Grid Hasil */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
               {animes.map(anime => (
                 <AnimeCard
@@ -98,6 +115,7 @@ export default function SearchPage() {
               ))}
             </div>
 
+            {/* Load More */}
             {hasMore && (
               <div className="mt-12 text-center">
                 <Button
@@ -111,15 +129,19 @@ export default function SearchPage() {
                   ) : (
                     <ArrowDownCircle size={18} />
                   )}
+
                   {loadingMore ? 'Loading...' : 'See All Results'}
                 </Button>
               </div>
             )}
           </>
         ) : (
+          // Empty State
           <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border">
             <p className="text-muted-foreground mb-2">No results found</p>
-            <p className="text-sm text-foreground/60">Try different keywords or check spelling</p>
+            <p className="text-sm text-foreground/60">
+              Try different keywords or check spelling
+            </p>
           </div>
         )}
       </div>

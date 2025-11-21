@@ -9,23 +9,26 @@ export function SearchDialog() {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
 
+  // --- Handle Submit ---
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}`)
-      setIsOpen(false)
-    }
+    if (!query.trim()) return
+
+    router.push(`/search?q=${encodeURIComponent(query)}`)
+    setIsOpen(false)
   }
 
+  // --- Shortcut: Ctrl + K / CMD + K ---
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey
+
+      if (e.key === 'k' && isCtrlOrCmd) {
         e.preventDefault()
         setIsOpen(true)
       }
-      if (e.key === 'Escape') {
-        setIsOpen(false)
-      }
+
+      if (e.key === 'Escape') setIsOpen(false)
     }
 
     window.addEventListener('keydown', handleKeydown)
@@ -34,6 +37,7 @@ export function SearchDialog() {
 
   return (
     <>
+      {/* Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
@@ -41,6 +45,7 @@ export function SearchDialog() {
         />
       )}
 
+      {/* Dialog Search */}
       <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl px-4">
         {isOpen && (
           <form
@@ -49,19 +54,21 @@ export function SearchDialog() {
           >
             <div className="flex items-center gap-3 px-4 py-3">
               <Search size={18} className="text-muted-foreground" />
+
               <input
                 autoFocus
                 type="text"
                 placeholder="Search anime... (Ctrl+K)"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="bg-transparent outline-none flex-1 text-foreground placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
               />
             </div>
           </form>
         )}
       </div>
 
+      {/* Search Button */}
       <button
         onClick={() => setIsOpen(true)}
         className="text-muted-foreground hover:text-foreground transition-colors"
