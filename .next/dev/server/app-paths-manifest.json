@@ -1,4 +1,5 @@
 {
+  "/anime/[id]/page": "app/anime/[id]/page.js",
   "/genres/page": "app/genres/page.js",
   "/page": "app/page.js"
 }

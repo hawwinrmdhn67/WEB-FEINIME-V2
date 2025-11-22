@@ -1037,28 +1037,55 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/play.js [app-client] (ecmascript) <export default as Play>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$heart$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Heart$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/heart.js [app-client] (ecmascript) <export default as Heart>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$share$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Share2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/share-2.js [app-client] (ecmascript) <export default as Share2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)"); // Import useState
+;
+var _s = __turbopack_context__.k.signature();
 'use client';
 ;
 ;
 ;
 function AnimeActionButtons({ animeId, trailerUrl }) {
-    const handleShare = ()=>{
-        if (navigator.share) {
-            navigator.share({
-                title: 'Check out this Anime!',
-                url: window.location.href
-            });
-        } else {
-            navigator.clipboard.writeText(window.location.href);
-            alert('Link copied to clipboard!');
+    _s();
+    // State untuk melacak status berbagi/copy
+    const [shareStatus, setShareStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('idle');
+    const handleShare = async ()=>{
+        const currentUrl = window.location.href;
+        const animeTitle = 'Check out this Anime!' // Menggunakan judul umum atau bisa ambil dari props jika ada
+        ;
+        try {
+            if (navigator.share) {
+                // Web Share API (Mobile/Desktop Modern)
+                await navigator.share({
+                    title: animeTitle,
+                    url: currentUrl
+                });
+                setShareStatus('idle'); // Jika share berhasil atau dibatalkan, kembali ke idle
+            } else if (navigator.clipboard) {
+                // Fallback: Copy ke Clipboard (Desktop)
+                await navigator.clipboard.writeText(currentUrl);
+                setShareStatus('copied');
+                // Reset status setelah 3 detik
+                setTimeout(()=>{
+                    setShareStatus('idle');
+                }, 3000);
+            } else {
+                // Fallback paling dasar
+                alert('Link copied to clipboard: ' + currentUrl);
+            }
+        } catch (error) {
+            console.error('Error sharing or copying:', error);
+            setShareStatus('idle');
         }
     };
+    // Gaya untuk tombol non-primer
     const glassButtonStyle = `
     gap-2 border-input backdrop-blur-sm transition-colors shadow-sm
     text-foreground bg-background/60
     hover:bg-primary hover:text-primary-foreground
     dark:hover:bg-white/20 dark:hover:text-white
   `;
+    // Gaya khusus untuk tombol Share (berdasarkan status)
+    const shareButtonClasses = shareStatus === 'copied' ? 'bg-green-500 text-white border-green-500 hover:bg-green-600' : glassButtonStyle;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex flex-wrap gap-3 mt-4 justify-center md:justify-start",
         children: [
@@ -1070,14 +1097,14 @@ function AnimeActionButtons({ animeId, trailerUrl }) {
                         size: 18
                     }, void 0, false, {
                         fileName: "[project]/components/anime-action-buttons.tsx",
-                        lineNumber: 41,
+                        lineNumber: 69,
                         columnNumber: 11
                     }, this),
                     " Watch Trailer"
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/anime-action-buttons.tsx",
-                lineNumber: 37,
+                lineNumber: 65,
                 columnNumber: 9
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                 disabled: true,
@@ -1087,14 +1114,14 @@ function AnimeActionButtons({ animeId, trailerUrl }) {
                         size: 18
                     }, void 0, false, {
                         fileName: "[project]/components/anime-action-buttons.tsx",
-                        lineNumber: 45,
+                        lineNumber: 73,
                         columnNumber: 11
                     }, this),
                     " No Trailer"
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/anime-action-buttons.tsx",
-                lineNumber: 44,
+                lineNumber: 72,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1106,42 +1133,44 @@ function AnimeActionButtons({ animeId, trailerUrl }) {
                         size: 18
                     }, void 0, false, {
                         fileName: "[project]/components/anime-action-buttons.tsx",
-                        lineNumber: 55,
+                        lineNumber: 83,
                         columnNumber: 9
                     }, this),
                     " Add to Favorites"
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/anime-action-buttons.tsx",
-                lineNumber: 50,
+                lineNumber: 78,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                 variant: "outline",
-                className: glassButtonStyle,
+                className: shareButtonClasses,
                 onClick: handleShare,
+                disabled: shareStatus === 'copied',
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$share$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Share2$3e$__["Share2"], {
                         size: 18
                     }, void 0, false, {
                         fileName: "[project]/components/anime-action-buttons.tsx",
-                        lineNumber: 64,
+                        lineNumber: 93,
                         columnNumber: 9
                     }, this),
-                    " Share"
+                    shareStatus === 'copied' ? 'Copied!' : 'Share'
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/anime-action-buttons.tsx",
-                lineNumber: 59,
+                lineNumber: 87,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/anime-action-buttons.tsx",
-        lineNumber: 33,
+        lineNumber: 61,
         columnNumber: 5
     }, this);
 }
+_s(AnimeActionButtons, "eaF0Pzq5rYaVxjkwkr+/SIuwiv8=");
 _c = AnimeActionButtons;
 var _c;
 __turbopack_context__.k.register(_c, "AnimeActionButtons");
