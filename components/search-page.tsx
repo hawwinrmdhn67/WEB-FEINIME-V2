@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Navbar } from './navbar'
 import { AnimeCard, Anime } from './anime-card'
-import { SkeletonGrid } from './skeleton-loader'
+import { SkeletonLoader } from './skeleton-loader'
 import { searchAnime } from '@/lib/api'
 import { Button } from './ui/button'
 import { ArrowDownCircle } from 'lucide-react'
+import { SkeletonGrid } from './anime-grid'
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -99,8 +100,8 @@ export default function SearchPage() {
 
         {/* Loading State */}
         {loading ? (
-          <SkeletonGrid />
-
+          <SkeletonLoader type="popular" count={12} />
+          
         ) : animes.length > 0 ? (
           <>
             {/* Grid Hasil */}

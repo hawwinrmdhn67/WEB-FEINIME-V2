@@ -186,4 +186,12 @@
   .dark .subtle-hover:hover {
     box-shadow: 0 4px 12px rgba(255,255,255,0.1);
   }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite linear;
+  }
 }

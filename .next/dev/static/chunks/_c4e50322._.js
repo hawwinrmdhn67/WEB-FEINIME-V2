@@ -1041,10 +1041,18 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 ;
 ;
 ;
+// Fungsi getStatusClasses yang disederhanakan untuk menggunakan warna tema & padding minimal
+const getStatusClasses = ()=>{
+    // text-[10px] untuk mobile, px-1.5, py-0.5 untuk padding minimal
+    const base = "font-medium px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs border transition-colors duration-300 ";
+    // Menggunakan warna tema (bg-card/70) agar tetap konsisten dengan light/dark mode
+    return base + 'bg-card/70 text-foreground/90 border-border/60';
+};
 function AnimeCard({ anime, rank }) {
     const imageUrl = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || "https://placehold.co/300x450/333333/FFFFFF?text=No+Image";
     const displayScore = anime.score != null ? anime.score.toFixed(1) : "N/A";
-    const displayEpisodes = anime.episodes != null ? `${anime.episodes} Ep` : "Ongoing";
+    // Logika episode/ongoing yang lebih deskriptif
+    const displayEpisodes = anime.episodes != null ? `${anime.episodes} Ep` : anime.status === 'Currently Airing' ? 'Ongoing' : 'TBA';
     const displayType = anime.type || "Anime";
     const typeLabel = displayType.toLowerCase() === "movie" ? "Movie" : displayType.toLowerCase() === "tv" ? "TV Anime" : displayType;
     const TypeIcon = displayType.toLowerCase() === "movie" ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clapperboard$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clapperboard$3e$__["Clapperboard"] : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$tv$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Tv$3e$__["Tv"];
@@ -1065,14 +1073,14 @@ function AnimeCard({ anime, rank }) {
                             onError: (e)=>e.target.src = "https://placehold.co/300x450/333333/FFFFFF?text=No+Image"
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 54,
+                            lineNumber: 69,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 66,
+                            lineNumber: 81,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1083,20 +1091,20 @@ function AnimeCard({ anime, rank }) {
                                     className: "opacity-80"
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 77,
+                                    lineNumber: 92,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: typeLabel
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 78,
+                                    lineNumber: 93,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 70,
+                            lineNumber: 85,
                             columnNumber: 11
                         }, this),
                         anime.score != null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1107,14 +1115,14 @@ function AnimeCard({ anime, rank }) {
                                     className: "text-yellow-400 fill-yellow-400"
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 90,
+                                    lineNumber: 105,
                                     columnNumber: 15
                                 }, this),
                                 displayScore
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 83,
+                            lineNumber: 98,
                             columnNumber: 13
                         }, this),
                         rank && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1125,13 +1133,13 @@ function AnimeCard({ anime, rank }) {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 97,
+                            lineNumber: 112,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/anime-card.tsx",
-                    lineNumber: 53,
+                    lineNumber: 68,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1142,49 +1150,49 @@ function AnimeCard({ anime, rank }) {
                             children: anime.title
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 111,
+                            lineNumber: 126,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "mt-auto flex items-center justify-between text-xs text-muted-foreground",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "opacity-90",
+                                    className: "opacity-90 text-[10px] sm:text-xs",
                                     children: displayEpisodes
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 116,
+                                    lineNumber: 132,
                                     columnNumber: 13
                                 }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "font-medium bg-muted px-2 py-0.5 rounded-full text-foreground/80",
+                                anime.status && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: getStatusClasses(),
                                     children: displayStatus
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 117,
-                                    columnNumber: 13
+                                    lineNumber: 136,
+                                    columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 115,
+                            lineNumber: 130,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/anime-card.tsx",
-                    lineNumber: 110,
+                    lineNumber: 125,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/components/anime-card.tsx",
-            lineNumber: 50,
+            lineNumber: 65,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/components/anime-card.tsx",
-        lineNumber: 49,
+        lineNumber: 64,
         columnNumber: 7
     }, this);
 }
@@ -1199,180 +1207,223 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 "use strict";
 
 __turbopack_context__.s([
-    "HeroSkeleton",
-    ()=>HeroSkeleton,
-    "SkeletonCard",
-    ()=>SkeletonCard,
-    "SkeletonGrid",
-    ()=>SkeletonGrid
+    "SkeletonLoader",
+    ()=>SkeletonLoader
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 'use client';
 ;
-function HeroSkeleton() {
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "w-full mt-4 sm:mt-8 mb-8",
-        children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "h-8 w-48 bg-muted rounded mb-4 ml-4 sm:ml-8 animate-pulse"
-            }, void 0, false, {
-                fileName: "[project]/components/skeleton-loader.tsx",
-                lineNumber: 14,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "flex gap-3 sm:gap-5 md:gap-6 overflow-hidden pb-8 px-4 sm:px-6 lg:px-8",
-                children: Array(5).fill(null).map((_, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: " flex-shrink-0 animate-pulse bg-muted rounded-2xl w-[75vw] sm:w-60 md:w-72 aspect-[2/3] ",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "h-full w-full flex flex-col justify-end p-4 space-y-2",
+const SkeletonLoader = ({ type, count = 6 })=>{
+    // Helper: untuk grid layout
+    const isGridLayout = [
+        'seasonal',
+        'popular',
+        'search'
+    ].includes(type);
+    // GRID columns sesuai tipe
+    const gridCols = type === 'search' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
+    if (type === 'home') {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "flex flex-col gap-6",
+            children: Array.from({
+                length: count
+            }).map((_, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex flex-col sm:flex-row bg-card rounded-xl overflow-hidden border border-border/50 animate-pulse h-56 sm:h-64",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "w-full sm:w-5/12 h-56 sm:h-auto bg-muted dark:bg-muted/70 rounded-md"
+                        }, void 0, false, {
+                            fileName: "[project]/components/skeleton-loader.tsx",
+                            lineNumber: 26,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex-1 p-5 flex flex-col gap-3",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "h-6 bg-gray-400/30 rounded w-3/4"
+                                    className: "h-4 bg-muted dark:bg-muted/70 rounded w-1/3"
                                 }, void 0, false, {
                                     fileName: "[project]/components/skeleton-loader.tsx",
                                     lineNumber: 28,
                                     columnNumber: 15
-                                }, this),
+                                }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "h-4 bg-gray-400/30 rounded w-1/2"
+                                    className: "h-6 bg-muted dark:bg-muted/70 rounded w-3/4"
                                 }, void 0, false, {
+                                    fileName: "[project]/components/skeleton-loader.tsx",
+                                    lineNumber: 29,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex gap-2 mt-2",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "h-4 bg-muted dark:bg-muted/70 rounded w-12"
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/skeleton-loader.tsx",
+                                            lineNumber: 31,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "h-4 bg-muted dark:bg-muted/70 rounded w-16"
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/skeleton-loader.tsx",
+                                            lineNumber: 32,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            className: "h-4 bg-muted dark:bg-muted/70 rounded w-20"
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/skeleton-loader.tsx",
+                                            lineNumber: 33,
+                                            columnNumber: 17
+                                        }, ("TURBOPACK compile-time value", void 0))
+                                    ]
+                                }, void 0, true, {
                                     fileName: "[project]/components/skeleton-loader.tsx",
                                     lineNumber: 30,
                                     columnNumber: 15
-                                }, this)
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex-1 h-12 bg-muted dark:bg-muted/70 rounded mt-2"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/skeleton-loader.tsx",
+                                    lineNumber: 35,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "h-9 bg-muted dark:bg-muted/70 rounded w-32 mt-auto"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/skeleton-loader.tsx",
+                                    lineNumber: 36,
+                                    columnNumber: 15
+                                }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/skeleton-loader.tsx",
-                            lineNumber: 26,
+                            lineNumber: 27,
                             columnNumber: 13
-                        }, this)
-                    }, i, false, {
-                        fileName: "[project]/components/skeleton-loader.tsx",
-                        lineNumber: 19,
-                        columnNumber: 11
-                    }, this))
-            }, void 0, false, {
-                fileName: "[project]/components/skeleton-loader.tsx",
-                lineNumber: 17,
-                columnNumber: 7
-            }, this)
-        ]
-    }, void 0, true, {
-        fileName: "[project]/components/skeleton-loader.tsx",
-        lineNumber: 12,
-        columnNumber: 5
-    }, this);
-}
-_c = HeroSkeleton;
-function SkeletonCard() {
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "flex flex-col h-full animate-pulse",
-        children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "relative w-full aspect-[2/3] bg-muted rounded-xl overflow-hidden",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute inset-0 flex justify-center items-center text-muted-foreground/20 text-2xl",
-                    children: "🎬"
-                }, void 0, false, {
+                        }, ("TURBOPACK compile-time value", void 0))
+                    ]
+                }, i, true, {
                     fileName: "[project]/components/skeleton-loader.tsx",
-                    lineNumber: 49,
-                    columnNumber: 9
-                }, this)
-            }, void 0, false, {
-                fileName: "[project]/components/skeleton-loader.tsx",
-                lineNumber: 48,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "p-3 flex flex-col gap-2 border-t border-border/50",
+                    lineNumber: 25,
+                    columnNumber: 11
+                }, ("TURBOPACK compile-time value", void 0)))
+        }, void 0, false, {
+            fileName: "[project]/components/skeleton-loader.tsx",
+            lineNumber: 23,
+            columnNumber: 7
+        }, ("TURBOPACK compile-time value", void 0));
+    }
+    if (type === 'trending') {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "flex flex-col gap-3",
+            children: Array.from({
+                length: count
+            }).map((_, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex gap-4 items-center p-3 rounded-xl bg-card border border-border/50 animate-pulse",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            className: "w-6 h-6 bg-muted dark:bg-muted/70 rounded"
+                        }, void 0, false, {
+                            fileName: "[project]/components/skeleton-loader.tsx",
+                            lineNumber: 49,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "w-12 h-16 rounded-md bg-muted dark:bg-muted/70"
+                        }, void 0, false, {
+                            fileName: "[project]/components/skeleton-loader.tsx",
+                            lineNumber: 50,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex-1 h-4 bg-muted dark:bg-muted/70 rounded"
+                        }, void 0, false, {
+                            fileName: "[project]/components/skeleton-loader.tsx",
+                            lineNumber: 51,
+                            columnNumber: 13
+                        }, ("TURBOPACK compile-time value", void 0))
+                    ]
+                }, i, true, {
+                    fileName: "[project]/components/skeleton-loader.tsx",
+                    lineNumber: 48,
+                    columnNumber: 11
+                }, ("TURBOPACK compile-time value", void 0)))
+        }, void 0, false, {
+            fileName: "[project]/components/skeleton-loader.tsx",
+            lineNumber: 46,
+            columnNumber: 7
+        }, ("TURBOPACK compile-time value", void 0));
+    }
+    // GRID layout: seasonal, popular, search
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: `grid ${gridCols} gap-4 md:gap-6`,
+        children: Array.from({
+            length: count
+        }).map((_, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex flex-col gap-2 animate-pulse bg-card p-2 rounded-lg",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "h-4 bg-muted rounded w-11/12"
+                        className: "w-full aspect-[2/3] bg-muted dark:bg-muted/70 rounded-lg"
                     }, void 0, false, {
                         fileName: "[project]/components/skeleton-loader.tsx",
-                        lineNumber: 56,
-                        columnNumber: 9
-                    }, this),
+                        lineNumber: 63,
+                        columnNumber: 11
+                    }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "h-4 bg-muted rounded w-2/3"
+                        className: "h-4 bg-muted dark:bg-muted/70 rounded w-3/4 mt-2"
                     }, void 0, false, {
                         fileName: "[project]/components/skeleton-loader.tsx",
-                        lineNumber: 57,
-                        columnNumber: 9
-                    }, this),
+                        lineNumber: 64,
+                        columnNumber: 11
+                    }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "flex justify-between mt-2",
+                        className: "h-3 bg-muted dark:bg-muted/70 rounded w-1/2"
+                    }, void 0, false, {
+                        fileName: "[project]/components/skeleton-loader.tsx",
+                        lineNumber: 65,
+                        columnNumber: 11
+                    }, ("TURBOPACK compile-time value", void 0)),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "flex gap-2 mt-1",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "h-3 bg-muted rounded w-10"
+                                className: "h-3 bg-muted dark:bg-muted/70 rounded w-6"
                             }, void 0, false, {
                                 fileName: "[project]/components/skeleton-loader.tsx",
-                                lineNumber: 60,
-                                columnNumber: 11
-                            }, this),
+                                lineNumber: 67,
+                                columnNumber: 13
+                            }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "h-3 bg-muted rounded w-8"
+                                className: "h-3 bg-muted dark:bg-muted/70 rounded w-10"
                             }, void 0, false, {
                                 fileName: "[project]/components/skeleton-loader.tsx",
-                                lineNumber: 61,
-                                columnNumber: 11
-                            }, this)
+                                lineNumber: 68,
+                                columnNumber: 13
+                            }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/skeleton-loader.tsx",
-                        lineNumber: 59,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/components/skeleton-loader.tsx",
-                lineNumber: 55,
-                columnNumber: 7
-            }, this)
-        ]
-    }, void 0, true, {
-        fileName: "[project]/components/skeleton-loader.tsx",
-        lineNumber: 46,
-        columnNumber: 5
-    }, this);
-}
-_c1 = SkeletonCard;
-function SkeletonGrid({ count = 10 }) {
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-        className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12",
-        children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "h-8 w-40 bg-muted rounded mb-4 animate-pulse"
-            }, void 0, false, {
-                fileName: "[project]/components/skeleton-loader.tsx",
-                lineNumber: 77,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6",
-                children: Array(count).fill(null).map((_, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SkeletonCard, {}, i, false, {
-                        fileName: "[project]/components/skeleton-loader.tsx",
-                        lineNumber: 81,
+                        lineNumber: 66,
                         columnNumber: 11
-                    }, this))
-            }, void 0, false, {
+                    }, ("TURBOPACK compile-time value", void 0))
+                ]
+            }, i, true, {
                 fileName: "[project]/components/skeleton-loader.tsx",
-                lineNumber: 79,
-                columnNumber: 7
-            }, this)
-        ]
-    }, void 0, true, {
+                lineNumber: 62,
+                columnNumber: 9
+            }, ("TURBOPACK compile-time value", void 0)))
+    }, void 0, false, {
         fileName: "[project]/components/skeleton-loader.tsx",
-        lineNumber: 75,
+        lineNumber: 60,
         columnNumber: 5
-    }, this);
-}
-_c2 = SkeletonGrid;
-var _c, _c1, _c2;
-__turbopack_context__.k.register(_c, "HeroSkeleton");
-__turbopack_context__.k.register(_c1, "SkeletonCard");
-__turbopack_context__.k.register(_c2, "SkeletonGrid");
+    }, ("TURBOPACK compile-time value", void 0));
+};
+_c = SkeletonLoader;
+var _c;
+__turbopack_context__.k.register(_c, "SkeletonLoader");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
@@ -1479,7 +1530,7 @@ function SearchPage() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Navbar"], {}, void 0, false, {
                 fileName: "[project]/components/search-page.tsx",
-                lineNumber: 83,
+                lineNumber: 84,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1493,7 +1544,7 @@ function SearchPage() {
                                 children: "Search Results"
                             }, void 0, false, {
                                 fileName: "[project]/components/search-page.tsx",
-                                lineNumber: 89,
+                                lineNumber: 90,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1501,18 +1552,21 @@ function SearchPage() {
                                 children: query ? `Showing results for "${query}"` : 'Enter a keyword to start searching'
                             }, void 0, false, {
                                 fileName: "[project]/components/search-page.tsx",
-                                lineNumber: 93,
+                                lineNumber: 94,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/search-page.tsx",
-                        lineNumber: 88,
+                        lineNumber: 89,
                         columnNumber: 9
                     }, this),
-                    loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$skeleton$2d$loader$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SkeletonGrid"], {}, void 0, false, {
+                    loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$skeleton$2d$loader$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SkeletonLoader"], {
+                        type: "popular",
+                        count: 12
+                    }, void 0, false, {
                         fileName: "[project]/components/search-page.tsx",
-                        lineNumber: 102,
+                        lineNumber: 103,
                         columnNumber: 11
                     }, this) : animes.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                         children: [
@@ -1524,12 +1578,12 @@ function SearchPage() {
                                         imgClassName: "w-full h-auto object-cover rounded-lg"
                                     }, anime.mal_id, false, {
                                         fileName: "[project]/components/search-page.tsx",
-                                        lineNumber: 109,
+                                        lineNumber: 110,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/components/search-page.tsx",
-                                lineNumber: 107,
+                                lineNumber: 108,
                                 columnNumber: 13
                             }, this),
                             hasMore && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1544,25 +1598,25 @@ function SearchPage() {
                                             className: "animate-spin rounded-full h-4 w-4 border-b-2 border-current"
                                         }, void 0, false, {
                                             fileName: "[project]/components/search-page.tsx",
-                                            lineNumber: 128,
+                                            lineNumber: 129,
                                             columnNumber: 21
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$arrow$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowDownCircle$3e$__["ArrowDownCircle"], {
                                             size: 18
                                         }, void 0, false, {
                                             fileName: "[project]/components/search-page.tsx",
-                                            lineNumber: 130,
+                                            lineNumber: 131,
                                             columnNumber: 21
                                         }, this),
                                         loadingMore ? 'Loading...' : 'See All Results'
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/search-page.tsx",
-                                    lineNumber: 121,
+                                    lineNumber: 122,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/search-page.tsx",
-                                lineNumber: 120,
+                                lineNumber: 121,
                                 columnNumber: 15
                             }, this)
                         ]
@@ -1575,7 +1629,7 @@ function SearchPage() {
                                 children: "No results found"
                             }, void 0, false, {
                                 fileName: "[project]/components/search-page.tsx",
-                                lineNumber: 141,
+                                lineNumber: 142,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1583,25 +1637,25 @@ function SearchPage() {
                                 children: "Try different keywords or check spelling"
                             }, void 0, false, {
                                 fileName: "[project]/components/search-page.tsx",
-                                lineNumber: 142,
+                                lineNumber: 143,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/search-page.tsx",
-                        lineNumber: 140,
+                        lineNumber: 141,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/search-page.tsx",
-                lineNumber: 85,
+                lineNumber: 86,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/search-page.tsx",
-        lineNumber: 82,
+        lineNumber: 83,
         columnNumber: 5
     }, this);
 }

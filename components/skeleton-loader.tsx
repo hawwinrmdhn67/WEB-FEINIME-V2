@@ -2,85 +2,83 @@
 
 import React from 'react'
 
-/* ================================
-   1. Hero Carousel Skeleton
-   - Untuk loading HorizontalCard
-   - Mengikuti ukuran carousel anime
-================================= */
-export function HeroSkeleton() {
-  return (
-    <div className="w-full mt-4 sm:mt-8 mb-8">
-      {/* Header Title Dummy */}
-      <div className="h-8 w-48 bg-muted rounded mb-4 ml-4 sm:ml-8 animate-pulse" />
+export type SkeletonType = 'home' | 'trending' | 'seasonal' | 'popular' | 'search' | 'genres'
 
-      {/* Horizontal Fake Scroll Container */}
-      <div className="flex gap-3 sm:gap-5 md:gap-6 overflow-hidden pb-8 px-4 sm:px-6 lg:px-8">
-        {Array(5).fill(null).map((_, i) => (
-          <div
-            key={i}
-            className="
-              flex-shrink-0 animate-pulse bg-muted rounded-2xl
-              w-[75vw] sm:w-60 md:w-72 aspect-[2/3]
-            "
+interface SkeletonLoaderProps {
+  type: SkeletonType
+  count?: number
+}
+
+export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({ type, count = 6 }) => {
+  // Helper: untuk grid layout
+  const isGridLayout = ['seasonal', 'popular', 'search'].includes(type)
+
+  // GRID columns sesuai tipe
+  const gridCols = type === 'search'
+    ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+    : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6'
+
+  if (type === 'home') {
+    return (
+      <div className="flex flex-col gap-6">
+        {Array.from({ length: count }).map((_, i) => (
+          // Penyesuaian responsif pada elemen kontainer 'home'
+          <div 
+            key={i} 
+            className="flex flex-col sm:flex-row bg-card rounded-xl overflow-hidden border border-border/50 animate-pulse 
+                       h-auto sm:h-64" // Tinggi di mobile diatur otomatis, di sm ke atas tetap 64
           >
-            <div className="h-full w-full flex flex-col justify-end p-4 space-y-2">
-              {/* Title Placeholder */}
-              <div className="h-6 bg-gray-400/30 rounded w-3/4" />
-              {/* Subtitle Placeholder */}
-              <div className="h-4 bg-gray-400/30 rounded w-1/2" />
+            {/* Placeholder Gambar: Di mobile mengambil lebar penuh, dengan rasio tertentu */}
+            <div 
+              className="w-full sm:w-5/12 h-48 sm:h-auto bg-muted dark:bg-muted/70 
+                         rounded-t-xl sm:rounded-l-xl sm:rounded-r-none" // Penyesuaian border radius di mobile dan sm+
+            />
+            {/* Konten Placeholder */}
+            <div className="flex-1 p-4 sm:p-5 flex flex-col gap-3">
+              <div className="h-4 bg-muted dark:bg-muted/70 rounded w-1/3" />
+              <div className="h-6 bg-muted dark:bg-muted/70 rounded w-3/4" />
+              <div className="flex gap-2 mt-2">
+                <div className="h-4 bg-muted dark:bg-muted/70 rounded w-12" />
+                <div className="h-4 bg-muted dark:bg-muted/70 rounded w-16" />
+                <div className="h-4 bg-muted dark:bg-muted/70 rounded w-20" />
+              </div>
+              <div className="flex-1 h-12 bg-muted dark:bg-muted/70 rounded mt-2" />
+              <div className="h-9 bg-muted dark:bg-muted/70 rounded w-32 mt-auto self-start" /> {/* self-start agar rata kiri */}
             </div>
           </div>
         ))}
       </div>
-    </div>
-  )
-}
+    )
+  }
 
-/* ================================
-   2. Grid Card Skeleton
-   - Untuk loading AnimeCard grid
-   - Aspect ratio 2:3 + metadata bawah
-================================= */
-export function SkeletonCard() {
-  return (
-    <div className="flex flex-col h-full animate-pulse">
-      {/* Image */}
-      <div className="relative w-full aspect-[2/3] bg-muted rounded-xl overflow-hidden">
-        <div className="absolute inset-0 flex justify-center items-center text-muted-foreground/20 text-2xl">
-          🎬
-        </div>
-      </div>
-
-      {/* Text / Meta */}
-      <div className="p-3 flex flex-col gap-2 border-t border-border/50">
-        <div className="h-4 bg-muted rounded w-11/12" />
-        <div className="h-4 bg-muted rounded w-2/3" />
-
-        <div className="flex justify-between mt-2">
-          <div className="h-3 bg-muted rounded w-10" />
-          <div className="h-3 bg-muted rounded w-8" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ================================
-   3. Grid Skeleton Layout
-   - Digunakan untuk loading halaman
-   - Layout disamakan dengan SearchPage & HomePage
-================================= */
-export function SkeletonGrid({ count = 10 }: { count?: number }) {
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-      {/* Header Placeholder */}
-      <div className="h-8 w-40 bg-muted rounded mb-4 animate-pulse" />
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-        {Array(count).fill(null).map((_, i) => (
-          <SkeletonCard key={i} />
+  if (type === 'trending') {
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: count }).map((_, i) => (
+          <div key={i} className="flex gap-4 items-center p-3 rounded-xl bg-card border border-border/50 animate-pulse">
+            <span className="w-6 h-6 bg-muted dark:bg-muted/70 rounded" />
+            <div className="w-12 h-16 rounded-md bg-muted dark:bg-muted/70" />
+            <div className="flex-1 h-4 bg-muted dark:bg-muted/70 rounded" />
+          </div>
         ))}
       </div>
+    )
+  }
+
+  // GRID layout: seasonal, popular, search
+  return (
+    <div className={`grid ${gridCols} gap-4 md:gap-6`}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex flex-col gap-2 animate-pulse bg-card p-2 rounded-lg">
+          <div className="w-full aspect-[2/3] bg-muted dark:bg-muted/70 rounded-lg" />
+          <div className="h-4 bg-muted dark:bg-muted/70 rounded w-3/4 mt-2" />
+          <div className="h-3 bg-muted dark:bg-muted/70 rounded w-1/2" />
+          <div className="flex gap-2 mt-1">
+            <div className="h-3 bg-muted dark:bg-muted/70 rounded w-6" />
+            <div className="h-3 bg-muted dark:bg-muted/70 rounded w-10" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

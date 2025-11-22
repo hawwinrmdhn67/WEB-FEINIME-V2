@@ -26,6 +26,16 @@ interface AnimeCardProps {
   imgClassName?: string;
 }
 
+// Fungsi getStatusClasses yang disederhanakan untuk menggunakan warna tema & padding minimal
+const getStatusClasses = () => {
+    // text-[10px] untuk mobile, px-1.5, py-0.5 untuk padding minimal
+    const base = "font-medium px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs border transition-colors duration-300 ";
+    
+    // Menggunakan warna tema (bg-card/70) agar tetap konsisten dengan light/dark mode
+    return base + 'bg-card/70 text-foreground/90 border-border/60';
+};
+
+
 export function AnimeCard({ anime, rank }: AnimeCardProps) {
   const imageUrl =
     anime.images?.jpg?.large_image_url ||
@@ -33,7 +43,12 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
     "https://placehold.co/300x450/333333/FFFFFF?text=No+Image";
 
   const displayScore = anime.score != null ? anime.score.toFixed(1) : "N/A";
-  const displayEpisodes = anime.episodes != null ? `${anime.episodes} Ep` : "Ongoing";
+  
+  // Logika episode/ongoing yang lebih deskriptif
+  const displayEpisodes = anime.episodes != null 
+    ? `${anime.episodes} Ep` 
+    : anime.status === 'Currently Airing' ? 'Ongoing' : 'TBA'; 
+
   const displayType = anime.type || "Anime";
   const typeLabel =
     displayType.toLowerCase() === "movie"
@@ -106,20 +121,25 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
           )}
         </div>
 
-         {/* CONTENT */}
+          {/* CONTENT */}
         <div className="p-3 flex flex-col flex-1 bg-card border-t border-border/40">
           <h3 className="font-semibold text-sm sm:text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2">
             {anime.title}
           </h3>
 
           <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
-            <span className="opacity-90">{displayEpisodes}</span>
-            <span className="font-medium bg-muted px-2 py-0.5 rounded-full text-foreground/80">
-              {displayStatus}
-            </span>
+            {/* Episode Count - Dibuat responsif */}
+            <span className="opacity-90 text-[10px] sm:text-xs">{displayEpisodes}</span>
+            
+            {/* STATUS BADGE - Dibuat responsif menggunakan getStatusClasses */}
+            {anime.status && (
+              <span className={getStatusClasses()}>
+                {displayStatus}
+              </span>
+            )}
           </div>
         </div>
       </div>
-    </Link>
+      </Link>
   );
 }

@@ -1,36 +1,32 @@
-import { Anime } from '@/lib/api'
-import { AnimeCard } from './anime-card'
+'use client'
 
-interface AnimeGridProps {
-  animes: Anime[]
-  title?: string
+import { SkeletonLoader } from './skeleton-loader'
+
+interface SkeletonGridProps {
+  count?: number
+  type?: 'trending' | 'search' | 'popular' | 'seasonal'
 }
 
-export function AnimeGrid({ animes, title }: AnimeGridProps) {
+export function SkeletonGrid({ count = 8, type = 'trending' }: SkeletonGridProps) {
+  // Tentukan grid columns sesuai type
+  const getGridCols = () => {
+    switch (type) {
+      case 'search':
+      case 'trending':
+        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+      case 'popular':
+      case 'seasonal':
+        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6'
+      default:
+        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
+    }
+  }
+
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-      {/* Title Optional */}
-      {title && (
-        <h2 className="text-2xl font-bold text-foreground mb-4">
-          {title}
-        </h2>
-      )}
-
-      {/* Grid Layout */}
-      <div className="
-        grid 
-        grid-cols-2 
-        sm:grid-cols-3 
-        md:grid-cols-4 
-        lg:grid-cols-6 
-        gap-6
-      ">
-        {animes.map((anime) => (
-          <AnimeCard key={anime.mal_id} anime={anime} />
-        ))}
-      </div>
-      
-    </section>
+    <div className={`grid ${getGridCols()} gap-4 md:gap-6`}>
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonLoader key={i} type={type === 'trending' ? 'trending' : 'search'} />
+      ))}
+    </div>
   )
 }

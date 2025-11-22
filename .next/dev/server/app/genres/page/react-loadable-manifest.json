@@ -1,1 +1,9 @@
-{}
+{
+  "[project]/components/anime-card.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/anime-card.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/_a3c8ccb4._.js",
+      "static/chunks/components_anime-card_tsx_eeef1ac3._.js"
+    ]
+  }
+}

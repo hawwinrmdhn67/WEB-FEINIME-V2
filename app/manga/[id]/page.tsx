@@ -81,9 +81,9 @@ export default async function MangaPage({ params }: MangaPageProps) {
       {/* CONTENT WRAPPER */}
       <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 md:-mt-48 grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
 
-        {/* POSTER */}
+        {/* POSTER (BORDER REMOVED) */}
         <div className="relative w-48 md:w-64 mx-auto md:mx-0">
-          <div className="shadow-2xl rounded-lg overflow-hidden border-4 border-background group transition-transform duration-500 hover:scale-105">
+          <div className="shadow-2xl rounded-lg overflow-hidden group transition-transform duration-500 hover:scale-105">
             <Image src={imageUrl} alt={manga.title} width={300} height={450} className="w-full h-auto" priority />
           </div>
         </div>

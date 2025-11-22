@@ -1041,10 +1041,18 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 ;
 ;
 ;
+// Fungsi getStatusClasses yang disederhanakan untuk menggunakan warna tema & padding minimal
+const getStatusClasses = ()=>{
+    // text-[10px] untuk mobile, px-1.5, py-0.5 untuk padding minimal
+    const base = "font-medium px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs border transition-colors duration-300 ";
+    // Menggunakan warna tema (bg-card/70) agar tetap konsisten dengan light/dark mode
+    return base + 'bg-card/70 text-foreground/90 border-border/60';
+};
 function AnimeCard({ anime, rank }) {
     const imageUrl = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || "https://placehold.co/300x450/333333/FFFFFF?text=No+Image";
     const displayScore = anime.score != null ? anime.score.toFixed(1) : "N/A";
-    const displayEpisodes = anime.episodes != null ? `${anime.episodes} Ep` : "Ongoing";
+    // Logika episode/ongoing yang lebih deskriptif
+    const displayEpisodes = anime.episodes != null ? `${anime.episodes} Ep` : anime.status === 'Currently Airing' ? 'Ongoing' : 'TBA';
     const displayType = anime.type || "Anime";
     const typeLabel = displayType.toLowerCase() === "movie" ? "Movie" : displayType.toLowerCase() === "tv" ? "TV Anime" : displayType;
     const TypeIcon = displayType.toLowerCase() === "movie" ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clapperboard$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clapperboard$3e$__["Clapperboard"] : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$tv$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Tv$3e$__["Tv"];
@@ -1065,14 +1073,14 @@ function AnimeCard({ anime, rank }) {
                             onError: (e)=>e.target.src = "https://placehold.co/300x450/333333/FFFFFF?text=No+Image"
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 54,
+                            lineNumber: 69,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 66,
+                            lineNumber: 81,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1083,20 +1091,20 @@ function AnimeCard({ anime, rank }) {
                                     className: "opacity-80"
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 77,
+                                    lineNumber: 92,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: typeLabel
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 78,
+                                    lineNumber: 93,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 70,
+                            lineNumber: 85,
                             columnNumber: 11
                         }, this),
                         anime.score != null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1107,14 +1115,14 @@ function AnimeCard({ anime, rank }) {
                                     className: "text-yellow-400 fill-yellow-400"
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 90,
+                                    lineNumber: 105,
                                     columnNumber: 15
                                 }, this),
                                 displayScore
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 83,
+                            lineNumber: 98,
                             columnNumber: 13
                         }, this),
                         rank && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1125,13 +1133,13 @@ function AnimeCard({ anime, rank }) {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 97,
+                            lineNumber: 112,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/anime-card.tsx",
-                    lineNumber: 53,
+                    lineNumber: 68,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1142,49 +1150,49 @@ function AnimeCard({ anime, rank }) {
                             children: anime.title
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 111,
+                            lineNumber: 126,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "mt-auto flex items-center justify-between text-xs text-muted-foreground",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "opacity-90",
+                                    className: "opacity-90 text-[10px] sm:text-xs",
                                     children: displayEpisodes
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 116,
+                                    lineNumber: 132,
                                     columnNumber: 13
                                 }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    className: "font-medium bg-muted px-2 py-0.5 rounded-full text-foreground/80",
+                                anime.status && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: getStatusClasses(),
                                     children: displayStatus
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 117,
-                                    columnNumber: 13
+                                    lineNumber: 136,
+                                    columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 115,
+                            lineNumber: 130,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/anime-card.tsx",
-                    lineNumber: 110,
+                    lineNumber: 125,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/components/anime-card.tsx",
-            lineNumber: 50,
+            lineNumber: 65,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/components/anime-card.tsx",
-        lineNumber: 49,
+        lineNumber: 64,
         columnNumber: 7
     }, this);
 }

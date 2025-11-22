@@ -6,87 +6,205 @@
 __turbopack_context__.s([
     "getAnimeByGenre",
     ()=>getAnimeByGenre,
+    "getAnimeCharacters",
+    ()=>getAnimeCharacters,
     "getAnimeDetail",
     ()=>getAnimeDetail,
+    "getAnimeReviews",
+    ()=>getAnimeReviews,
+    "getAnimeStatistics",
+    ()=>getAnimeStatistics,
     "getGenres",
     ()=>getGenres,
+    "getMangaDetail",
+    ()=>getMangaDetail,
     "getPopularAnime",
     ()=>getPopularAnime,
+    "getSeasonNow",
+    ()=>getSeasonNow,
     "getTopAnime",
     ()=>getTopAnime,
     "searchAnime",
     ()=>searchAnime
 ]);
 const JIKAN_API_BASE = 'https://api.jikan.moe/v4';
-// Optional rate limit helper
-async function rateLimit() {
-    return new Promise((resolve)=>setTimeout(resolve, 300));
-}
-async function getTopAnime(page = 1) {
+// =========================
+// 2. HELPER FUNCTIONS
+// =========================
+const delay = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
+async function fetchWithRetry(url, options = {}, retries = 3, backoff = 1000) {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/top/anime?page=${page}&limit=25`);
-        if (!res.ok) throw new Error('Failed to fetch top anime');
-        return res.json();
-    } catch (error) {
-        console.error('Error fetching top anime:', error);
-        return {
-            data: []
-        };
+        await delay(300);
+        const res = await fetch(url, options);
+        if (res.status === 429 && retries > 0) {
+            console.warn(`[API] Rate limit hit for ${url}, retrying in ${backoff}ms...`);
+            await delay(backoff);
+            return fetchWithRetry(url, options, retries - 1, backoff * 2);
+        }
+        return res;
+    } catch (err) {
+        if (retries > 0) {
+            await delay(backoff);
+            return fetchWithRetry(url, options, retries - 1, backoff * 2);
+        }
+        throw err;
     }
 }
 async function getAnimeDetail(mal_id) {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/anime/${mal_id}`);
-        if (!res.ok) throw new Error('Failed to fetch anime detail');
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/full`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return null;
         const data = await res.json();
         return data.data;
-    } catch (error) {
-        console.error('Error fetching anime detail:', error);
+    } catch (err) {
         return null;
     }
 }
-async function getPopularAnime(page = 1) {
+async function getAnimeCharacters(mal_id) {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/anime?order_by=popularity&sort=asc&page=${page}&limit=25`);
-        if (!res.ok) throw new Error('Failed to fetch popular anime');
-        return res.json();
-    } catch (error) {
-        console.error('Error fetching popular anime:', error);
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/characters`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.data.sort((a, b)=>a.role === 'Main' ? -1 : 1).slice(0, 12);
+    } catch  {
+        return [];
+    }
+}
+async function getAnimeReviews(mal_id) {
+    try {
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/reviews?preliminary=true&spoiler=false`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.data.slice(0, 6);
+    } catch  {
+        return [];
+    }
+}
+async function getAnimeStatistics(mal_id) {
+    try {
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/statistics`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.data;
+    } catch  {
+        return null;
+    }
+}
+async function getMangaDetail(mal_id) {
+    try {
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/manga/${mal_id}/full`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.data;
+    } catch  {
+        return null;
+    }
+}
+async function getTopAnime() {
+    try {
+        const [res1, res2] = await Promise.all([
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?page=1&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            }),
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?page=2&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            })
+        ]);
+        const data1 = await res1.json();
+        const data2 = await res2.json();
+        return {
+            data: [
+                ...data1.data,
+                ...data2.data
+            ],
+            pagination: data1.pagination
+        };
+    } catch  {
         return {
             data: []
         };
     }
 }
-async function getAnimeByGenre(genreId, page = 1) {
+async function getPopularAnime() {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/anime?genres=${genreId}&page=${page}&limit=25`);
-        if (!res.ok) throw new Error('Failed to fetch anime by genre');
-        return res.json();
-    } catch (error) {
-        console.error('Error fetching anime by genre:', error);
+        const [res1, res2] = await Promise.all([
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?filter=bypopularity&page=1&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            }),
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?filter=bypopularity&page=2&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            })
+        ]);
+        const data1 = await res1.json();
+        const data2 = await res2.json();
+        return {
+            data: [
+                ...data1.data,
+                ...data2.data
+            ],
+            pagination: data1.pagination
+        };
+    } catch  {
         return {
             data: []
         };
     }
 }
-async function searchAnime(query, page = 1) {
+async function getSeasonNow(page = 1) {
     try {
-        await rateLimit();
-        const url = `${JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=25`;
-        const res = await fetch(url);
-        if (!res.ok) {
-            const text = await res.text(); // baca responsenya biar bisa debug
-            console.error('Failed search response:', text);
-            throw new Error(`Failed to search anime: ${res.status} ${res.statusText}`);
-        }
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/seasons/now?page=${page}&limit=25`, {
+            next: {
+                revalidate: 86400
+            }
+        });
         const data = await res.json();
         return data;
-    } catch (error) {
-        console.error('Error searching anime:', error);
+    } catch  {
+        return {
+            data: []
+        };
+    }
+}
+async function searchAnime(query, page = 1, signal) {
+    try {
+        const url = `${JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=25&sfw=true`;
+        const res = await fetchWithRetry(url, {
+            signal,
+            next: {
+                revalidate: 300
+            }
+        });
+        const data = await res.json();
+        return data;
+    } catch  {
         return {
             data: []
         };
@@ -94,14 +212,51 @@ async function searchAnime(query, page = 1) {
 }
 async function getGenres() {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/genres/anime`);
-        if (!res.ok) throw new Error('Failed to fetch genres');
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/genres/anime`, {
+            next: {
+                revalidate: 86400
+            }
+        });
         const data = await res.json();
         return data.data;
-    } catch (error) {
-        console.error('Error fetching genres:', error);
+    } catch  {
         return [];
+    }
+}
+async function getAnimeByGenre(genreId) {
+    try {
+        const pages = [
+            1,
+            2,
+            3,
+            4,
+            5
+        ];
+        const promises = pages.map((page)=>fetchWithRetry(`${JIKAN_API_BASE}/anime?genres=${genreId}&page=${page}&limit=25&order_by=start_date&sort=desc&sfw=true`, {
+                next: {
+                    revalidate: 3600
+                }
+            }).then((res)=>res.ok ? res.json() : {
+                    data: []
+                }));
+        const results = await Promise.all(promises);
+        const combinedData = results.flatMap((r)=>r.data || []);
+        const uniqueData = Array.from(new Map(combinedData.map((item)=>[
+                item.mal_id,
+                item
+            ])).values());
+        return {
+            data: uniqueData,
+            pagination: {
+                last_visible_page: 5,
+                has_next_page: true,
+                current_page: 1
+            }
+        };
+    } catch  {
+        return {
+            data: []
+        };
     }
 }
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
@@ -291,10 +446,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/search.js [app-client] (ecmascript) <export default as Search>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/menu.js [app-client] (ecmascript) <export default as Menu>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/x.js [app-client] (ecmascript) <export default as X>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-client] (ecmascript) <export default as Loader2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$theme$2d$toggle$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/theme-toggle.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/api.ts [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
 'use client';
+;
 ;
 ;
 ;
@@ -309,24 +467,49 @@ function Navbar() {
     const [results, setResults] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const dropdownRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
-    const handleSearch = async (query)=>{
-        if (!query) {
-            setResults([]);
-            return;
+    const abortControllerRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    // ============================
+    // 🔍 SEARCH LOGIC
+    // ============================
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "Navbar.useEffect": ()=>{
+            if (!searchQuery.trim()) {
+                setResults([]);
+                setLoading(false);
+                return;
+            }
+            if (abortControllerRef.current) abortControllerRef.current.abort();
+            const controller = new AbortController();
+            abortControllerRef.current = controller;
+            setLoading(true);
+            const timeoutId = setTimeout({
+                "Navbar.useEffect.timeoutId": async ()=>{
+                    try {
+                        const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["searchAnime"])(searchQuery, 1, controller.signal);
+                        if (!controller.signal.aborted) {
+                            setResults(res.data?.slice(0, 6) || []);
+                            setLoading(false);
+                        }
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            console.error("Navbar search error:", error);
+                            setResults([]);
+                            setLoading(false);
+                        }
+                    }
+                }
+            }["Navbar.useEffect.timeoutId"], 500);
+            return ({
+                "Navbar.useEffect": ()=>{
+                    clearTimeout(timeoutId);
+                    controller.abort();
+                }
+            })["Navbar.useEffect"];
         }
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-            const data = await res.json();
-            const uniqueResults = data.data.filter((anime, i, arr)=>arr.findIndex((a)=>a.mal_id === anime.mal_id) === i);
-            setResults(uniqueResults);
-        } catch  {
-            setResults([]);
-        } finally{
-            setLoading(false);
-        }
-    };
-    // Close dropdown when clicking outside (desktop)
+    }["Navbar.useEffect"], [
+        searchQuery
+    ]);
+    // Close dropdown when clicking outside
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Navbar.useEffect": ()=>{
             const listener = {
@@ -342,6 +525,17 @@ function Navbar() {
             })["Navbar.useEffect"];
         }
     }["Navbar.useEffect"], []);
+    const handleSubmitSearch = (e)=>{
+        e?.preventDefault();
+        if (!searchQuery) return;
+        setResults([]);
+        setMobileSearchOpen(false);
+        setIsOpen(false);
+        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    };
+    // ============================
+    // UI COMPONENT
+    // ============================
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -357,163 +551,190 @@ function Navbar() {
                                     className: "flex items-center gap-2 group",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "w-8 h-8 bg-primary rounded-lg flex items-center justify-center neon-glow",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-white font-bold text-lg",
-                                                children: "A"
+                                            className: "w-8 h-8 rounded-full overflow-hidden flex items-center justify-center",
+                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                                                src: "/feinime.jpg",
+                                                alt: "Logo Feinime",
+                                                className: "w-full h-full object-cover"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/navbar.tsx",
-                                                lineNumber: 71,
+                                                lineNumber: 98,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 70,
+                                            lineNumber: 97,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "text-xl font-bold text-foreground hidden sm:inline group-hover:text-primary transition-colors",
-                                            children: "Stream4nzu"
+                                            children: "Feinime"
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 73,
+                                            lineNumber: 104,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 69,
+                                    lineNumber: 96,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "hidden md:flex items-center gap-8",
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                        {
                                             href: "/",
-                                            className: "text-foreground hover:text-primary transition-colors text-sm font-medium",
-                                            children: "Home"
-                                        }, void 0, false, {
-                                            fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 80,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                            href: "/popular",
-                                            className: "text-foreground hover:text-primary transition-colors text-sm font-medium",
-                                            children: "Popular"
-                                        }, void 0, false, {
-                                            fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 81,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                            label: "Home"
+                                        },
+                                        {
                                             href: "/trending",
-                                            className: "text-foreground hover:text-primary transition-colors text-sm font-medium",
-                                            children: "Trending"
-                                        }, void 0, false, {
-                                            fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 82,
-                                            columnNumber: 15
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                            label: "Trending"
+                                        },
+                                        {
+                                            href: "/seasonal",
+                                            label: "Seasonal"
+                                        },
+                                        {
+                                            href: "/popular",
+                                            label: "Popular"
+                                        },
+                                        {
                                             href: "/genres",
-                                            className: "text-foreground hover:text-primary transition-colors text-sm font-medium",
-                                            children: "Genres"
-                                        }, void 0, false, {
+                                            label: "Genres"
+                                        }
+                                    ].map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                            href: item.href,
+                                            className: " text-foreground text-sm font-medium hover:text-primary hover:bg-primary/10 px-2 py-1 rounded-md transition-colors ",
+                                            children: item.label
+                                        }, item.href, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 83,
-                                            columnNumber: 15
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                            lineNumber: 118,
+                                            columnNumber: 17
+                                        }, this))
+                                }, void 0, false, {
                                     fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 79,
+                                    lineNumber: 110,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "relative hidden sm:flex items-center gap-2 bg-input border border-border rounded-lg px-3 py-2 w-64",
+                                    className: "relative hidden sm:flex items-center gap-2 bg-input border border-border rounded-lg px-3 py-2 w-64 focus-within:ring-1 focus-within:ring-primary transition-all",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__["Search"], {
                                             size: 18,
                                             className: "text-muted-foreground"
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 88,
+                                            lineNumber: 134,
                                             columnNumber: 15
                                         }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                            type: "text",
-                                            placeholder: "Search anime...",
-                                            value: searchQuery,
-                                            onChange: (e)=>{
-                                                setSearchQuery(e.target.value);
-                                                handleSearch(e.target.value);
-                                            },
-                                            className: "bg-transparent outline-none text-sm flex-1 placeholder:text-muted-foreground"
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
+                                            onSubmit: handleSubmitSearch,
+                                            className: "flex-1",
+                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                type: "text",
+                                                placeholder: "Search anime...",
+                                                value: searchQuery,
+                                                onChange: (e)=>setSearchQuery(e.target.value),
+                                                className: "bg-transparent outline-none text-sm w-full placeholder:text-muted-foreground"
+                                            }, void 0, false, {
+                                                fileName: "[project]/components/navbar.tsx",
+                                                lineNumber: 137,
+                                                columnNumber: 17
+                                            }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 89,
+                                            lineNumber: 136,
                                             columnNumber: 15
+                                        }, this),
+                                        loading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                                            size: 16,
+                                            className: "animate-spin text-primary"
+                                        }, void 0, false, {
+                                            fileName: "[project]/components/navbar.tsx",
+                                            lineNumber: 146,
+                                            columnNumber: 27
                                         }, this),
                                         results.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             ref: dropdownRef,
-                                            className: "absolute top-full left-0 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-80 overflow-y-auto z-50",
-                                            children: results.slice(0, 10).map((anime)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                                    href: `/anime/${anime.mal_id}`,
-                                                    onClick: ()=>setResults([]),
-                                                    className: "flex items-center gap-3 px-3 py-2 w-full text-left hover:bg-primary/10 transition-colors",
+                                            className: " absolute top-full left-0 w-full mt-2 bg-card  border border-border rounded-md shadow-xl overflow-hidden  z-50 animate-in fade-in slide-in-from-top-2 ",
+                                            children: [
+                                                results.map((anime)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                                        href: `/anime/${anime.mal_id}`,
+                                                        onClick: ()=>{
+                                                            setResults([]);
+                                                            setSearchQuery('');
+                                                        },
+                                                        className: " flex items-center gap-3 px-3 py-2  hover:bg-primary/10 border-b border-border/50 last:border-0 transition-colors ",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                                                                src: anime.images.jpg.image_url || anime.images.jpg.large_image_url,
+                                                                alt: anime.title,
+                                                                className: "w-10 h-14 object-cover rounded"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/components/navbar.tsx",
+                                                                lineNumber: 172,
+                                                                columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "flex-1 min-w-0",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                        className: "text-sm font-medium truncate",
+                                                                        children: anime.title
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/components/navbar.tsx",
+                                                                        lineNumber: 179,
+                                                                        columnNumber: 25
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                                        className: "text-xs text-muted-foreground",
+                                                                        children: [
+                                                                            anime.type,
+                                                                            " • ",
+                                                                            anime.episodes ?? "?",
+                                                                            " eps"
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/components/navbar.tsx",
+                                                                        lineNumber: 180,
+                                                                        columnNumber: 25
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/components/navbar.tsx",
+                                                                lineNumber: 178,
+                                                                columnNumber: 23
+                                                            }, this)
+                                                        ]
+                                                    }, anime.mal_id, true, {
+                                                        fileName: "[project]/components/navbar.tsx",
+                                                        lineNumber: 158,
+                                                        columnNumber: 21
+                                                    }, this)),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                    onClick: ()=>handleSubmitSearch(),
+                                                    className: " w-full text-center text-sm font-semibold text-primary  bg-secondary/30 py-3 hover:bg-secondary/50  transition-colors rounded-md mt-1 ",
                                                     children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
-                                                            src: anime.images.jpg.small_image_url,
-                                                            alt: anime.title,
-                                                            className: "w-10 h-14 object-cover rounded"
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/components/navbar.tsx",
-                                                            lineNumber: 113,
-                                                            columnNumber: 23
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            children: [
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                    className: "text-sm font-medium",
-                                                                    children: anime.title
-                                                                }, void 0, false, {
-                                                                    fileName: "[project]/components/navbar.tsx",
-                                                                    lineNumber: 119,
-                                                                    columnNumber: 25
-                                                                }, this),
-                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                    className: "text-xs text-muted-foreground",
-                                                                    children: [
-                                                                        anime.episodes ?? 'TBA',
-                                                                        " eps"
-                                                                    ]
-                                                                }, void 0, true, {
-                                                                    fileName: "[project]/components/navbar.tsx",
-                                                                    lineNumber: 120,
-                                                                    columnNumber: 25
-                                                                }, this)
-                                                            ]
-                                                        }, void 0, true, {
-                                                            fileName: "[project]/components/navbar.tsx",
-                                                            lineNumber: 118,
-                                                            columnNumber: 23
-                                                        }, this)
+                                                        'View all results for "',
+                                                        searchQuery,
+                                                        '"'
                                                     ]
-                                                }, anime.mal_id, true, {
+                                                }, void 0, true, {
                                                     fileName: "[project]/components/navbar.tsx",
-                                                    lineNumber: 107,
-                                                    columnNumber: 21
-                                                }, this))
-                                        }, void 0, false, {
+                                                    lineNumber: 187,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 102,
+                                            lineNumber: 149,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 87,
+                                    lineNumber: 133,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -526,17 +747,17 @@ function Navbar() {
                                                 size: 24
                                             }, void 0, false, {
                                                 fileName: "[project]/components/navbar.tsx",
-                                                lineNumber: 135,
+                                                lineNumber: 207,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 131,
+                                            lineNumber: 203,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$theme$2d$toggle$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ThemeToggle"], {}, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 138,
+                                            lineNumber: 210,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -546,90 +767,82 @@ function Navbar() {
                                                 size: 24
                                             }, void 0, false, {
                                                 fileName: "[project]/components/navbar.tsx",
-                                                lineNumber: 145,
+                                                lineNumber: 216,
                                                 columnNumber: 27
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__["Menu"], {
                                                 size: 24
                                             }, void 0, false, {
                                                 fileName: "[project]/components/navbar.tsx",
-                                                lineNumber: 145,
+                                                lineNumber: 216,
                                                 columnNumber: 45
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 141,
+                                            lineNumber: 212,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 129,
+                                    lineNumber: 202,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/navbar.tsx",
-                            lineNumber: 66,
+                            lineNumber: 93,
                             columnNumber: 11
                         }, this),
                         isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "md:hidden mt-2 space-y-2 px-2 pb-2",
+                            className: "md:hidden mt-2 space-y-2 px-2 pb-4 animate-in slide-in-from-top-5",
                             children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                {
                                     href: "/",
-                                    className: "block px-3 py-2 hover:text-primary",
-                                    children: "Home"
-                                }, void 0, false, {
-                                    fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 153,
-                                    columnNumber: 15
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                    href: "/popular",
-                                    className: "block px-3 py-2 hover:text-primary",
-                                    children: "Popular"
-                                }, void 0, false, {
-                                    fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 154,
-                                    columnNumber: 15
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    label: "Home"
+                                },
+                                {
                                     href: "/trending",
-                                    className: "block px-3 py-2 hover:text-primary",
-                                    children: "Trending"
-                                }, void 0, false, {
-                                    fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 155,
-                                    columnNumber: 15
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    label: "Trending"
+                                },
+                                {
+                                    href: "/seasonal",
+                                    label: "Seasonal"
+                                },
+                                {
+                                    href: "/popular",
+                                    label: "Popular"
+                                },
+                                {
                                     href: "/genres",
-                                    className: "block px-3 py-2 hover:text-primary",
-                                    children: "Genres"
-                                }, void 0, false, {
+                                    label: "Genres"
+                                }
+                            ].map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    href: item.href,
+                                    className: "block px-3 py-2 rounded-md hover:bg-primary/20",
+                                    children: item.label
+                                }, item.href, false, {
                                     fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 156,
-                                    columnNumber: 15
-                                }, this)
-                            ]
-                        }, void 0, true, {
+                                    lineNumber: 231,
+                                    columnNumber: 17
+                                }, this))
+                        }, void 0, false, {
                             fileName: "[project]/components/navbar.tsx",
-                            lineNumber: 152,
+                            lineNumber: 223,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/navbar.tsx",
-                    lineNumber: 65,
+                    lineNumber: 92,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/navbar.tsx",
-                lineNumber: 64,
+                lineNumber: 91,
                 columnNumber: 7
             }, this),
             mobileSearchOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "fixed inset-0 bg-background/95 backdrop-blur-lg z-[999] p-4 pointer-events-auto animate-fadeIn",
+                className: "fixed inset-0 bg-background/95 backdrop-blur-lg z-[999] p-4 animate-in fade-in duration-200",
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex items-center justify-between mb-4",
@@ -639,141 +852,168 @@ function Navbar() {
                                 children: "Search Anime"
                             }, void 0, false, {
                                 fileName: "[project]/components/navbar.tsx",
-                                lineNumber: 166,
+                                lineNumber: 249,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 onClick: ()=>{
                                     setMobileSearchOpen(false);
                                     setResults([]);
+                                    setSearchQuery('');
                                 },
                                 className: "p-2 rounded-lg hover:bg-secondary",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
                                     size: 26
                                 }, void 0, false, {
                                     fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 171,
+                                    lineNumber: 258,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/navbar.tsx",
-                                lineNumber: 167,
+                                lineNumber: 250,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/navbar.tsx",
-                        lineNumber: 165,
+                        lineNumber: 248,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "flex items-center gap-3 bg-input border border-border rounded-xl px-4 py-3",
+                        className: " flex items-center gap-3 bg-input border border-border  rounded-xl px-4 py-3  focus-within:ring-2 focus-within:ring-primary/50  transition-all ",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__["Search"], {
                                 size: 20,
                                 className: "text-muted-foreground"
                             }, void 0, false, {
                                 fileName: "[project]/components/navbar.tsx",
-                                lineNumber: 176,
+                                lineNumber: 268,
                                 columnNumber: 13
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                autoFocus: true,
-                                type: "text",
-                                placeholder: "Search anime...",
-                                value: searchQuery,
-                                onChange: (e)=>{
-                                    setSearchQuery(e.target.value);
-                                    handleSearch(e.target.value);
-                                },
-                                className: "bg-transparent outline-none text-base flex-1"
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
+                                onSubmit: handleSubmitSearch,
+                                className: "flex-1",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                    autoFocus: true,
+                                    type: "text",
+                                    placeholder: "Search anime...",
+                                    value: searchQuery,
+                                    onChange: (e)=>setSearchQuery(e.target.value),
+                                    className: "bg-transparent outline-none text-base w-full"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/navbar.tsx",
+                                    lineNumber: 271,
+                                    columnNumber: 15
+                                }, this)
                             }, void 0, false, {
                                 fileName: "[project]/components/navbar.tsx",
-                                lineNumber: 177,
+                                lineNumber: 270,
                                 columnNumber: 13
+                            }, this),
+                            loading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                                className: "animate-spin text-primary",
+                                size: 20
+                            }, void 0, false, {
+                                fileName: "[project]/components/navbar.tsx",
+                                lineNumber: 281,
+                                columnNumber: 25
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/navbar.tsx",
-                        lineNumber: 175,
+                        lineNumber: 262,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "mt-4 space-y-2 max-h-[70vh] overflow-y-auto",
                         children: [
-                            loading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-sm text-muted-foreground",
-                                children: "Loading..."
+                            results.length === 0 && searchQuery && !loading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "text-center text-muted-foreground mt-10",
+                                children: "No results found."
                             }, void 0, false, {
                                 fileName: "[project]/components/navbar.tsx",
-                                lineNumber: 191,
-                                columnNumber: 25
+                                lineNumber: 288,
+                                columnNumber: 15
                             }, this),
-                            results.length > 0 && results.map((anime)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            results.map((anime)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    href: `/anime/${anime.mal_id}`,
                                     onClick: ()=>{
-                                        setMobileSearchOpen(false); // tutup modal dulu
-                                        router.push(`/anime/${anime.mal_id}`); // baru navigasi
+                                        setMobileSearchOpen(false);
+                                        setResults([]);
+                                        setSearchQuery('');
                                     },
-                                    className: "flex items-center gap-3 p-2 rounded-lg hover:bg-primary/10 w-full text-left transition",
+                                    className: " flex items-center gap-3 p-2 rounded-lg  hover:bg-primary/10 transition animate-in slide-in-from-bottom-2 ",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
-                                            src: anime.images.jpg.small_image_url,
+                                            src: anime.images.jpg.image_url || anime.images.jpg.large_image_url,
                                             alt: anime.title,
                                             className: "w-12 h-16 object-cover rounded"
                                         }, void 0, false, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 203,
-                                            columnNumber: 19
+                                            lineNumber: 306,
+                                            columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                    className: "font-medium",
+                                                    className: "font-medium line-clamp-1",
                                                     children: anime.title
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/navbar.tsx",
-                                                    lineNumber: 209,
-                                                    columnNumber: 21
+                                                    lineNumber: 313,
+                                                    columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "text-xs text-muted-foreground",
                                                     children: [
-                                                        anime.episodes ?? 'TBA',
+                                                        anime.type,
+                                                        " • ",
+                                                        anime.episodes ?? "?",
                                                         " eps"
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/navbar.tsx",
-                                                    lineNumber: 210,
-                                                    columnNumber: 21
+                                                    lineNumber: 314,
+                                                    columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/navbar.tsx",
-                                            lineNumber: 208,
-                                            columnNumber: 19
+                                            lineNumber: 312,
+                                            columnNumber: 17
                                         }, this)
                                     ]
                                 }, anime.mal_id, true, {
                                     fileName: "[project]/components/navbar.tsx",
-                                    lineNumber: 195,
-                                    columnNumber: 17
-                                }, this))
+                                    lineNumber: 292,
+                                    columnNumber: 15
+                                }, this)),
+                            results.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: ()=>handleSubmitSearch(),
+                                className: " w-full py-3 mt-2 text-center text-primary font-bold  border border-primary/20 rounded-lg  hover:bg-primary/10 ",
+                                children: "See all results"
+                            }, void 0, false, {
+                                fileName: "[project]/components/navbar.tsx",
+                                lineNumber: 322,
+                                columnNumber: 15
+                            }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/navbar.tsx",
-                        lineNumber: 190,
+                        lineNumber: 285,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/navbar.tsx",
-                lineNumber: 164,
+                lineNumber: 246,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true);
 }
-_s(Navbar, "DpCfR3xJ4rm61cHnExSJ/lBJ2BA=", false, function() {
+_s(Navbar, "0+AUxpZkI9iwn5DFMJ4XQbEkpSQ=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"]
     ];
@@ -793,132 +1033,167 @@ __turbopack_context__.s([
     ()=>AnimeCard
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/image.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/client/app-dir/link.js [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/play.js [app-client] (ecmascript) <export default as Play>"); // Heart dihapus jika tidak dipakai
-'use client';
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$star$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Star$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/star.js [app-client] (ecmascript) <export default as Star>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$tv$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Tv$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/tv.js [app-client] (ecmascript) <export default as Tv>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clapperboard$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clapperboard$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/clapperboard.js [app-client] (ecmascript) <export default as Clapperboard>");
+"use client";
 ;
 ;
 ;
-;
-function AnimeCard({ anime }) {
+// Fungsi getStatusClasses yang disederhanakan untuk menggunakan warna tema & padding minimal
+const getStatusClasses = ()=>{
+    // text-[10px] untuk mobile, px-1.5, py-0.5 untuk padding minimal
+    const base = "font-medium px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs border transition-colors duration-300 ";
+    // Menggunakan warna tema (bg-card/70) agar tetap konsisten dengan light/dark mode
+    return base + 'bg-card/70 text-foreground/90 border-border/60';
+};
+function AnimeCard({ anime, rank }) {
+    const imageUrl = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || "https://placehold.co/300x450/333333/FFFFFF?text=No+Image";
+    const displayScore = anime.score != null ? anime.score.toFixed(1) : "N/A";
+    // Logika episode/ongoing yang lebih deskriptif
+    const displayEpisodes = anime.episodes != null ? `${anime.episodes} Ep` : anime.status === 'Currently Airing' ? 'Ongoing' : 'TBA';
+    const displayType = anime.type || "Anime";
+    const typeLabel = displayType.toLowerCase() === "movie" ? "Movie" : displayType.toLowerCase() === "tv" ? "TV Anime" : displayType;
+    const TypeIcon = displayType.toLowerCase() === "movie" ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clapperboard$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clapperboard$3e$__["Clapperboard"] : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$tv$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Tv$3e$__["Tv"];
+    const displayStatus = anime.status || "Unknown";
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         href: `/anime/${anime.mal_id}`,
-        className: "block h-full",
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "group relative flex flex-col h-full cursor-pointer rounded-xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1",
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "relative w-full aspect-[2/3] overflow-hidden",
+                    className: "relative w-full aspect-[2/3] overflow-hidden rounded-t-xl",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                            src: anime.images.jpg.large_image_url || "/placeholder.svg",
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                            src: imageUrl,
                             alt: anime.title,
-                            fill: true,
-                            className: "object-cover transition-transform duration-500 group-hover:scale-110",
-                            sizes: "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                            className: "h-full w-full object-cover transition-transform duration-500 group-hover:scale-110",
+                            loading: "lazy",
+                            onError: (e)=>e.target.src = "https://placehold.co/300x450/333333/FFFFFF?text=No+Image"
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 20,
+                            lineNumber: 69,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]",
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "bg-primary/90 text-white p-3 rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-75",
-                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
-                                    size: 24,
-                                    fill: "currentColor"
-                                }, void 0, false, {
-                                    fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 31,
-                                    columnNumber: 15
-                                }, this)
-                            }, void 0, false, {
-                                fileName: "[project]/components/anime-card.tsx",
-                                lineNumber: 30,
-                                columnNumber: 13
-                            }, this)
+                            className: "absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 29,
+                            lineNumber: 81,
                             columnNumber: 11
                         }, this),
-                        anime.score != null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "absolute top-2 right-2 bg-black/70 backdrop-blur-sm border border-white/10 px-2 py-1 rounded-md text-xs font-bold text-white shadow-sm",
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: " absolute top-2 left-2 flex items-center gap-1  bg-background/70 px-2 py-1 rounded-full  backdrop-blur-sm text-xs font-semibold shadow-sm border border-border/60  transition-all duration-300 group-hover:bg-background/90 ",
                             children: [
-                                "★ ",
-                                anime.score.toFixed(1)
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(TypeIcon, {
+                                    size: 12,
+                                    className: "opacity-80"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/anime-card.tsx",
+                                    lineNumber: 92,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    children: typeLabel
+                                }, void 0, false, {
+                                    fileName: "[project]/components/anime-card.tsx",
+                                    lineNumber: 93,
+                                    columnNumber: 13
+                                }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 37,
+                            lineNumber: 85,
+                            columnNumber: 11
+                        }, this),
+                        anime.score != null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: " absolute top-2 right-2 flex items-center gap-1 bg-background/70 px-2 py-1 rounded-full  backdrop-blur-sm text-xs font-semibold shadow-sm border border-border/60  transition-all duration-300 group-hover:bg-background/90 ",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$star$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Star$3e$__["Star"], {
+                                    size: 12,
+                                    className: "text-yellow-400 fill-yellow-400"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/anime-card.tsx",
+                                    lineNumber: 105,
+                                    columnNumber: 15
+                                }, this),
+                                displayScore
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/components/anime-card.tsx",
+                            lineNumber: 98,
+                            columnNumber: 13
+                        }, this),
+                        rank && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: " absolute bottom-2 left-2  bg-primary text-primary-foreground  text-xs font-bold px-2 py-1 rounded-md  border border-primary/40 shadow-sm backdrop-blur-sm ",
+                            children: [
+                                "#",
+                                rank
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/components/anime-card.tsx",
+                            lineNumber: 112,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/anime-card.tsx",
-                    lineNumber: 19,
+                    lineNumber: 68,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "p-3 flex flex-col flex-1 bg-background border-t border-border/50",
+                    className: "p-3 flex flex-col flex-1 bg-card border-t border-border/40",
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                            className: "font-semibold text-sm sm:text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-1",
+                            className: "font-semibold text-sm sm:text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2",
                             children: anime.title
                         }, void 0, false, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 45,
+                            lineNumber: 126,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "mt-auto flex items-center justify-between text-xs text-muted-foreground",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    children: anime.episodes ? `${anime.episodes} Ep` : 'Ongoing'
+                                    className: "opacity-90 text-[10px] sm:text-xs",
+                                    children: displayEpisodes
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 50,
+                                    lineNumber: 132,
                                     columnNumber: 13
                                 }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    children: anime.type || 'TV'
+                                anime.status && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    className: getStatusClasses(),
+                                    children: displayStatus
                                 }, void 0, false, {
                                     fileName: "[project]/components/anime-card.tsx",
-                                    lineNumber: 51,
-                                    columnNumber: 13
+                                    lineNumber: 136,
+                                    columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 49,
+                            lineNumber: 130,
                             columnNumber: 11
-                        }, this),
-                        anime.genres && anime.genres.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                            className: "text-[10px] sm:text-xs text-muted-foreground/70 mt-2 line-clamp-1",
-                            children: anime.genres.slice(0, 2).map((g)=>g.name).join(' • ')
-                        }, void 0, false, {
-                            fileName: "[project]/components/anime-card.tsx",
-                            lineNumber: 56,
-                            columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/anime-card.tsx",
-                    lineNumber: 44,
+                    lineNumber: 125,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/components/anime-card.tsx",
-            lineNumber: 16,
+            lineNumber: 65,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/components/anime-card.tsx",
-        lineNumber: 15,
-        columnNumber: 5
+        lineNumber: 64,
+        columnNumber: 7
     }, this);
 }
 _c = AnimeCard;
@@ -956,9 +1231,15 @@ function PopularPage() {
             const fetchPopular = {
                 "PopularPage.useEffect.fetchPopular": async ()=>{
                     setLoading(true);
-                    const data = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getPopularAnime"])(1);
-                    setAnimes(data.data);
-                    setLoading(false);
+                    try {
+                        const data = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getPopularAnime"])();
+                        setAnimes(data.data || []);
+                    } catch (err) {
+                        console.error('Failed to fetch popular anime', err);
+                        setAnimes([]);
+                    } finally{
+                        setLoading(false);
+                    }
                 }
             }["PopularPage.useEffect.fetchPopular"];
             fetchPopular();
@@ -969,63 +1250,233 @@ function PopularPage() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Navbar"], {}, void 0, false, {
                 fileName: "[project]/app/popular/page.tsx",
-                lineNumber: 25,
+                lineNumber: 31,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12",
                 children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                        className: "text-4xl font-bold mb-2 text-foreground",
-                        children: "Popular Anime"
-                    }, void 0, false, {
-                        fileName: "[project]/app/popular/page.tsx",
-                        lineNumber: 28,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-muted-foreground mb-8",
-                        children: "Explore the most popular anime series right now"
-                    }, void 0, false, {
-                        fileName: "[project]/app/popular/page.tsx",
-                        lineNumber: 29,
-                        columnNumber: 9
-                    }, this),
-                    loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FunSkeletonGrid, {}, void 0, false, {
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "text-center md:text-left mb-10",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
+                                className: "text-4xl font-bold mb-2 text-foreground",
+                                children: "Popular Anime"
+                            }, void 0, false, {
+                                fileName: "[project]/app/popular/page.tsx",
+                                lineNumber: 35,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "text-muted-foreground",
+                                children: "Explore the most popular anime series right now"
+                            }, void 0, false, {
+                                fileName: "[project]/app/popular/page.tsx",
+                                lineNumber: 36,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
                         fileName: "[project]/app/popular/page.tsx",
                         lineNumber: 34,
+                        columnNumber: 9
+                    }, this),
+                    loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(A, {}, void 0, false, {
+                        fileName: "[project]/app/popular/page.tsx",
+                        lineNumber: 40,
                         columnNumber: 11
                     }, this) : animes.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6",
-                        children: animes.map((anime, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$anime$2d$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimeCard"], {
+                        children: animes.map((anime)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$anime$2d$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AnimeCard"], {
                                 anime: anime
-                            }, `${anime.mal_id}-${index}`, false, {
+                            }, anime.mal_id, false, {
                                 fileName: "[project]/app/popular/page.tsx",
-                                lineNumber: 38,
+                                lineNumber: 44,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/app/popular/page.tsx",
-                        lineNumber: 36,
+                        lineNumber: 42,
                         columnNumber: 11
-                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-center text-muted-foreground",
-                        children: "No popular anime found"
+                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border",
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                            className: "text-muted-foreground",
+                            children: "No popular anime found"
+                        }, void 0, false, {
+                            fileName: "[project]/app/popular/page.tsx",
+                            lineNumber: 49,
+                            columnNumber: 13
+                        }, this)
                     }, void 0, false, {
                         fileName: "[project]/app/popular/page.tsx",
-                        lineNumber: 42,
+                        lineNumber: 48,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/app/popular/page.tsx",
-                lineNumber: 27,
+                lineNumber: 33,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("footer", {
+                className: "border-t border-border bg-card mt-auto",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex flex-col md:flex-row justify-between items-center md:items-start gap-6 md:gap-12",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "text-center md:text-left",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "font-bold text-xl tracking-tight",
+                                        children: "Feinime"
+                                    }, void 0, false, {
+                                        fileName: "[project]/app/popular/page.tsx",
+                                        lineNumber: 62,
+                                        columnNumber: 15
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/app/popular/page.tsx",
+                                    lineNumber: 61,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
+                                    className: "flex flex-wrap justify-center md:justify-start gap-4 md:gap-6 text-sm text-muted-foreground",
+                                    children: [
+                                        'Home',
+                                        'Popular',
+                                        'Trending',
+                                        'About',
+                                        'Contact',
+                                        'FAQ'
+                                    ].map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                            href: "#",
+                                            className: "hover:text-primary transition-colors",
+                                            children: item
+                                        }, item, false, {
+                                            fileName: "[project]/app/popular/page.tsx",
+                                            lineNumber: 68,
+                                            columnNumber: 17
+                                        }, this))
+                                }, void 0, false, {
+                                    fileName: "[project]/app/popular/page.tsx",
+                                    lineNumber: 66,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex justify-center md:justify-start items-center gap-4",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                            href: "#",
+                                            className: "text-muted-foreground hover:text-[#1DA1F2] transition-colors",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: "sr-only",
+                                                    children: "Twitter"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/popular/page.tsx",
+                                                    lineNumber: 84,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                                    className: "w-5 h-5",
+                                                    viewBox: "0 0 24 24",
+                                                    fill: "currentColor",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                        d: "M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.564-2.005.974-3.127 1.195-.897-.955-2.178-1.55-3.594-1.55-2.717 0-4.92 2.204-4.92 4.917 0 .39.045.765.127 1.124-4.087-.205-7.72-2.164-10.148-5.144-.424.722-.666 1.561-.666 2.475 0 1.708.87 3.214 2.188 4.099-.807-.025-1.566-.248-2.229-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.376 4.604 3.416-1.68 1.319-3.809 2.105-6.102 2.105-.396 0-.779-.023-1.158-.067 2.189 1.402 4.768 2.217 7.548 2.217 9.051 0 14-7.496 14-13.986 0-.21 0-.42-.015-.63 1.009-.73 1.884-1.64 2.584-2.675z"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/popular/page.tsx",
+                                                        lineNumber: 86,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/popular/page.tsx",
+                                                    lineNumber: 85,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/app/popular/page.tsx",
+                                            lineNumber: 80,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
+                                            href: "#",
+                                            className: "text-muted-foreground hover:text-[#5865F2] transition-colors",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: "sr-only",
+                                                    children: "Discord"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/popular/page.tsx",
+                                                    lineNumber: 93,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                                                    className: "w-5 h-5",
+                                                    viewBox: "0 0 71 55",
+                                                    fill: "currentColor",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                                                        d: "M60.1 4.55A59 59 0 0 0 46.92 0c-.65 1.14-1.39 2.59-1.9 3.74a42 42 0 0 0-17 0C27.5 2.6 26.76 1.15 26.1 0A58.8 58.8 0 0 0 10.9 4.55C2.68 19.28.08 33.43 1.3 47.36c11.04 8.16 21.56 6.06 21.56 6.06 1.44-1.84 2.56-3.78 3.44-5.7-6.16-1.84-8.52-4.52-8.52-4.52.72.48 1.44.92 2.16 1.3 4.92 2.52 10.12 3.78 15.44 3.78s10.52-1.26 15.44-3.78c.72-.38 1.44-.82 2.16-1.3 0 0-2.36 2.68-8.52 4.52.88 1.92 2 3.86 3.44 5.7 0 0 10.52 2.1 21.56-6.06 1.22-13.92-1.38-28.07-9.6-42.8ZM24.76 37.34c-3.12 0-5.68-2.82-5.68-6.28 0-3.46 2.52-6.28 5.68-6.28 3.18 0 5.74 2.82 5.68 6.28 0 3.46-2.5 6.28-5.68 6.28Zm21.48 0c-3.12 0-5.68-2.82-5.68-6.28 0-3.46 2.52-6.28 5.68-6.28 3.18 0 5.74 2.82 5.68 6.28 0 3.46-2.5 6.28-5.68 6.28Z"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/app/popular/page.tsx",
+                                                        lineNumber: 95,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "[project]/app/popular/page.tsx",
+                                                    lineNumber: 94,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/app/popular/page.tsx",
+                                            lineNumber: 89,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/app/popular/page.tsx",
+                                    lineNumber: 79,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/app/popular/page.tsx",
+                            lineNumber: 58,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "border-t border-border mt-8 pt-6 text-center text-muted-foreground text-sm",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                children: "Feinime © 2025. All rights reserved."
+                            }, void 0, false, {
+                                fileName: "[project]/app/popular/page.tsx",
+                                lineNumber: 104,
+                                columnNumber: 13
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/app/popular/page.tsx",
+                            lineNumber: 103,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/app/popular/page.tsx",
+                    lineNumber: 55,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/app/popular/page.tsx",
+                lineNumber: 54,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/popular/page.tsx",
-        lineNumber: 24,
+        lineNumber: 30,
         columnNumber: 5
     }, this);
 }

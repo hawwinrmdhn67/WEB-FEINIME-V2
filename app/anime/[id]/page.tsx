@@ -458,4 +458,4 @@ export default async function AnimePage({ params }: AnimePageProps) {
 			</footer>
 		</main>
 	)
-}
+} 
