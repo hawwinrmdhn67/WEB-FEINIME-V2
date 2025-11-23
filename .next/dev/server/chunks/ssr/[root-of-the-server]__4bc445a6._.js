@@ -32,6 +32,8 @@ __turbopack_context__.s([
     ()=>getPopularAnime,
     "getSeasonNow",
     ()=>getSeasonNow,
+    "getSeasonUpcoming",
+    ()=>getSeasonUpcoming,
     "getTopAnime",
     ()=>getTopAnime,
     "searchAnime",
@@ -41,10 +43,13 @@ const JIKAN_API_BASE = 'https://api.jikan.moe/v4';
 // =========================
 // 2. HELPER FUNCTIONS
 // =========================
+// Delay helper
 const delay = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
-async function fetchWithRetry(url, options = {}, retries = 3, backoff = 1000) {
+/**
+ * Fetch dengan retry & exponential backoff untuk menghindari rate limit Jikan (429)
+ */ async function fetchWithRetry(url, options = {}, retries = 3, backoff = 1000) {
     try {
-        await delay(300);
+        await delay(300); // minimal delay untuk menghormati rate limit
         const res = await fetch(url, options);
         if (res.status === 429 && retries > 0) {
             console.warn(`[API] Rate limit hit for ${url}, retrying in ${backoff}ms...`);
@@ -70,7 +75,7 @@ async function getAnimeDetail(mal_id) {
         if (!res.ok) return null;
         const data = await res.json();
         return data.data;
-    } catch (err) {
+    } catch  {
         return null;
     }
 }
@@ -203,6 +208,39 @@ async function getSeasonNow(page = 1) {
         };
     }
 }
+async function getSeasonUpcoming() {
+    try {
+        const [res1, res2] = await Promise.all([
+            fetchWithRetry(`${JIKAN_API_BASE}/seasons/upcoming?page=1&limit=25`, {
+                next: {
+                    revalidate: 86400
+                }
+            }),
+            fetchWithRetry(`${JIKAN_API_BASE}/seasons/upcoming?page=2&limit=25`, {
+                next: {
+                    revalidate: 86400
+                }
+            })
+        ]);
+        const data1 = res1.ok ? await res1.json() : {
+            data: []
+        };
+        const data2 = res2.ok ? await res2.json() : {
+            data: []
+        };
+        return {
+            data: [
+                ...data1.data,
+                ...data2.data
+            ],
+            pagination: data1.pagination
+        };
+    } catch  {
+        return {
+            data: []
+        };
+    }
+}
 async function searchAnime(query, page = 1, signal) {
     try {
         const url = `${JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=25&sfw=true`;
@@ -242,14 +280,13 @@ async function getAnimeByGenre(genreId) {
             4,
             5
         ];
-        const promises = pages.map((page)=>fetchWithRetry(`${JIKAN_API_BASE}/anime?genres=${genreId}&page=${page}&limit=25&order_by=start_date&sort=desc&sfw=true`, {
+        const results = await Promise.all(pages.map((page)=>fetchWithRetry(`${JIKAN_API_BASE}/anime?genres=${genreId}&page=${page}&limit=25&order_by=start_date&sort=desc&sfw=true`, {
                 next: {
                     revalidate: 3600
                 }
             }).then((res)=>res.ok ? res.json() : {
                     data: []
-                }));
-        const results = await Promise.all(promises);
+                })));
         const combinedData = results.flatMap((r)=>r.data || []);
         const uniqueData = Array.from(new Map(combinedData.map((item)=>[
                 item.mal_id,

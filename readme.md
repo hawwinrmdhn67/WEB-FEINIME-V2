@@ -164,6 +164,12 @@ npm install lodash.debounce axios
 
 npm install --save-dev @types/lodash.debounce @types/react
 
+npm install react-hot-toast
+
+npm install framer-motion
+
+npm install next-themes
+
 ```
 
 

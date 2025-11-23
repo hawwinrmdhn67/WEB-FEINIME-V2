@@ -16,87 +16,246 @@ __turbopack_context__.n(__turbopack_context__.i("[project]/app/layout.tsx [app-r
 __turbopack_context__.s([
     "getAnimeByGenre",
     ()=>getAnimeByGenre,
+    "getAnimeCharacters",
+    ()=>getAnimeCharacters,
     "getAnimeDetail",
     ()=>getAnimeDetail,
+    "getAnimeReviews",
+    ()=>getAnimeReviews,
+    "getAnimeStatistics",
+    ()=>getAnimeStatistics,
     "getGenres",
     ()=>getGenres,
+    "getMangaDetail",
+    ()=>getMangaDetail,
     "getPopularAnime",
     ()=>getPopularAnime,
+    "getSeasonNow",
+    ()=>getSeasonNow,
+    "getSeasonUpcoming",
+    ()=>getSeasonUpcoming,
     "getTopAnime",
     ()=>getTopAnime,
     "searchAnime",
     ()=>searchAnime
 ]);
 const JIKAN_API_BASE = 'https://api.jikan.moe/v4';
-// Optional rate limit helper
-async function rateLimit() {
-    return new Promise((resolve)=>setTimeout(resolve, 300));
-}
-async function getTopAnime(page = 1) {
+// =========================
+// 2. HELPER FUNCTIONS
+// =========================
+const delay = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
+/**
+ * Fungsi fetch kustom dengan mekanisme retry (3x) dan backoff untuk mengatasi rate limiting Jikan API (429).
+ */ async function fetchWithRetry(url, options = {}, retries = 3, backoff = 1000) {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/top/anime?page=${page}&limit=25`);
-        if (!res.ok) throw new Error('Failed to fetch top anime');
-        return res.json();
-    } catch (error) {
-        console.error('Error fetching top anime:', error);
-        return {
-            data: []
-        };
+        await delay(300); // Penundaan minimum untuk menghormati rate limit Jikan
+        const res = await fetch(url, options);
+        if (res.status === 429 && retries > 0) {
+            console.warn(`[API] Rate limit hit for ${url}, retrying in ${backoff}ms...`);
+            await delay(backoff);
+            return fetchWithRetry(url, options, retries - 1, backoff * 2);
+        }
+        return res;
+    } catch (err) {
+        if (retries > 0) {
+            await delay(backoff);
+            return fetchWithRetry(url, options, retries - 1, backoff * 2);
+        }
+        throw err;
     }
 }
 async function getAnimeDetail(mal_id) {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/anime/${mal_id}`);
-        if (!res.ok) throw new Error('Failed to fetch anime detail');
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/full`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return null;
         const data = await res.json();
         return data.data;
-    } catch (error) {
-        console.error('Error fetching anime detail:', error);
+    } catch (err) {
         return null;
     }
 }
-async function getPopularAnime(page = 1) {
+async function getAnimeCharacters(mal_id) {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/anime?order_by=popularity&sort=asc&page=${page}&limit=25`);
-        if (!res.ok) throw new Error('Failed to fetch popular anime');
-        return res.json();
-    } catch (error) {
-        console.error('Error fetching popular anime:', error);
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/characters`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.data.sort((a, b)=>a.role === 'Main' ? -1 : 1).slice(0, 12);
+    } catch  {
+        return [];
+    }
+}
+async function getAnimeReviews(mal_id) {
+    try {
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/reviews?preliminary=true&spoiler=false`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.data.slice(0, 6);
+    } catch  {
+        return [];
+    }
+}
+async function getAnimeStatistics(mal_id) {
+    try {
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/statistics`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.data;
+    } catch  {
+        return null;
+    }
+}
+async function getMangaDetail(mal_id) {
+    try {
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/manga/${mal_id}/full`, {
+            next: {
+                revalidate: 3600
+            }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.data;
+    } catch  {
+        return null;
+    }
+}
+async function getTopAnime() {
+    try {
+        const [res1, res2] = await Promise.all([
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?page=1&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            }),
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?page=2&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            })
+        ]);
+        const data1 = await res1.json();
+        const data2 = await res2.json();
+        return {
+            data: [
+                ...data1.data,
+                ...data2.data
+            ],
+            pagination: data1.pagination
+        };
+    } catch  {
         return {
             data: []
         };
     }
 }
-async function getAnimeByGenre(genreId, page = 1) {
+async function getPopularAnime() {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/anime?genres=${genreId}&page=${page}&limit=25`);
-        if (!res.ok) throw new Error('Failed to fetch anime by genre');
-        return res.json();
-    } catch (error) {
-        console.error('Error fetching anime by genre:', error);
+        const [res1, res2] = await Promise.all([
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?filter=bypopularity&page=1&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            }),
+            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?filter=bypopularity&page=2&limit=25`, {
+                next: {
+                    revalidate: 3600
+                }
+            })
+        ]);
+        const data1 = await res1.json();
+        const data2 = await res2.json();
+        return {
+            data: [
+                ...data1.data,
+                ...data2.data
+            ],
+            pagination: data1.pagination
+        };
+    } catch  {
         return {
             data: []
         };
     }
 }
-async function searchAnime(query, page = 1) {
+async function getSeasonNow(page = 1) {
     try {
-        await rateLimit();
-        const url = `${JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=25`;
-        const res = await fetch(url);
-        if (!res.ok) {
-            const text = await res.text(); // baca responsenya biar bisa debug
-            console.error('Failed search response:', text);
-            throw new Error(`Failed to search anime: ${res.status} ${res.statusText}`);
-        }
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/seasons/now?page=${page}&limit=25`, {
+            next: {
+                revalidate: 86400
+            }
+        });
         const data = await res.json();
         return data;
+    } catch  {
+        return {
+            data: []
+        };
+    }
+}
+async function getSeasonUpcoming() {
+    try {
+        const [res1, res2] = await Promise.all([
+            fetchWithRetry(`${JIKAN_API_BASE}/seasons/upcoming?page=1&limit=25`, {
+                next: {
+                    revalidate: 86400
+                }
+            }),
+            fetchWithRetry(`${JIKAN_API_BASE}/seasons/upcoming?page=2&limit=25`, {
+                next: {
+                    revalidate: 86400
+                }
+            })
+        ]);
+        if (!res1.ok && !res2.ok) {
+            throw new Error("Failed to fetch both pages for upcoming season.");
+        }
+        const data1 = res1.ok ? await res1.json() : {
+            data: []
+        };
+        const data2 = res2.ok ? await res2.json() : {
+            data: []
+        };
+        return {
+            data: [
+                ...data1.data,
+                ...data2.data
+            ],
+            pagination: data1.pagination
+        };
     } catch (error) {
-        console.error('Error searching anime:', error);
+        console.error("Error fetching upcoming season anime:", error);
+        return {
+            data: []
+        };
+    }
+}
+async function searchAnime(query, page = 1, signal) {
+    try {
+        const url = `${JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=25&sfw=true`;
+        const res = await fetchWithRetry(url, {
+            signal,
+            next: {
+                revalidate: 300
+            }
+        });
+        const data = await res.json();
+        return data;
+    } catch  {
         return {
             data: []
         };
@@ -104,14 +263,51 @@ async function searchAnime(query, page = 1) {
 }
 async function getGenres() {
     try {
-        await rateLimit();
-        const res = await fetch(`${JIKAN_API_BASE}/genres/anime`);
-        if (!res.ok) throw new Error('Failed to fetch genres');
+        const res = await fetchWithRetry(`${JIKAN_API_BASE}/genres/anime`, {
+            next: {
+                revalidate: 86400
+            }
+        });
         const data = await res.json();
         return data.data;
-    } catch (error) {
-        console.error('Error fetching genres:', error);
+    } catch  {
         return [];
+    }
+}
+async function getAnimeByGenre(genreId) {
+    try {
+        const pages = [
+            1,
+            2,
+            3,
+            4,
+            5
+        ];
+        const promises = pages.map((page)=>fetchWithRetry(`${JIKAN_API_BASE}/anime?genres=${genreId}&page=${page}&limit=25&order_by=start_date&sort=desc&sfw=true`, {
+                next: {
+                    revalidate: 3600
+                }
+            }).then((res)=>res.ok ? res.json() : {
+                    data: []
+                }));
+        const results = await Promise.all(promises);
+        const combinedData = results.flatMap((r)=>r.data || []);
+        const uniqueData = Array.from(new Map(combinedData.map((item)=>[
+                item.mal_id,
+                item
+            ])).values());
+        return {
+            data: uniqueData,
+            pagination: {
+                last_visible_page: 5,
+                has_next_page: true,
+                current_page: 1
+            }
+        };
+    } catch  {
+        return {
+            data: []
+        };
     }
 }
 }),
@@ -151,397 +347,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx_
 ;
 __turbopack_context__.n(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx__$5b$app$2d$rsc$5d$__$28$client__reference__proxy$29$__);
 }),
-"[project]/app/anime/[id]/page.tsx [app-rsc] (ecmascript)", ((__turbopack_context__) => {
-"use strict";
+"[project]/app/anime/[id]/page.tsx [app-rsc] (ecmascript)", ((__turbopack_context__, module, exports) => {
 
-__turbopack_context__.s([
-    "default",
-    ()=>AnimePage
-]);
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.js [app-rsc] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/api.ts [app-rsc] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/navbar.tsx [app-rsc] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/image.js [app-rsc] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/play.js [app-rsc] (ecmascript) <export default as Play>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$star$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Star$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/star.js [app-rsc] (ecmascript) <export default as Star>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/calendar.js [app-rsc] (ecmascript) <export default as Calendar>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$film$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Film$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/film.js [app-rsc] (ecmascript) <export default as Film>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/activity.js [app-rsc] (ecmascript) <export default as Activity>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$api$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/next/dist/api/navigation.react-server.js [app-rsc] (ecmascript) <locals>");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$components$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/client/components/navigation.react-server.js [app-rsc] (ecmascript)");
-;
-;
-;
-;
-;
-;
-async function AnimePage({ params }) {
-    const { id } = await params;
-    const animeId = parseInt(id);
-    if (isNaN(animeId)) (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$components$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["notFound"])();
-    let anime = null;
-    try {
-        anime = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$api$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getAnimeDetail"])(animeId);
-    } catch (err) {
-        console.error('Error fetching anime:', err);
-        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$components$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["notFound"])();
-    }
-    if (!anime) (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$components$2f$navigation$2e$react$2d$server$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["notFound"])();
-    const imageUrl = anime.images?.jpg?.large_image_url || '/placeholder.svg';
-    const titleEnglish = anime.title_english || '-';
-    const score = anime.score != null ? anime.score.toFixed(1) : '-';
-    const episodes = anime.episodes ?? 'TBA';
-    const status = anime.status || '-';
-    const year = anime.year ?? 'TBA';
-    const genres = anime.genres ?? [];
-    const synopsis = anime.synopsis || '-';
-    const airedFrom = anime.aired?.from ? new Date(anime.aired.from).toLocaleDateString() : 'TBA';
-    const airedTo = anime.aired?.to ? new Date(anime.aired.to).toLocaleDateString() : 'Ongoing';
-    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
-        className: "min-h-screen bg-background overflow-x-hidden",
-        children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "fixed top-0 left-0 w-full z-50",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$navbar$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Navbar"], {}, void 0, false, {
-                    fileName: "[project]/app/anime/[id]/page.tsx",
-                    lineNumber: 42,
-                    columnNumber: 9
-                }, this)
-            }, void 0, false, {
-                fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 41,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "relative h-112 md:h-128 w-full overflow-hidden",
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
-                        src: imageUrl,
-                        alt: "Anime background",
-                        fill: true,
-                        className: "object-cover blur-sm",
-                        quality: 80
-                    }, void 0, false, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 47,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "absolute inset-0 bg-gradient-to-t  from-black/40 dark:from-black/20  via-transparent to-transparent"
-                    }, void 0, false, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 56,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 46,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 md:-mt-40 grid grid-cols-1 md:grid-cols-3 gap-8",
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "relative w-44 md:w-60 mx-auto md:mx-0",
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "shadow-2xl rounded-lg overflow-hidden group transition-transform duration-500 hover:scale-105",
-                            children: [
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
-                                    src: imageUrl,
-                                    alt: anime.title,
-                                    width: 300,
-                                    height: 400,
-                                    className: "w-full h-auto"
-                                }, void 0, false, {
-                                    fileName: "[project]/app/anime/[id]/page.tsx",
-                                    lineNumber: 69,
-                                    columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-all"
-                                }, void 0, false, {
-                                    fileName: "[project]/app/anime/[id]/page.tsx",
-                                    lineNumber: 78,
-                                    columnNumber: 13
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
-                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "w-14 h-14 bg-primary/80 rounded-full flex items-center justify-center",
-                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
-                                            size: 24,
-                                            className: "text-white"
-                                        }, void 0, false, {
-                                            fileName: "[project]/app/anime/[id]/page.tsx",
-                                            lineNumber: 82,
-                                            columnNumber: 17
-                                        }, this)
-                                    }, void 0, false, {
-                                        fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 81,
-                                        columnNumber: 15
-                                    }, this)
-                                }, void 0, false, {
-                                    fileName: "[project]/app/anime/[id]/page.tsx",
-                                    lineNumber: 80,
-                                    columnNumber: 13
-                                }, this)
-                            ]
-                        }, void 0, true, {
-                            fileName: "[project]/app/anime/[id]/page.tsx",
-                            lineNumber: 67,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 66,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                        className: "md:col-span-2 text-center md:text-left flex flex-col justify-center gap-4",
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                                className: "text-3xl md:text-4xl font-bold text-white drop-shadow-lg",
-                                children: anime.title
-                            }, void 0, false, {
-                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 91,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                className: "text-white/80 text-lg drop-shadow-sm",
-                                children: titleEnglish
-                            }, void 0, false, {
-                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 95,
-                                columnNumber: 11
-                            }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "grid grid-cols-2 md:grid-cols-4 gap-4 mt-4",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start gap-1 bg-card p-3 rounded-lg border border-border shadow-sm",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$star$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Star$3e$__["Star"], {
-                                                className: "text-yellow-400"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 101,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-sm text-muted-foreground",
-                                                children: "Rating"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 102,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-lg font-bold text-primary",
-                                                children: score
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 103,
-                                                columnNumber: 15
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 100,
-                                        columnNumber: 13
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start gap-1 bg-card p-3 rounded-lg border border-border shadow-sm",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$film$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Film$3e$__["Film"], {
-                                                className: "text-blue-500"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 107,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-sm text-muted-foreground",
-                                                children: "Episodes"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 108,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-lg font-bold text-primary",
-                                                children: episodes
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 109,
-                                                columnNumber: 15
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 106,
-                                        columnNumber: 13
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start gap-1 bg-card p-3 rounded-lg border border-border shadow-sm",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$activity$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Activity$3e$__["Activity"], {
-                                                className: "text-green-500"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 113,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-sm text-muted-foreground",
-                                                children: "Status"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 114,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-lg font-bold text-primary",
-                                                children: status
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 115,
-                                                columnNumber: 15
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 112,
-                                        columnNumber: 13
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-col items-center md:items-start gap-1 bg-card p-3 rounded-lg border border-border shadow-sm",
-                                        children: [
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__["Calendar"], {
-                                                className: "text-purple-500"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 119,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-sm text-muted-foreground",
-                                                children: "Year"
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 120,
-                                                columnNumber: 15
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "text-lg font-bold text-primary",
-                                                children: year
-                                            }, void 0, false, {
-                                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                                lineNumber: 121,
-                                                columnNumber: 15
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
-                                        fileName: "[project]/app/anime/[id]/page.tsx",
-                                        lineNumber: 118,
-                                        columnNumber: 13
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/app/anime/[id]/page.tsx",
-                                lineNumber: 98,
-                                columnNumber: 11
-                            }, this)
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 90,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 63,
-                columnNumber: 7
-            }, this),
-            genres.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-6 flex flex-wrap gap-3",
-                children: genres.map((genre)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                        className: "px-3 py-1 bg-card border border-primary text-primary text-sm rounded-full",
-                        children: genre.name
-                    }, genre.mal_id, false, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 135,
-                        columnNumber: 13
-                    }, this))
-            }, void 0, false, {
-                fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 133,
-                columnNumber: 9
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
-                className: "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-12",
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                        className: "text-2xl font-bold text-foreground mb-4",
-                        children: "Synopsis"
-                    }, void 0, false, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 147,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-muted-foreground leading-relaxed",
-                        children: synopsis
-                    }, void 0, false, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 148,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 146,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
-                className: "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-12",
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
-                        className: "text-2xl font-bold text-foreground mb-4",
-                        children: "Air Dates"
-                    }, void 0, false, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 153,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                        className: "text-muted-foreground",
-                        children: [
-                            airedFrom,
-                            " - ",
-                            airedTo
-                        ]
-                    }, void 0, true, {
-                        fileName: "[project]/app/anime/[id]/page.tsx",
-                        lineNumber: 154,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/app/anime/[id]/page.tsx",
-                lineNumber: 152,
-                columnNumber: 7
-            }, this)
-        ]
-    }, void 0, true, {
-        fileName: "[project]/app/anime/[id]/page.tsx",
-        lineNumber: 39,
-        columnNumber: 5
-    }, this);
-}
+const e = new Error("Could not parse module '[project]/app/anime/[id]/page.tsx'\n\nExpected ',', got 'interface'");
+e.code = 'MODULE_UNPARSABLE';
+throw e;
 }),
 "[project]/app/anime/[id]/page.tsx [app-rsc] (ecmascript, Next.js Server Component)", ((__turbopack_context__) => {
 

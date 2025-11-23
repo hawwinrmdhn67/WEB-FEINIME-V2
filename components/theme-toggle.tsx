@@ -1,51 +1,40 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Moon, Sun } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useTheme } from 'next-themes'
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light')
-    setTheme(initialTheme)
     setMounted(true)
   }, [])
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    
-    const htmlElement = document.documentElement
-    if (newTheme === 'dark') {
-      htmlElement.classList.add('dark')
-    } else {
-      htmlElement.classList.remove('dark')
-    }
-  }
-
   if (!mounted) {
+    // Placeholder dengan ukuran yang pas agar tidak layout shift
     return <div className="w-10 h-10" />
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={toggleTheme}
-      className="rounded-lg hover:bg-secondary transition-colors"
-      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+    <button
+      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+      // Style disamakan dengan tombol Search & User:
+      // p-2: padding standar
+      // rounded-lg: sudut tumpul
+      // hover:bg-secondary: efek hover ghost
+      className="p-2 rounded-lg hover:bg-secondary transition-colors text-foreground flex items-center justify-center"
+      title={resolvedTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      aria-label="Toggle theme"
     >
-      {theme === 'dark' ? (
-        <Sun size={20} className="text-primary" />
+      {resolvedTheme === 'dark' ? (
+        // Matahari: Mobile 24px (w-6), Desktop 20px (w-5)
+        <Sun className="w-6 h-6 md:w-5 md:h-5" />
       ) : (
-        <Moon size={20} className="text-primary" />
+        // Bulan: Mobile 24px (w-6), Desktop 20px (w-5)
+        <Moon className="w-6 h-6 md:w-5 md:h-5" />
       )}
-    </Button>
+    </button>
   )
 }

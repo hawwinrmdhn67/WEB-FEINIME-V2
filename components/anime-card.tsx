@@ -3,21 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Star, Tv, Clapperboard } from "lucide-react";
-
-export interface Anime {
-  mal_id: number;
-  title: string;
-  images: {
-    jpg: {
-      large_image_url?: string;
-      image_url: string;
-    };
-  };
-  score?: number;
-  episodes?: number | null;
-  type?: string | null;
-  status?: string | null;
-}
+import { Anime } from "@/lib/api"; 
 
 interface AnimeCardProps {
   anime: Anime;
@@ -26,15 +12,10 @@ interface AnimeCardProps {
   imgClassName?: string;
 }
 
-// Fungsi getStatusClasses yang disederhanakan untuk menggunakan warna tema & padding minimal
 const getStatusClasses = () => {
-    // text-[10px] untuk mobile, px-1.5, py-0.5 untuk padding minimal
-    const base = "font-medium px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs border transition-colors duration-300 ";
-    
-    // Menggunakan warna tema (bg-card/70) agar tetap konsisten dengan light/dark mode
-    return base + 'bg-card/70 text-foreground/90 border-border/60';
+   const base = "font-medium px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs border transition-colors duration-300 ";
+   return base + 'bg-card/70 text-foreground/90 border-border/60';
 };
-
 
 export function AnimeCard({ anime, rank }: AnimeCardProps) {
   const imageUrl =
@@ -44,7 +25,6 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
 
   const displayScore = anime.score != null ? anime.score.toFixed(1) : "N/A";
   
-  // Logika episode/ongoing yang lebih deskriptif
   const displayEpisodes = anime.episodes != null 
     ? `${anime.episodes} Ep` 
     : anime.status === 'Currently Airing' ? 'Ongoing' : 'TBA'; 
@@ -60,11 +40,14 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
   const TypeIcon = displayType.toLowerCase() === "movie" ? Clapperboard : Tv;
   const displayStatus = anime.status || "Unknown";
 
-  return (
-      <Link href={`/anime/${anime.mal_id}`}>
-      <div className="group relative flex flex-col h-full cursor-pointer rounded-xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+  // Style Seragam (Glassmorphism) untuk semua badge
+  const glassBadgeStyle = "flex items-center gap-1 bg-background/70 px-2 py-1 rounded-full backdrop-blur-sm text-xs font-semibold shadow-sm border border-border/60 transition-all duration-300 group-hover:bg-background/90";
 
-        {/* IMAGE */}
+  return (
+    <Link href={`/anime/${anime.mal_id}`}>
+      <div className="group relative flex flex-col h-full cursor-pointer rounded-xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-border/40">
+
+        {/* --- IMAGE SECTION --- */}
         <div className="relative w-full aspect-[2/3] overflow-hidden rounded-t-xl">
           <img
             src={imageUrl}
@@ -72,66 +55,45 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
             onError={(e: any) =>
-              (e.target.src =
-                "https://placehold.co/300x450/333333/FFFFFF?text=No+Image")
+              (e.target.src = "https://placehold.co/300x450/333333/FFFFFF?text=No+Image")
             }
           />
           
-          {/* Overlay */}
+          {/* Overlay Gelap (Hover Only) */}
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-
-          {/* TYPE BADGE */}
-          <div className="
-              absolute top-2 left-2 flex items-center gap-1 
-              bg-background/70 px-2 py-1 rounded-full 
-              backdrop-blur-sm text-xs font-semibold shadow-sm
-              border border-border/60 
-              transition-all duration-300 group-hover:bg-background/90
-            ">
+          {/* 1. TYPE BADGE (DEFAULT: KIRI ATAS) */}
+          <div className={`absolute top-2 left-2 z-20 ${glassBadgeStyle}`}>
             <TypeIcon size={12} className="opacity-80" />
             <span>{typeLabel}</span>
           </div>
 
-          {/* SCORE BADGE */}
+          {/* 2. SCORE BADGE (DEFAULT: KANAN ATAS) */}
           {anime.score != null && (
-            <div className="
-                absolute top-2 right-2 flex items-center gap-1
-                bg-background/70 px-2 py-1 rounded-full 
-                backdrop-blur-sm text-xs font-semibold shadow-sm
-                border border-border/60 
-                transition-all duration-300 group-hover:bg-background/90
-              ">
+            <div className={`absolute top-2 right-2 z-20 ${glassBadgeStyle}`}>
               <Star size={12} className="text-yellow-400 fill-yellow-400" />
               {displayScore}
             </div>
           )}
 
-          {/* RANK BADGE */}
+          {/* 3. RANK BADGE (DEFAULT: KIRI BAWAH) */}
+          {/* Style disamakan dengan badge lain (glassmorphism) */}
           {rank && (
-            <div className="
-                absolute bottom-2 left-2 
-                bg-primary text-primary-foreground 
-                text-xs font-bold px-2 py-1 rounded-md 
-                border border-primary/40 shadow-sm
-                backdrop-blur-sm
-              ">
-              #{rank}
+            <div className={`absolute bottom-2 left-2 z-20 ${glassBadgeStyle}`}>
+               <span>#{rank}</span>
             </div>
           )}
+
         </div>
 
-          {/* CONTENT */}
+        {/* --- CONTENT SECTION --- */}
         <div className="p-3 flex flex-col flex-1 bg-card border-t border-border/40">
           <h3 className="font-semibold text-sm sm:text-base line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2">
             {anime.title}
           </h3>
 
           <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
-            {/* Episode Count - Dibuat responsif */}
             <span className="opacity-90 text-[10px] sm:text-xs">{displayEpisodes}</span>
-            
-            {/* STATUS BADGE - Dibuat responsif menggunakan getStatusClasses */}
             {anime.status && (
               <span className={getStatusClasses()}>
                 {displayStatus}
@@ -140,6 +102,8 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
           </div>
         </div>
       </div>
-      </Link>
+    </Link>
   );
 }
+
+export type { Anime };

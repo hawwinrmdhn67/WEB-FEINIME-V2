@@ -1,99 +1,158 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { Play, Heart, Share2 } from 'lucide-react'
-import { useState } from 'react' // Import useState
+import { Play, Heart, Share2, Check, Ban, Bookmark } from 'lucide-react'
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useAnimeList } from '../app/context/AnimeListContext'
 
 interface AnimeActionButtonsProps {
   animeId: number
-  trailerUrl: string | null | undefined
+  title: string
+  imageUrl: string
+  totalEpisodes: number | null
+  trailerUrl?: string | null
 }
 
-export default function AnimeActionButtons({ animeId, trailerUrl }: AnimeActionButtonsProps) {
-  // State untuk melacak status berbagi/copy
-  const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
+interface ToastMessage {
+  id: number
+  text: string
+}
 
+export default function AnimeActionButtons({ 
+  animeId, 
+  title,
+  imageUrl,
+  totalEpisodes,
+  trailerUrl 
+}: AnimeActionButtonsProps) {
+  
+  // 1. LOGIKA DATABASE (CONTEXT)
+  const { myList, addToMyList, removeFromMyList } = useAnimeList()
+  
+  // Cek apakah anime ini sudah ada di list
+  const isFavorite = myList.some(item => item.mal_id === animeId)
+
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
+
+  // ===================== TOAST HANDLER =====================
+  const showToast = (text: string) => {
+    const id = Date.now()
+    setToasts(prev => [...prev, { id, text }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
+  }
+
+  // ===================== TOGGLE FAVORITE =====================
+  const toggleFavorite = () => {
+    if (isFavorite) {
+      removeFromMyList(animeId)
+      showToast('Removed from My List')
+    } else {
+      // Simpan ke Context (Local Storage)
+      addToMyList({
+        mal_id: animeId,
+        title: title,
+        images: { jpg: { image_url: imageUrl } },
+        episodes: totalEpisodes
+      }, 'Plan to Watch') 
+      showToast('Added to My List')
+    }
+  }
+
+  // ===================== SHARE HANDLER =====================
   const handleShare = async () => {
     const currentUrl = window.location.href
-    const animeTitle = 'Check out this Anime!' // Menggunakan judul umum atau bisa ambil dari props jika ada
-
     try {
       if (navigator.share) {
-        // Web Share API (Mobile/Desktop Modern)
-        await navigator.share({
-          title: animeTitle,
-          url: currentUrl,
-        })
-        setShareStatus('idle') // Jika share berhasil atau dibatalkan, kembali ke idle
-      } else if (navigator.clipboard) {
-        // Fallback: Copy ke Clipboard (Desktop)
+        await navigator.share({ title: `Watch ${title} on Feinime`, url: currentUrl })
+        setShareStatus('idle')
+      } else {
         await navigator.clipboard.writeText(currentUrl)
         setShareStatus('copied')
-        
-        // Reset status setelah 3 detik
-        setTimeout(() => {
-          setShareStatus('idle')
-        }, 3000)
-      } else {
-        // Fallback paling dasar
-        alert('Link copied to clipboard: ' + currentUrl)
+        setTimeout(() => setShareStatus('idle'), 3000)
+        showToast('Link copied to clipboard!')
       }
-    } catch (error) {
-      console.error('Error sharing or copying:', error)
+    } catch (err) {
+      console.error(err)
       setShareStatus('idle')
     }
   }
 
-  // Gaya untuk tombol non-primer
-  const glassButtonStyle = `
-    gap-2 border-input backdrop-blur-sm transition-colors shadow-sm
-    text-foreground bg-background/60
-    hover:bg-primary hover:text-primary-foreground
-    dark:hover:bg-white/20 dark:hover:text-white
-  `
+  // ===================== STYLING (Sesuai Request) =====================
+  // Menggunakan Tailwind class murni untuk meniru komponen Button agar tidak error dependensi
+  const baseButtonClass = "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
   
-  // Gaya khusus untuk tombol Share (berdasarkan status)
+  const primaryBtnClass = `${baseButtonClass} gap-2 bg-primary text-primary-foreground shadow hover:bg-primary/90`
+  const disabledBtnClass = `${baseButtonClass} gap-2 bg-muted text-muted-foreground cursor-not-allowed opacity-70`
+
+  const glassButtonStyle = `${baseButtonClass} gap-2 border border-input backdrop-blur-sm transition-colors shadow-sm text-foreground bg-background/60 hover:bg-primary hover:text-primary-foreground dark:hover:bg-white/20 dark:hover:text-white`
+
   const shareButtonClasses = shareStatus === 'copied'
-    ? 'bg-green-500 text-white border-green-500 hover:bg-green-600'
+    ? `${baseButtonClass} gap-2 bg-green-500 text-white border border-green-500 hover:bg-green-600`
     : glassButtonStyle
 
   return (
-    <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
-      
-      {/* Trailer Button */}
-      {trailerUrl ? (
-        <Button 
-          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
-          onClick={() => window.open(trailerUrl, '_blank')}
+    <>
+      {/* TOAST CONTAINER */}
+      <div className="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-xs">
+        <AnimatePresence>
+          {toasts.map(t => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              className="px-4 py-3 rounded-lg shadow-lg border border-border text-sm font-medium flex items-center gap-2"
+              style={{
+                background: 'var(--card)',
+                color: 'var(--card-foreground)',
+              }}
+            >
+              <div className="w-2 h-2 rounded-full bg-primary" />
+              {t.text}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start w-full">
+
+        {/* TRAILER BUTTON */}
+        {trailerUrl ? (
+          <button 
+            className={primaryBtnClass} 
+            onClick={() => window.open(trailerUrl, '_blank')}
+          >
+            <Play size={18} /> Watch Trailer
+          </button>
+        ) : (
+          <button disabled className={disabledBtnClass}>
+            <Play size={18} /> No Trailer
+          </button>
+        )}
+
+        {/* ADD TO LIST BUTTON */}
+        <button 
+          className={`${glassButtonStyle} ${isFavorite ? 'text-green-500 border-green-200 dark:border-green-900 hover:bg-green-50 dark:hover:bg-green-900/20' : ''}`} 
+          onClick={toggleFavorite}
         >
-          <Play size={18} /> Watch Trailer
-        </Button>
-      ) : (
-        <Button disabled className="gap-2 bg-muted text-muted-foreground cursor-not-allowed opacity-70">
-          <Play size={18} /> No Trailer
-        </Button>
-      )}
+          {isFavorite ? (
+            <>
+              <Bookmark size={18} className="fill-green-500" /> Added to List
+            </>
+          ) : (
+            <>
+              <Bookmark size={18} /> Add to My List
+            </>
+          )}
+        </button>
 
-      {/* Add to Favorites */}
-      <Button 
-        variant="outline" 
-        className={glassButtonStyle} 
-        onClick={() => alert('Added to favorites (Demo)')}
-      >
-        <Heart size={18} /> Add to Favorites
-      </Button>
-
-      {/* Share Button (dengan feedback visual) */}
-      <Button 
-        variant="outline" 
-        className={shareButtonClasses} // Menggunakan kelas yang disesuaikan
-        onClick={handleShare}
-        disabled={shareStatus === 'copied'} // Menonaktifkan tombol saat status 'copied'
-      >
-        <Share2 size={18} /> 
-        {/* Teks dinamis berdasarkan status */}
-        {shareStatus === 'copied' ? 'Copied!' : 'Share'}
-      </Button>
-    </div>
+        {/* SHARE BUTTON */}
+        <button className={shareButtonClasses} onClick={handleShare} disabled={shareStatus === 'copied'}>
+          {shareStatus === 'copied' ? <Check size={18} /> : <Share2 size={18} />}
+          {shareStatus === 'copied' ? 'Copied!' : 'Share'}
+        </button>
+      </div>
+    </>
   )
 }

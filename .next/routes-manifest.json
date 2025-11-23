@@ -57,16 +57,58 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/api/my-list",
+      "regex": "^/api/my\\-list(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/my\\-list(?:/)?$"
+    },
+    {
+      "page": "/api/my-list/add",
+      "regex": "^/api/my\\-list/add(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/my\\-list/add(?:/)?$"
+    },
+    {
+      "page": "/api/my-list/check",
+      "regex": "^/api/my\\-list/check(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/my\\-list/check(?:/)?$"
+    },
+    {
+      "page": "/api/my-list/remove",
+      "regex": "^/api/my\\-list/remove(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/my\\-list/remove(?:/)?$"
+    },
+    {
       "page": "/api/search",
       "regex": "^/api/search(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/search(?:/)?$"
     },
     {
+      "page": "/dashboard",
+      "regex": "^/dashboard(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard(?:/)?$"
+    },
+    {
       "page": "/genres",
       "regex": "^/genres(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/genres(?:/)?$"
+    },
+    {
+      "page": "/my-activity",
+      "regex": "^/my\\-activity(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/my\\-activity(?:/)?$"
+    },
+    {
+      "page": "/my-list",
+      "regex": "^/my\\-list(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/my\\-list(?:/)?$"
     },
     {
       "page": "/popular",
@@ -85,6 +127,18 @@
       "regex": "^/seasonal(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/seasonal(?:/)?$"
+    },
+    {
+      "page": "/seasonal/upcoming",
+      "regex": "^/seasonal/upcoming(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/seasonal/upcoming(?:/)?$"
+    },
+    {
+      "page": "/settings",
+      "regex": "^/settings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/settings(?:/)?$"
     },
     {
       "page": "/trending",
