@@ -191,6 +191,6 @@ Kontribusi Anda sangat dihargai\! Jika Anda ingin menambahkan fitur, memperbaiki
   * **Debouncing**: Penggunaan `lodash.debounce` adalah kunci untuk optimasi performa *live search*.
 
 
-*Terima kasih telah melihat proyek Feinime V2 Salam dari dev hawwinrmdhn67\!*
+*Terima kasih telah melihat project Feinime V2 Salam dari dev hawwinrmdhn67\!*
 
 ----
