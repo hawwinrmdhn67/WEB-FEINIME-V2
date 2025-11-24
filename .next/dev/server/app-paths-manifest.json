@@ -1,3 +1,7 @@
 {
-  "/page": "app/page.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/my-list/page": "app/my-list/page.js",
+  "/page": "app/page.js",
+  "/seasonal/upcoming/page": "app/seasonal/upcoming/page.js",
+  "/settings/page": "app/settings/page.js"
 }

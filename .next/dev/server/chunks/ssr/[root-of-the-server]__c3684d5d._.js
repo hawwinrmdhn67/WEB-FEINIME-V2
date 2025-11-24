@@ -32,6 +32,8 @@ __turbopack_context__.s([
     ()=>getPopularAnime,
     "getSeasonNow",
     ()=>getSeasonNow,
+    "getSeasonUpcoming",
+    ()=>getSeasonUpcoming,
     "getTopAnime",
     ()=>getTopAnime,
     "searchAnime",
@@ -39,231 +41,251 @@ __turbopack_context__.s([
 ]);
 const JIKAN_API_BASE = 'https://api.jikan.moe/v4';
 // =========================
-// 2. HELPER FUNCTIONS
+// 2. RATE LIMITER & QUEUE SYSTEM
 // =========================
 const delay = (ms)=>new Promise((resolve)=>setTimeout(resolve, ms));
-async function fetchWithRetry(url, options = {}, retries = 3, backoff = 1000) {
+/**
+ * GLOBAL QUEUE:
+ * Variabel ini bertugas menampung Promise chain.
+ * FIX: Menggunakan Promise<any> agar kompatibel dengan berbagai return type.
+ */ let apiQueue = Promise.resolve();
+/**
+ * scheduleRequest:
+ * Fungsi ini memastikan setiap request ke API Jikan diberi jeda waktu 400ms
+ * dan dieksekusi secara berurutan (sequential).
+ */ function scheduleRequest(callback) {
+    // Tambahkan request baru ke ujung antrian
+    const operation = apiQueue.then(async ()=>{
+        // Tunggu 400ms SEBELUM melakukan fetch
+        await delay(400);
+        return callback();
+    });
+    // Update pointer antrian agar request berikutnya menunggu request ini selesai
+    // Kita catch error agar jika satu request gagal, antrian tidak macet
+    apiQueue = operation.catch(()=>{});
+    return operation;
+}
+/**
+ * fetchWithRetry:
+ * Menggunakan scheduleRequest untuk membungkus fetch.
+ * Jika masih terkena 429, dia akan melakukan retry dengan backoff.
+ */ async function fetchWithRetry(endpoint, options = {}, retries = 3, backoff = 1000) {
+    const url = endpoint.startsWith('http') ? endpoint : `${JIKAN_API_BASE}${endpoint}`;
     try {
-        await delay(300);
-        const res = await fetch(url, options);
-        if (res.status === 429 && retries > 0) {
-            console.warn(`[API] Rate limit hit for ${url}, retrying in ${backoff}ms...`);
-            await delay(backoff);
-            return fetchWithRetry(url, options, retries - 1, backoff * 2);
+        // PENTING: Gunakan scheduleRequest, jangan langsung fetch
+        const res = await scheduleRequest(()=>fetch(url, options));
+        // Jika masih terkena limit (kasus sangat jarang dengan queue), lakukan retry manual
+        if (res.status === 429) {
+            if (retries > 0) {
+                console.warn(`[API 429] Rate limit hit for ${url}, queueing retry in ${backoff}ms...`);
+                await delay(backoff);
+                return fetchWithRetry(endpoint, options, retries - 1, backoff * 2);
+            } else {
+                console.error(`[API Fail] Max retries reached for ${url}`);
+                return null;
+            }
         }
-        return res;
+        if (!res.ok) {
+            return null;
+        }
+        return await res.json();
     } catch (err) {
         if (retries > 0) {
             await delay(backoff);
-            return fetchWithRetry(url, options, retries - 1, backoff * 2);
+            return fetchWithRetry(endpoint, options, retries - 1, backoff * 2);
         }
-        throw err;
+        console.error(`[API Error] ${err}`);
+        return null;
+    }
+}
+/**
+ * Helper untuk membangun URL dengan Query Params
+ */ function buildUrl(path, params) {
+    const url = new URL(`${JIKAN_API_BASE}${path}`);
+    Object.entries(params).forEach(([key, value])=>{
+        if (value !== undefined && value !== null) {
+            url.searchParams.append(key, String(value));
+        }
+    });
+    return url.toString();
+}
+/**
+ * fetchAnimeList:
+ * Mengambil list anime dengan dukungan pagination otomatis melalui Queue System.
+ */ async function fetchAnimeList(path, params, pages = 1, revalidate = 3600) {
+    try {
+        if (pages === 1) {
+            const url = buildUrl(path, params);
+            const data = await fetchWithRetry(url, {
+                next: {
+                    revalidate
+                }
+            });
+            return data || {
+                data: []
+            };
+        }
+        // Buat array promise untuk setiap halaman
+        const promises = [];
+        for(let i = 1; i <= pages; i++){
+            const url = buildUrl(path, {
+                ...params,
+                page: i
+            });
+            promises.push(fetchWithRetry(url, {
+                next: {
+                    revalidate
+                }
+            }));
+        }
+        // Jalankan (scheduleRequest akan membuatnya sequential otomatis)
+        const results = await Promise.all(promises);
+        const allData = results.flatMap((r)=>r?.data || []);
+        const lastResult = results.findLast((r)=>r?.pagination);
+        return {
+            data: allData,
+            pagination: lastResult?.pagination
+        };
+    } catch (error) {
+        console.error('Fetch list error:', error);
+        return {
+            data: []
+        };
     }
 }
 async function getAnimeDetail(mal_id) {
-    try {
-        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/full`, {
-            next: {
-                revalidate: 3600
-            }
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data.data;
-    } catch (err) {
-        return null;
-    }
+    const res = await fetchWithRetry(`/anime/${mal_id}/full`, {
+        next: {
+            revalidate: 3600
+        }
+    });
+    return res?.data || null;
 }
 async function getAnimeCharacters(mal_id) {
-    try {
-        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/characters`, {
-            next: {
-                revalidate: 3600
-            }
-        });
-        if (!res.ok) return [];
-        const data = await res.json();
-        return data.data.sort((a, b)=>a.role === 'Main' ? -1 : 1).slice(0, 12);
-    } catch  {
-        return [];
-    }
+    const res = await fetchWithRetry(`/anime/${mal_id}/characters`, {
+        next: {
+            revalidate: 3600
+        }
+    });
+    if (!res?.data) return [];
+    return res.data.sort((a, b)=>a.role === 'Main' ? -1 : 1).slice(0, 12);
 }
 async function getAnimeReviews(mal_id) {
-    try {
-        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/reviews?preliminary=true&spoiler=false`, {
-            next: {
-                revalidate: 3600
-            }
-        });
-        if (!res.ok) return [];
-        const data = await res.json();
-        return data.data.slice(0, 6);
-    } catch  {
-        return [];
-    }
+    const res = await fetchWithRetry(`/anime/${mal_id}/reviews?preliminary=true&spoiler=false`, {
+        next: {
+            revalidate: 3600
+        }
+    });
+    return res?.data ? res.data.slice(0, 6) : [];
 }
 async function getAnimeStatistics(mal_id) {
-    try {
-        const res = await fetchWithRetry(`${JIKAN_API_BASE}/anime/${mal_id}/statistics`, {
-            next: {
-                revalidate: 3600
-            }
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data.data;
-    } catch  {
-        return null;
-    }
+    const res = await fetchWithRetry(`/anime/${mal_id}/statistics`, {
+        next: {
+            revalidate: 3600
+        }
+    });
+    return res?.data || null;
 }
 async function getMangaDetail(mal_id) {
-    try {
-        const res = await fetchWithRetry(`${JIKAN_API_BASE}/manga/${mal_id}/full`, {
-            next: {
-                revalidate: 3600
-            }
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data.data;
-    } catch  {
-        return null;
-    }
+    const res = await fetchWithRetry(`/manga/${mal_id}/full`, {
+        next: {
+            revalidate: 3600
+        }
+    });
+    return res?.data || null;
 }
 async function getTopAnime() {
-    try {
-        const [res1, res2] = await Promise.all([
-            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?page=1&limit=25`, {
-                next: {
-                    revalidate: 3600
-                }
-            }),
-            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?page=2&limit=25`, {
-                next: {
-                    revalidate: 3600
-                }
-            })
-        ]);
-        const data1 = await res1.json();
-        const data2 = await res2.json();
-        return {
-            data: [
-                ...data1.data,
-                ...data2.data
-            ],
-            pagination: data1.pagination
-        };
-    } catch  {
-        return {
-            data: []
-        };
-    }
+    return fetchAnimeList('/top/anime', {
+        limit: 25
+    }, 2);
 }
 async function getPopularAnime() {
-    try {
-        const [res1, res2] = await Promise.all([
-            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?filter=bypopularity&page=1&limit=25`, {
-                next: {
-                    revalidate: 3600
-                }
-            }),
-            fetchWithRetry(`${JIKAN_API_BASE}/top/anime?filter=bypopularity&page=2&limit=25`, {
-                next: {
-                    revalidate: 3600
-                }
-            })
-        ]);
-        const data1 = await res1.json();
-        const data2 = await res2.json();
-        return {
-            data: [
-                ...data1.data,
-                ...data2.data
-            ],
-            pagination: data1.pagination
-        };
-    } catch  {
-        return {
-            data: []
-        };
-    }
+    return fetchAnimeList('/top/anime', {
+        filter: 'bypopularity',
+        limit: 25
+    }, 2);
 }
-async function getSeasonNow(page = 1) {
-    try {
-        const res = await fetchWithRetry(`${JIKAN_API_BASE}/seasons/now?page=${page}&limit=25`, {
-            next: {
-                revalidate: 86400
-            }
-        });
-        const data = await res.json();
-        return data;
-    } catch  {
+async function getSeasonNow() {
+    const res = await fetchAnimeList('/seasons/now', {
+        limit: 25
+    }, 2, 86400);
+    if (!res || !Array.isArray(res.data)) {
         return {
             data: []
         };
     }
+    return res;
+}
+async function getSeasonUpcoming() {
+    return fetchAnimeList('/seasons/upcoming', {
+        limit: 25
+    }, 2, 86400);
 }
 async function searchAnime(query, page = 1, signal) {
-    try {
-        const url = `${JIKAN_API_BASE}/anime?q=${encodeURIComponent(query)}&page=${page}&limit=25&sfw=true`;
-        const res = await fetchWithRetry(url, {
-            signal,
-            next: {
-                revalidate: 300
-            }
-        });
-        const data = await res.json();
-        return data;
-    } catch  {
-        return {
-            data: []
-        };
-    }
+    const url = buildUrl('/anime', {
+        q: query,
+        page,
+        limit: 25,
+        sfw: true
+    });
+    const res = await fetchWithRetry(url, {
+        next: {
+            revalidate: 300
+        }
+    });
+    return res || {
+        data: []
+    };
 }
 async function getGenres() {
-    try {
-        const res = await fetchWithRetry(`${JIKAN_API_BASE}/genres/anime`, {
-            next: {
-                revalidate: 86400
-            }
-        });
-        const data = await res.json();
-        return data.data;
-    } catch  {
-        return [];
-    }
+    const res = await fetchWithRetry('/genres/anime', {
+        next: {
+            revalidate: 86400
+        }
+    });
+    return res?.data || [];
 }
 async function getAnimeByGenre(genreId) {
+    const LIMIT_PAGES = 5;
     try {
-        const pages = [
-            1,
-            2,
-            3,
-            4,
-            5
-        ];
-        const promises = pages.map((page)=>fetchWithRetry(`${JIKAN_API_BASE}/anime?genres=${genreId}&page=${page}&limit=25&order_by=start_date&sort=desc&sfw=true`, {
+        const promises = [];
+        // Kita request 5 halaman sekaligus.
+        // Berkat scheduleRequest, ini tidak akan ditembak bersamaan.
+        for(let page = 1; page <= LIMIT_PAGES; page++){
+            const url = buildUrl('/anime', {
+                genres: genreId,
+                page: page,
+                limit: 25,
+                order_by: 'start_date',
+                sort: 'desc',
+                sfw: true
+            });
+            promises.push(fetchWithRetry(url, {
                 next: {
                     revalidate: 3600
                 }
-            }).then((res)=>res.ok ? res.json() : {
-                    data: []
-                }));
+            }));
+        }
         const results = await Promise.all(promises);
-        const combinedData = results.flatMap((r)=>r.data || []);
-        const uniqueData = Array.from(new Map(combinedData.map((item)=>[
-                item.mal_id,
-                item
-            ])).values());
+        const combinedData = results.flatMap((r)=>r?.data || []);
+        // Dedup: Hilangkan duplikat
+        const uniqueMap = new Map();
+        combinedData.forEach((item)=>{
+            if (!uniqueMap.has(item.mal_id)) {
+                uniqueMap.set(item.mal_id, item);
+            }
+        });
+        const uniqueData = Array.from(uniqueMap.values());
         return {
             data: uniqueData,
             pagination: {
-                last_visible_page: 5,
+                last_visible_page: LIMIT_PAGES,
                 has_next_page: true,
                 current_page: 1
             }
         };
-    } catch  {
+    } catch (e) {
+        console.error("Error fetching genre:", e);
         return {
             data: []
         };
