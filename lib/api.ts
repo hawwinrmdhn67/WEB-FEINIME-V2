@@ -340,12 +340,18 @@ export async function getPopularAnime(): Promise<AnimeResponse> {
 
 // E. Season
 
-export async function getSeasonNow(page = 1): Promise<AnimeResponse> {
-  return fetchAnimeList('/seasons/now', { limit: 25, page }, 1, 86400)
+export async function getSeasonNow(): Promise<AnimeResponse> {
+  const res = await fetchAnimeList('/seasons/now', { limit: 25 }, 2, 86400)
+
+  if (!res || !Array.isArray(res.data)) {
+    return { data: [] }
+  }
+
+  return res
 }
 
 export async function getSeasonUpcoming(): Promise<AnimeResponse> {
-  return fetchAnimeList('/seasons/upcoming', { limit: 25 }, 2, 86400)
+  return fetchAnimeList('/seasons/upcoming', { limit: 25 }, 3, 86400)
 }
 
 // F. Search

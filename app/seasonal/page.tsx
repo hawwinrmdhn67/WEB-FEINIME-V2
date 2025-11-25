@@ -19,12 +19,11 @@ export default function SeasonalPage() {
   const [animes, setAnimes] = useState<Anime[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchSeasonal = async () => {
       setLoading(true)
       try {
-        // Panggil API tanpa parameter, sudah otomatis ambil page 1 & 2
-        const res = await getSeasonNow()
+        const res = await getSeasonNow()   // sudah 50 data
         setAnimes(res.data)
       } catch (err) {
         console.error('Failed to fetch seasonal anime', err)
