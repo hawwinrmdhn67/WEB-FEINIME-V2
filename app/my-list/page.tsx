@@ -47,36 +47,50 @@ export default function MyListPage() {
   }, [myList])
 
   return (
-    // UPDATED: Tambahkan 'flex flex-col' agar children bisa mengisi height
-    <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
+  <main className="min-h-screen bg-background text-foreground flex flex-col">
+    <Navbar />
 
-      {/* UPDATED: Tambahkan 'flex-1 w-full' agar div ini mengisi sisa ruang kosong */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
-        {/* HEADER */}
-        <div className="text-center md:text-left mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">My List</h1>
-          <p className="text-muted-foreground">
-            Manage your anime watchlist here
-          </p>
-        </div>
-
-        {/* GRID */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
+      
+      {/* HEADER: Loading vs Content */}
+      <div className="mb-10 text-center md:text-left">
         {loading ? (
-          <SkeletonLoader type="popular" count={12} />
-        ) : animeList.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {animeList.map(anime => (
-              <AnimeCard key={anime.mal_id} anime={anime} />
-            ))}
-          </div>
+           <SkeletonLoader type="page-header" />
         ) : (
-          <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border flex flex-col items-center justify-center h-64">
-            <p className="text-muted-foreground text-lg font-medium">No anime in your list</p>
-            <p className="text-sm text-muted-foreground/60 mt-1">Start adding anime to track your progress!</p>
-          </div>
+          <>
+            {/* Mengubah mb-3 jadi mb-2 */}
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+              My List
+            </h1>
+            {/* Menghapus 'text-base md:text-lg' agar ukuran font kembali normal (seperti trending) */}
+            <p className="text-muted-foreground">
+              Your personal anime watchlist track progress and manage favorites
+            </p>
+          </>
         )}
       </div>
+
+      {/* GRID */}
+      {loading ? (
+        <SkeletonLoader type="popular" count={12} />
+      ) : animeList.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          {animeList.map(anime => (
+            <AnimeCard key={anime.mal_id} anime={anime} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border flex flex-col items-center justify-center h-64">
+          <p className="text-muted-foreground text-lg font-medium">
+            No anime in your list
+          </p>
+          <p className="text-sm text-muted-foreground/60 mt-1">
+            Start adding anime to track your progress!
+          </p>
+        </div>
+      )}
+    </div>
+
 
       {/* Footer - Sekarang akan selalu di bawah karena parentnya flex-col dan konten di atasnya flex-1 */}
       <footer className="border-t border-border bg-card mt-auto">

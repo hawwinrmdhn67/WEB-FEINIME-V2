@@ -37,10 +37,15 @@ export default function PopularPage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Navbar />
+  <main className="min-h-screen bg-background text-foreground">
+    <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+      {/* HEADER: Loading vs Content */}
+      {loading ? (
+        <SkeletonLoader type="page-header" />
+      ) : (
         <div className="text-center md:text-left mb-10">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Popular Anime
@@ -49,22 +54,23 @@ export default function PopularPage() {
             Explore the most popular anime series right now
           </p>
         </div>
+      )}
 
-        {loading ? (
-          <SkeletonLoader type="popular" count={12} />
-        ) : animes.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {animes.map((anime, index) => (
-              // PERUBAHAN DI SINI: Menghapus prop rank={index + 1}
-              <AnimeCard key={anime.mal_id} anime={anime} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border">
-            <p className="text-muted-foreground">No popular anime found</p>
-          </div>
-        )}
-      </div>
+      {/* CONTENT */}
+      {loading ? (
+        <SkeletonLoader type="popular" count={12} />
+      ) : animes.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          {animes.map((anime, index) => (
+            <AnimeCard key={anime.mal_id} anime={anime} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border">
+          <p className="text-muted-foreground">No popular anime found</p>
+        </div>
+      )}
+    </div>
 
       {/* Responsive Footer */}
       <footer className="border-t border-border bg-card mt-auto">

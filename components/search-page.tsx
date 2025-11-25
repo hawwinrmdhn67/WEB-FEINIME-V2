@@ -85,18 +85,21 @@ export default function SearchPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-        {/* Header */}
+        {/* HEADER: Loading vs Content */}
+      {loading ? (
+         <SkeletonLoader type="page-header" />
+      ) : (
         <div className="text-center md:text-left mb-10">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Search Results
           </h1>
-
           <p className="text-muted-foreground">
             {query
               ? `Showing results for "${query}"`
               : 'Enter a keyword to start searching'}
           </p>
         </div>
+      )}
 
         {/* Loading State */}
         {loading ? (

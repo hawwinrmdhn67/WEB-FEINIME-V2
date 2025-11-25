@@ -194,3 +194,22 @@ Kontribusi Anda sangat dihargai\! Jika Anda ingin menambahkan fitur, memperbaiki
 *Terima kasih telah melihat project Feinime V2 Salam dari dev hawwinrmdhn67\!*
 
 ----
+ {/* Sidebar/Top Charts Section */}
+          <div className="lg:col-span-4 flex flex-col h-full"> 
+            
+            {/* =======================================
+                HEADER LOADING LOGIC
+                (Menggunakan skeleton type="header-side")
+               ======================================= */}
+            {loadingTop ? (
+               <SkeletonLoader type="header-side" />
+            ) : (
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <TrendingUp className="text-primary" size={18}/> Top Charts
+                </h3>
+                <Link href="/trending" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  View All
+                </Link>
+              </div>
+            )}

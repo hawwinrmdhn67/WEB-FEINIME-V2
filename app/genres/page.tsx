@@ -55,12 +55,35 @@ export default function GenresPage() {
 
   const currentGenreName = genres.find(g => g.mal_id === selectedGenre)?.name
 
-  return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Navbar />
+ return (
+  <main className="min-h-screen bg-background text-foreground">
+    <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl md:text-4xl font-bold mb-8">Browse by Genre</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+      {/* HEADER: Loading vs Content */}
+      {loading ? (
+        <SkeletonLoader type="page-header" />
+      ) : (
+        <div className="text-center md:text-left mb-10">
+           <h1 className="text-3xl md:text-4xl font-bold mb-3">Browse by Genre</h1>
+            <p className="text-muted-foreground text-base md:text-lg">
+              Explore anime series categorized by your favorite genres
+            </p>
+        </div>
+      )}
+
+      {/* GENRE BUTTONS */}
+      {loading ? (
+        <div className="flex flex-wrap gap-2 mb-12">
+          {[...Array(42)].map((_, i) => (
+            <div
+              key={i}
+              className="h-8 w-20 bg-muted animate-pulse rounded-full"
+            ></div>
+          ))}
+        </div>
+      ) : (
         <div className="mb-12 flex flex-wrap gap-2">
           {genres.map((genre) => {
             const isSelected = selectedGenre === genre.mal_id
@@ -79,24 +102,32 @@ export default function GenresPage() {
             )
           })}
         </div>
+      )}
 
-        {loading ? (
+      {/* CONTENT */}
+      {loading ? (
+        <>
+          <div className="h-6 w-44 bg-muted animate-pulse rounded mb-6"></div>
           <SkeletonLoader type="genres" count={12} />
-        ) : animes.length > 0 ? (
-          <>
-            <h2 className="text-2xl font-semibold mb-6">{currentGenreName} Anime</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-              {animes.map(anime => (
-                <AnimeCard key={anime.mal_id} anime={anime} />
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border">
-            <p className="text-muted-foreground">No anime found for this genre</p>
+        </>
+      ) : animes.length > 0 ? (
+        <>
+          {/* Genre Name Title */}
+          <h2 className="text-2xl font-semibold mb-6">{currentGenreName} Anime</h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+            {animes.map(anime => (
+              <AnimeCard key={anime.mal_id} anime={anime} />
+            ))}
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border">
+          <p className="text-muted-foreground">No anime found for this genre</p>
+        </div>
+      )}
+    </div>
+
       {/* Responsive Footer */}
       <footer className="border-t border-border bg-card mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
