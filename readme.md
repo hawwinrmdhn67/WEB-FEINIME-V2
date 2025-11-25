@@ -175,7 +175,7 @@ Kontribusi Anda sangat dihargai\! Jika Anda ingin menambahkan fitur, memperbaiki
 
 2.  Buat *branch* fitur baru: `git checkout -b fitur-xyz`
 
-3.  *Commit* perubahan Anda: `git commit -m "feat: Menambahkan fitur xyz"`
+3.  *Commit* perubahan mu: `git commit -m "feat: Menambahkan fitur xyz"`
 
 4.  *Push* ke *branch*: `git push origin fitur-xyz`
 
