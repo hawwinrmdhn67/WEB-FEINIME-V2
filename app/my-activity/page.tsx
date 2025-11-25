@@ -22,6 +22,11 @@ const mockAllActivities: ActivityItem[] = [
   { id: 3, type: 'add', animeTitle: 'The Apothecary Diaries', detail: 'Added to List', time: '3 days ago' },
   { id: 4, type: 'share', animeTitle: 'One Piece', detail: 'Shared this anime', time: '4 days ago' },
   { id: 5, type: 'add', animeTitle: 'Vinland Saga Season 2', detail: 'Added to List', time: '5 days ago' },
+  { id: 6, type: 'add', animeTitle: 'Chainsaw Man', detail: 'Added to List', time: '6 days ago' },
+  { id: 7, type: 'share', animeTitle: 'Demon Slayer: Kimetsu no Yaiba', detail: 'Shared this anime', time: '1 week ago' },
+  { id: 8, type: 'add', animeTitle: 'Spy x Family Season 2', detail: 'Added to List', time: '1 week ago' },
+  { id: 9, type: 'share', animeTitle: 'Attack on Titan Final Season', detail: 'Shared this anime', time: '2 weeks ago' },
+  { id: 10, type: 'add', animeTitle: 'My Hero Academia Season 6', detail: 'Added to List', time: '2 weeks ago' },
 ]
 
 // ======================
@@ -70,7 +75,7 @@ export default function MyActivityPage() {
                 Back to Dashboard <ArrowRight size={12} />
               </Link>
             </div>
-
+            
             <div className="flex flex-col gap-3 p-4">
               {visibleActivities.map(activity => {
                 const style = getActivityStyle(activity.type)

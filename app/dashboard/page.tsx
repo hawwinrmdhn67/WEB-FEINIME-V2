@@ -22,13 +22,13 @@ const mockRecentActivity = [
   { 
     id: 1, type: "add", animeTitle: "Sousou no Frieren", 
     detail: "Added to List", time: "2 hours ago",
-    icon: <Bookmark size={16} className="text-green-500" />, // Saved = green
+    icon: <Bookmark size={16} className="text-green-500" />, 
     bg: "bg-green-500/10"
   },
   { 
     id: 2, type: "share", animeTitle: "Jujutsu Kaisen Season 2", 
     detail: "Shared this anime", time: "1 day ago",
-    icon: <Share2 size={16} className="text-blue-500" />, // Share = blue
+    icon: <Share2 size={16} className="text-blue-500" />, 
     bg: "bg-blue-500/10"
   },
   { 
@@ -74,7 +74,83 @@ const UpcomingListItem = ({ title, date, image, id }: { title: string, date: str
 );
 
 // ===================================
-// 3. MAIN COMPONENT
+// 3. SKELETON COMPONENT
+// ===================================
+const DashboardSkeleton = () => (
+  <div className="max-w-6xl mx-auto animate-pulse">
+    {/* Header Skeleton */}
+    <div className="mb-8 pb-6 border-b border-border">
+      <div className="h-8 w-48 bg-muted rounded mb-3"></div>
+      <div className="h-4 w-64 bg-muted rounded opacity-70"></div>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Left Column Skeleton */}
+      <div className="lg:col-span-2 space-y-8">
+        
+        {/* Stats Row Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-card p-5 rounded-xl border border-border shadow-sm h-32 flex flex-col justify-between">
+               <div className="flex justify-between items-start">
+                  <div className="h-4 w-16 bg-muted rounded"></div>
+                  <div className="h-8 w-8 bg-muted rounded-full"></div>
+               </div>
+               <div className="space-y-2">
+                  <div className="h-8 w-12 bg-muted rounded"></div>
+                  <div className="h-3 w-24 bg-muted rounded opacity-70"></div>
+               </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent Activity Skeleton */}
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden h-64">
+           <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-muted/20">
+              <div className="h-6 w-32 bg-muted rounded"></div>
+              <div className="h-4 w-16 bg-muted rounded"></div>
+           </div>
+           <div className="p-4 space-y-4">
+              {[1, 2, 3].map((i) => (
+                 <div key={i} className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-muted shrink-0"></div>
+                    <div className="flex-1 space-y-2">
+                       <div className="h-4 w-48 bg-muted rounded"></div>
+                       <div className="h-3 w-32 bg-muted rounded opacity-70"></div>
+                    </div>
+                 </div>
+              ))}
+           </div>
+        </div>
+      </div>
+
+      {/* Right Column (Sidebar) Skeleton */}
+      <div className="lg:col-span-1 space-y-6">
+          <div className="bg-card rounded-xl border border-border shadow-sm p-5">
+              <div className="flex justify-between mb-6">
+                 <div className="h-6 w-24 bg-muted rounded"></div>
+                 <div className="h-5 w-10 bg-muted rounded-full"></div>
+              </div>
+              <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="flex gap-3">
+                          <div className="w-12 h-16 bg-muted rounded-md shrink-0"></div>
+                          <div className="flex-1 space-y-2 py-1">
+                              <div className="h-4 w-full bg-muted rounded"></div>
+                              <div className="h-3 w-2/3 bg-muted rounded opacity-70"></div>
+                          </div>
+                      </div>
+                  ))}
+              </div>
+              <div className="mt-5 h-9 w-full bg-muted rounded-lg"></div>
+          </div>
+      </div>
+    </div>
+  </div>
+)
+
+// ===================================
+// 4. MAIN COMPONENT
 // ===================================
 
 export default function UserDashboard() { 
@@ -84,6 +160,7 @@ export default function UserDashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true)
       try {
         const upcomingData = await getSeasonUpcoming();
         // Take first 5 anime
@@ -125,75 +202,79 @@ export default function UserDashboard() {
       <Navbar /> 
       
       <div className="min-h-[calc(100vh-64px)] bg-background p-4 sm:p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto"> 
-          
-          <header className="mb-8 pb-6 border-b border-border">
-            <h1 className="text-3xl font-bold flex items-center gap-3 text-foreground">
-              Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-2">
-                Welcome, <span className="font-semibold text-foreground">{userName}</span>. Keep track of your anime collection here.
-            </p>
-          </header>
+        
+        {isLoading ? (
+            // TAMPILKAN SKELETON JIKA LOADING
+            <DashboardSkeleton />
+        ) : (
+            // TAMPILKAN KONTEN ASLI
+            <div className="max-w-6xl mx-auto"> 
+            
+            <header className="mb-8 pb-6 border-b border-border">
+                <h1 className="text-3xl font-bold flex items-center gap-3 text-foreground">
+                Dashboard
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                    Welcome, <span className="font-semibold text-foreground">{userName}</span>. Keep track of your anime collection here.
+                </p>
+            </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            {/* === LEFT COLUMN (MAIN AREA - Span 2) === */}
-            <div className="lg:col-span-2 space-y-8">
-                
-                {/* 1. Stats Row */}
-                 <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <StatCard 
-                      icon={<User size={18} className="text-yellow-500" />}
-                      title="Joined"
-                      // FIX: Date format to English locale (Jan 2025)
-                      value={new Date(mockUser.joined).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
-                      description="Member Since"
-                  />
-                  <StatCard 
-                      icon={<Bookmark size={18} className="text-green-500" />}
-                      title="Saved"
-                      value={mockUser.totalSaved}
-                      description="Anime in List"
-                  />
-                  <StatCard 
-                      icon={<Share2 size={18} className="text-blue-500" />}
-                      title="Shared"
-                      value={mockUser.totalShared || 15} 
-                      description="Anime shared"
-                  />
-              </section>
-                
-                {/* 2. Recent Activity */}
-                <section className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-                    <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-muted/20">
-                        <h2 className="font-semibold flex items-center gap-2 text-lg">
-                            <ListPlus size={20} className="text-primary" /> Recent Activity
-                        </h2>
-                        <Link href="/my-activity" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                            View All <ArrowRight size={12} />
-                        </Link>
-                    </div>
-                    <RecentActivityList />
-                </section>
-
-            </div>
-
-            {/* === RIGHT COLUMN (SIDEBAR - Span 1) === */}
-            <div className="lg:col-span-1 space-y-6">
-                
-                {/* Upcoming Anime Widget */}
-                <div className="bg-card rounded-xl border border-border shadow-sm p-5 sticky top-24">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold flex items-center gap-2">
-                            <Calendar size={18} className="text-pink-500" /> Upcoming
-                        </h3>
-                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">NEW</span>
-                    </div>
+                {/* === LEFT COLUMN (MAIN AREA - Span 2) === */}
+                <div className="lg:col-span-2 space-y-8">
                     
-                    <div className="space-y-2">
-                        {!isLoading && upcomingAnime ? (
-                            upcomingAnime.map((anime) => (
+                    {/* 1. Stats Row */}
+                    <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <StatCard 
+                        icon={<User size={18} className="text-yellow-500" />}
+                        title="Joined"
+                        value={new Date(mockUser.joined).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} 
+                        description="Member Since"
+                    />
+                    <StatCard 
+                        icon={<Bookmark size={18} className="text-green-500" />}
+                        title="Saved"
+                        value={mockUser.totalSaved}
+                        description="Anime in List"
+                    />
+                    <StatCard 
+                        icon={<Share2 size={18} className="text-blue-500" />}
+                        title="Shared"
+                        value={mockUser.totalShared || 15} 
+                        description="Anime shared"
+                    />
+                </section>
+                    
+                    {/* 2. Recent Activity */}
+                    <section className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                        <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-muted/20">
+                            <h2 className="font-semibold flex items-center gap-2 text-lg">
+                                <ListPlus size={20} className="text-primary" /> Recent Activity
+                            </h2>
+                            <Link href="/my-activity" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                                View All <ArrowRight size={12} />
+                            </Link>
+                        </div>
+                        <RecentActivityList />
+                    </section>
+
+                </div>
+
+                {/* === RIGHT COLUMN (SIDEBAR - Span 1) === */}
+                <div className="lg:col-span-1 space-y-6">
+                    
+                    {/* Upcoming Anime Widget */}
+                    <div className="bg-card rounded-xl border border-border shadow-sm p-5 sticky top-24">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold flex items-center gap-2">
+                                <Calendar size={18} className="text-pink-500" /> Upcoming
+                            </h3>
+                            <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">NEW</span>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            {upcomingAnime && upcomingAnime.map((anime) => (
                                 <UpcomingListItem 
                                     key={anime.mal_id}
                                     title={anime.title_english || anime.title}
@@ -201,21 +282,20 @@ export default function UserDashboard() {
                                     image={anime.images.jpg.image_url} 
                                     id={anime.mal_id}
                                 />
-                            ))
-                        ) : (
-                            <div className="text-xs text-muted-foreground py-4 text-center">Loading data...</div>
-                        )}
+                            ))}
+                        </div>
+                        
+                        <Link href="/seasonal/upcoming" className="mt-5 w-full block text-center py-2 text-sm font-medium text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
+                            View Full Schedule
+                        </Link>
                     </div>
-                    
-                    <Link href="/seasonal/upcoming" className="mt-5 w-full block text-center py-2 text-sm font-medium text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
-                        View Full Schedule
-                    </Link>
-                </div>
 
+                </div>
             </div>
-          </div>
-        </div>
+            </div>
+        )}
       </div>
+      
       {/* Footer */}
       <footer className="border-t border-border bg-card mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">

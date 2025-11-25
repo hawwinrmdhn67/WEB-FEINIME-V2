@@ -1,290 +1,469 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
-  Settings, User, Key, SunMoon, Save, 
-  Mail, PenLine, ShieldCheck, Palette, Camera
-} from 'lucide-react'
-import { Navbar } from '@/components/navbar'
+  UserCog, 
+  Shield, 
+  Bell, 
+  Palette, 
+  Save,
+  ChevronRight,
+  User,
+  ArrowLeft,
+  Lock,
+  LogOut
+} from 'lucide-react' 
+import { Navbar } from '@/components/navbar' 
 
-// ==========================================
-// SUB-COMPONENTS (Separated for better performance)
-// ==========================================
+// ===================================
+// 1. DATA MOCK & TYPES
+// ===================================
 
-const ProfileSettings = ({ 
-  form, 
-  onChange, 
-  onSave, 
-  isSaving 
-}: { 
-  form: any, 
-  onChange: (e: any) => void, 
-  onSave: (e: any) => void, 
-  isSaving: boolean 
-}) => (
-  <form onSubmit={onSave} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-            <h3 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-                <User size={20} className="text-blue-600 dark:text-blue-400" /> Personal Information
-            </h3>
-            <p className="text-sm text-muted-foreground">Update your photo and public profile details.</p>
-        </div>
-      </div>
-      
-      {/* Avatar Section */}
-      <div className="flex items-center gap-6 mb-8 p-4 bg-secondary/20 rounded-xl border border-border/50">
-        <div className="relative group">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary border-2 border-primary/20 overflow-hidden">
-                <User size={40} />
-            </div>
-            <button type="button" className="absolute bottom-0 right-0 p-1.5 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors">
-                <Camera size={14} />
-            </button>
-        </div>
-        <div className="flex-1">
-            <h4 className="text-sm font-medium text-foreground">Profile Picture</h4>
-            <p className="text-xs text-muted-foreground mb-3">We recommend using an image of size 500x500px.</p>
-            <button type="button" className="text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors font-medium">
-                Change Photo
-            </button>
-        </div>
-      </div>
+interface UserSettings {
+  username: string
+  email: string
+  theme: 'light' | 'dark' | 'system'
+  notificationEnabled: boolean
+}
 
-      {/* Form Fields */}
-      <div className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-                <label htmlFor="displayName" className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Display Name</label>
-                <div className="flex items-center gap-3 bg-card border border-border hover:border-primary/50 rounded-lg px-3 py-2.5 focus-within:ring-1 focus-within:ring-primary transition-all shadow-sm">
-                    <User size={18} className="text-muted-foreground" />
-                    <input 
-                    id="displayName" 
-                    name="displayName" 
-                    type="text" 
-                    value={form.displayName} 
-                    onChange={onChange}
-                    className="bg-transparent outline-none text-sm w-full text-foreground placeholder:text-muted-foreground" 
-                    required
-                    />
+const dummySettings: UserSettings = {
+  username: 'hawwinrmdhn',
+  email: 'user@example.com',
+  theme: 'dark',
+  notificationEnabled: true,
+}
+
+const settingSections = [
+    { id: 'profile', label: 'Profile', icon: <User size={18} className="text-blue-500" />, desc: 'Manage account info' },
+    { id: 'security', label: 'Security', icon: <Shield size={18} className="text-green-500" />, desc: 'Password & 2FA' },
+    { id: 'notifications', label: 'Notifications', icon: <Bell size={18} className="text-yellow-500" />, desc: 'Email alerts' },
+    { id: 'appearance', label: 'Appearance', icon: <Palette size={18} className="text-pink-500" />, desc: 'Theme settings' },
+]
+
+// ===================================
+// 2. HELPER COMPONENTS
+// ===================================
+
+const ContentHeader = ({ title, icon }: { title: string, icon: React.ReactNode }) => (
+    <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-muted/20">
+        <h2 className="font-semibold flex items-center gap-2 text-lg">
+            {icon} {title}
+        </h2>
+    </div>
+)
+
+const SaveButton = ({ isSaving, label = "Save Changes" }: { isSaving: boolean, label?: string }) => (
+    <div className="flex justify-end pt-4 mt-6 border-t border-border/50">
+        <button 
+            type="submit" 
+            disabled={isSaving}
+            className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-lg shadow hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+        >
+            {isSaving ? (
+                <>
+                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                </>
+            ) : (
+                <>
+                    <Save size={16} />
+                    {label}
+                </>
+            )}
+        </button>
+    </div>
+)
+
+// === KOMPONEN SKELETON FULL PAGE ===
+const SettingsSkeleton = () => (
+    <div className="max-w-6xl mx-auto animate-pulse">
+        {/* Header Skeleton */}
+        <div className="mb-8 pb-6 border-b border-border">
+            <div className="h-8 w-48 bg-muted rounded-md mb-3"></div>
+            <div className="h-4 w-64 bg-muted rounded-md opacity-60"></div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Sidebar Skeleton */}
+            <div className="lg:col-span-1 space-y-6">
+                <div className="bg-card rounded-xl border border-border shadow-sm p-4">
+                    <div className="h-6 w-32 bg-muted rounded mb-6"></div>
+                    <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => (
+                            <div key={i} className="h-12 w-full bg-muted rounded-lg opacity-60"></div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Email Address</label>
-                <div className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg px-3 py-2.5">
-                    <Mail size={18} className="text-muted-foreground" />
-                    <input 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    value={form.email} 
-                    readOnly
-                    className="bg-transparent outline-none text-sm w-full text-muted-foreground cursor-not-allowed" 
-                    />
+            {/* Content Skeleton */}
+            <div className="lg:col-span-2">
+                <div className="bg-card rounded-xl shadow-sm border border-border p-6 h-[400px]">
+                    <div className="flex items-center gap-3 mb-8 pb-4 border-b border-border/50">
+                        <div className="h-6 w-6 bg-muted rounded-full"></div>
+                        <div className="h-6 w-40 bg-muted rounded"></div>
+                    </div>
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <div className="h-4 w-24 bg-muted rounded opacity-70"></div>
+                            <div className="h-10 w-full bg-muted rounded"></div>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="h-4 w-32 bg-muted rounded opacity-70"></div>
+                            <div className="h-10 w-full bg-muted rounded"></div>
+                        </div>
+                        <div className="h-10 w-32 bg-muted rounded ml-auto mt-8"></div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div>
-          <label htmlFor="bio" className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Bio</label>
-          <div className="flex items-start gap-3 bg-card border border-border hover:border-primary/50 rounded-lg px-3 py-2.5 focus-within:ring-1 focus-within:ring-primary transition-all shadow-sm">
-            <PenLine size={18} className="text-muted-foreground mt-0.5" />
-            <textarea 
-              id="bio" 
-              name="bio" 
-              rows={3}
-              value={form.bio} 
-              onChange={onChange}
-              className="bg-transparent outline-none text-sm w-full resize-none text-foreground placeholder:text-muted-foreground" 
-            />
-          </div>
-          <p className="text-[10px] text-muted-foreground text-right mt-1">Max 150 characters</p>
-        </div>
-      </div>
     </div>
-
-    <div className="pt-6 border-t border-border flex justify-end">
-      <button 
-        type="submit" 
-        className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-primary-foreground font-medium transition-all w-full sm:w-auto shadow-md
-          ${isSaving ? 'bg-primary/70 cursor-not-allowed' : 'bg-primary hover:bg-primary/90 hover:shadow-lg active:scale-95'}`}
-        disabled={isSaving}
-      >
-        {isSaving ? <span className="animate-spin">⏳</span> : <Save size={18} />}
-        {isSaving ? 'Saving...' : 'Save Changes'}
-      </button>
-    </div>
-  </form>
 )
 
-const SecuritySettings = () => (
-  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    <div>
-      <h3 className="text-lg font-semibold mb-1 flex items-center gap-2 text-foreground">
-        <Key size={20} className="text-orange-600 dark:text-orange-400" /> Account Security
-      </h3>
-      <p className="text-sm text-muted-foreground mb-6">Manage your password and account security settings.</p>
-      
-      <div className="p-5 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-full text-orange-600 dark:text-orange-400">
-              <ShieldCheck size={24} />
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground">Password</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">Last changed 3 months ago</p>
-            </div>
-          </div>
-          <button className="w-full sm:w-auto px-4 py-2 bg-background border border-border hover:bg-secondary text-sm font-medium rounded-lg transition-colors shadow-sm">
-            Change Password
-          </button>
-        </div>
-      </div>
+// ===================================
+// 3. MAIN COMPONENT
+// ===================================
 
-      <div className="mt-4 p-4 rounded-lg bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20">
-        <div className="flex gap-3">
-            <div className="text-blue-600 dark:text-blue-400 mt-0.5">ℹ️</div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-                Enabling two-factor authentication (2FA) is highly recommended to enhance your account security. This feature will be available soon.
-            </p>
-        </div>
-      </div>
-    </div>
-  </div>
-)
-
-const AppearanceSettings = () => (
-  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    <div>
-      <h3 className="text-lg font-semibold mb-1 flex items-center gap-2 text-foreground">
-        <Palette size={20} className="text-purple-600 dark:text-purple-400" /> App Appearance
-      </h3>
-      <p className="text-sm text-muted-foreground mb-6">Customize your visual experience.</p>
-
-      <div className="p-5 bg-card border border-border rounded-xl shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-full text-purple-600 dark:text-purple-400">
-                <SunMoon size={24} />
-            </div>
-            <div>
-              <span className="block font-semibold text-foreground">Dark / Light Theme</span>
-              <span className="text-xs text-muted-foreground mt-0.5 block">Use the toggle button in the top Navbar to switch themes.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-)
-
-// ==========================================
-// MAIN COMPONENT
-// ==========================================
-
-export default function UserSettingsPage() {
-  const [activeTab, setActiveTab] = useState('profile')
-  const [profileForm, setProfileForm] = useState({
-    displayName: 'hawwinrmdhn',
-    email: 'hawwin123@gmail.com',
-    bio: 'Petinggi antartika',
-  })
+export default function UserSettingsPage() { 
+  const [settings, setSettings] = useState<UserSettings | null>(null)
+  const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [activeSection, setActiveSection] = useState<string>('profile')
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setProfileForm({
-      ...profileForm,
-      [e.target.name]: e.target.value,
+  // --- State Khusus Change Password ---
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+      current: '',
+      new: '',
+      confirm: ''
+  })
+
+  // --- Fetch Data ---
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setLoading(true)
+      // Simulasi loading seluruh halaman
+      await new Promise(resolve => setTimeout(resolve, 800)) 
+      setSettings(dummySettings)
+      setLoading(false)
+    }
+    fetchSettings()
+  }, [])
+
+  // --- Handlers ---
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    const isCheckbox = (e.target as HTMLInputElement).type === 'checkbox'
+    const checked = isCheckbox ? (e.target as HTMLInputElement).checked : undefined
+
+    setSettings(prev => {
+      if (!prev) return null
+      return { ...prev, [name]: isCheckbox ? checked : value }
     })
   }
 
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSaving(true)
-    // Simulation API call
-    setTimeout(() => {
-      setIsSaving(false)
-      alert('Profile settings saved successfully!')
-    }, 1500)
+  const handlePasswordInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target
+      setPasswordForm(prev => ({ ...prev, [name]: value }))
   }
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Key },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-  ]
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSaving(true)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    setIsSaving(false)
+  }
+
+  const handleSavePassword = async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (passwordForm.new !== passwordForm.confirm) {
+          alert("New password and confirmation do not match!")
+          return
+      }
+      setIsSaving(true)
+      await new Promise(resolve => setTimeout(resolve, 1500)) 
+      setIsSaving(false)
+      setIsChangingPassword(false)
+      setPasswordForm({ current: '', new: '', confirm: '' })
+      alert("Password successfully changed!")
+  }
+
+  // --- Render Form Content ---
+  const renderContent = () => {
+    if (!settings) return null;
+
+    switch (activeSection) {
+        case 'profile':
+            return (
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                    <ContentHeader title="Account Profile" icon={<User size={20} className="text-primary" />} />
+                    <div className="p-6">
+                        <form onSubmit={handleSave} className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">Username</label>
+                                <input name="username" value={settings.username} onChange={handleInputChange} 
+                                    className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">Email Address</label>
+                                <input name="email" type="email" value={settings.email} onChange={handleInputChange} 
+                                    className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" />
+                            </div>
+                            <SaveButton isSaving={isSaving} />
+                        </form>
+                    </div>
+                </div>
+            )
+
+        case 'security':
+            return (
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                    <ContentHeader title="Security Settings" icon={<Shield size={20} className="text-primary" />} />
+                    
+                    <div className="p-6">
+                        {isChangingPassword ? (
+                            <form onSubmit={handleSavePassword} className="space-y-5">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsChangingPassword(false)}
+                                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+                                >
+                                    <ArrowLeft size={16} /> Back to Security
+                                </button>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Current Password</label>
+                                    <div className="relative">
+                                        <input 
+                                            name="current" 
+                                            type="password" 
+                                            value={passwordForm.current}
+                                            onChange={handlePasswordInput}
+                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" 
+                                            placeholder="Enter current password"
+                                        />
+                                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">New Password</label>
+                                    <div className="relative">
+                                        <input 
+                                            name="new" 
+                                            type="password" 
+                                            value={passwordForm.new}
+                                            onChange={handlePasswordInput}
+                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" 
+                                            placeholder="Enter new password"
+                                        />
+                                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Confirm New Password</label>
+                                    <div className="relative">
+                                        <input 
+                                            name="confirm" 
+                                            type="password" 
+                                            value={passwordForm.confirm}
+                                            onChange={handlePasswordInput}
+                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" 
+                                            placeholder="Confirm new password"
+                                        />
+                                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    </div>
+                                </div>
+
+                                <SaveButton isSaving={isSaving} label="Update Password" />
+                            </form>
+                        ) : (
+                            <div className="space-y-4">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsChangingPassword(true)}
+                                    className="w-full text-left flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-secondary/30 transition-colors group"
+                                >
+                                     <div>
+                                        <h4 className="font-medium text-foreground group-hover:text-primary transition-colors">Change Password</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">Last updated 3 months ago</p>
+                                     </div>
+                                     <ChevronRight size={18} className="text-muted-foreground" />
+                                </button>
+
+                                <button type="button" className="w-full text-left flex items-center justify-between p-4 rounded-lg border border-border/60 hover:bg-secondary/30 transition-colors group">
+                                     <div>
+                                        <h4 className="font-medium text-foreground group-hover:text-primary transition-colors">Two-Factor Authentication</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">Add extra security layer</p>
+                                     </div>
+                                     <span className="text-[10px] bg-red-500/10 text-red-500 px-2 py-1 rounded font-bold">DISABLED</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )
+
+        case 'notifications':
+             return (
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                    <ContentHeader title="Notifications" icon={<Bell size={20} className="text-primary" />} />
+                    <div className="p-6">
+                        <form onSubmit={handleSave}>
+                            <div className="flex items-center justify-between p-4 border border-border/60 rounded-lg">
+                                <div>
+                                    <h4 className="font-medium text-foreground">Email Notifications</h4>
+                                    <p className="text-xs text-muted-foreground mt-1">Receive updates about new episodes.</p>
+                                </div>
+                                <input
+                                    name="notificationEnabled"
+                                    type="checkbox"
+                                    checked={settings.notificationEnabled}
+                                    onChange={handleInputChange}
+                                    className="h-5 w-5 rounded border-input text-primary focus:ring-primary cursor-pointer accent-primary"
+                                />
+                            </div>
+                            <SaveButton isSaving={isSaving} />
+                        </form>
+                    </div>
+                </div>
+            )
+
+        case 'appearance':
+            return (
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+                    <ContentHeader title="Appearance" icon={<Palette size={20} className="text-primary" />} />
+                    <div className="p-6">
+                         <form onSubmit={handleSave} className="space-y-5">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">Color Theme</label>
+                                <select
+                                    name="theme"
+                                    value={settings.theme}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2 rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none"
+                                >
+                                    <option value="light">Light Mode</option>
+                                    <option value="dark">Dark Mode</option>
+                                    <option value="system">System Default</option>
+                                </select>
+                            </div>
+                            <SaveButton isSaving={isSaving} />
+                        </form>
+                    </div>
+                </div>
+            )
+
+        default: return null;
+    }
+  }
 
   return (
     <>
-      <Navbar />
-
-      <div className="min-h-[calc(100vh-64px)] bg-background p-4 sm:p-6 lg:p-8 pb-20">
-        <div className="max-w-6xl mx-auto">
-          
-          {/* HEADER */}
-          <header className="mb-8 pb-6 border-b border-border">
-            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3 text-foreground">
-              Settings
-            </h1>
-            <p className="text-sm mt-2 text-muted-foreground ml-1">
-              Manage preferences and account information for <b>{profileForm.displayName}</b>.
-            </p>
-          </header>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <Navbar /> 
+      
+      <div className="min-h-[calc(100vh-64px)] bg-background p-4 sm:p-6 lg:p-8">
+        
+        {loading ? (
+            // === TAMPILKAN SKELETON FULL PAGE JIKA LOADING ===
+            <SettingsSkeleton />
+        ) : (
+            // === TAMPILKAN KONTEN ASLI SETELAH LOADING SELESAI ===
+            <div className="max-w-6xl mx-auto"> 
             
-            {/* LEFT COLUMN: NAVIGATION */}
-            {/* Desktop: Vertical List (No box background), Mobile: Horizontal Scroll */}
-            <div className="lg:col-span-3">
-              <div className="lg:sticky lg:top-24">
-                <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4 px-2 hidden lg:block">Menu</h2>
-                
-                {/* Navigation Container */}
-                <div className="flex lg:flex-col gap-1 overflow-x-auto pb-4 lg:pb-0 no-scrollbar mask-linear-fade">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon
-                    const isActive = activeTab === tab.id
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                          ${isActive 
-                            ? 'bg-primary/10 text-primary font-semibold' 
-                            : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-                          }`}
-                      >
-                        <Icon size={18} className={isActive ? 'text-primary' : ''} />
-                        {tab.label}
-                      </button>
-                    )
-                  })}
+            <header className="mb-8 pb-6 border-b border-border">
+                <h1 className="text-3xl font-bold flex items-center gap-3 text-foreground">
+                  Account Settings
+                </h1>
+                <p className="text-muted-foreground mt-2">
+                Manage your preferences and security settings.
+                </p>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                {/* SIDEBAR NAVIGATION */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-card rounded-xl border border-border shadow-sm p-4 sticky top-24">
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <h3 className="font-semibold flex items-center gap-2">
+                                <UserCog size={18} className="text-primary" /> Settings Menu
+                            </h3>
+                        </div>
+                        
+                        <div className="space-y-1">
+                            {settingSections.map((section) => (
+                                <button
+                                    key={section.id}
+                                    onClick={() => {
+                                        setActiveSection(section.id)
+                                        setIsChangingPassword(false)
+                                    }}
+                                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all group text-left
+                                        ${activeSection === section.id 
+                                            ? 'bg-secondary/80 text-foreground shadow-sm ring-1 ring-border' 
+                                            : 'hover:bg-secondary/40 text-muted-foreground hover:text-foreground'
+                                        }
+                                    `}
+                                >
+                                    <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 
+                                        ${activeSection === section.id ? 'bg-background shadow-sm' : 'bg-muted/50'}
+                                    `}>
+                                        {section.icon}
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-medium">{section.label}</h4>
+                                        <p className="text-[10px] opacity-70 leading-tight">{section.desc}</p>
+                                    </div>
+                                    {activeSection === section.id && (
+                                        <ChevronRight size={14} className="ml-auto opacity-50" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
 
-            {/* RIGHT COLUMN: CONTENT */}
-            <div className="lg:col-span-9">
-              <div className="bg-card p-6 md:p-8 rounded-2xl border border-border shadow-sm min-h-[500px]">
-                {activeTab === 'profile' && (
-                    <ProfileSettings 
-                        form={profileForm} 
-                        onChange={handleProfileChange} 
-                        onSave={handleSaveProfile} 
-                        isSaving={isSaving} 
-                    />
-                )}
-                {activeTab === 'security' && <SecuritySettings />}
-                {activeTab === 'appearance' && <AppearanceSettings />}
-              </div>
-            </div>
+                {/* CONTENT AREA */}
+                <div className="lg:col-span-2">
+                    {renderContent()}
+                </div>
 
+            </div>
+            </div>
+        )}
+      </div>
+
+      <footer className="border-t border-border bg-card mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 md:gap-12">
+            <div className="text-center md:text-left">
+              <span className="font-bold text-xl tracking-tight">Feinime</span>
+            </div>
+            <nav className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6 text-sm text-muted-foreground">
+              {['Home', 'Popular', 'Trending', 'About', 'Contact', 'FAQ'].map((item) => (
+                <a key={item} href="#" className="hover:text-primary transition-colors">
+                  {item}
+                </a>
+              ))}
+            </nav>
+            <div className="flex justify-center md:justify-start items-center gap-4">
+              <a href="#" className="text-muted-foreground hover:text-[#1DA1F2] transition-colors">
+                <span className="sr-only">Twitter</span>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M23.954 4.569c-.885.389-1.83.654-2.825.775 1.014-.611 1.794-1.574 2.163-2.723-.951.564-2.005.974-3.127 1.195-.897-.955-2.178-1.55-3.594-1.55-2.717 0-4.92 2.204-4.92 4.917 0 .39.045.765.127 1.124-4.087-.205-7.72-2.164-10.148-5.144-.424.722-.666 1.561-.666 2.475 0 1.708.87 3.214 2.188 4.099-.807-.025-1.566-.248-2.229-.616v.061c0 2.385 1.693 4.374 3.946 4.827-.413.111-.849.171-1.296.171-.314 0-.615-.03-.916-.086.631 1.953 2.445 3.376 4.604 3.416-1.68 1.319-3.809 2.105-6.102 2.105-.396 0-.779-.023-1.158-.067 2.189 1.402 4.768 2.217 7.548 2.217 9.051 0 14-7.496 14-13.986 0-.21 0-.42-.015-.63 1.009-.73 1.884-1.64 2.584-2.675z" /></svg>
+              </a>
+              <a href="#" className="text-muted-foreground hover:text-[#5865F2] transition-colors">
+                <span className="sr-only">Discord</span>
+                <svg className="w-5 h-5" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.55A59 59 0 0 0 46.92 0c-.65 1.14-1.39 2.59-1.9 3.74a42 42 0 0 0-17 0C27.5 2.6 26.76 1.15 26.1 0A58.8 58.8 0 0 0 10.9 4.55C2.68 19.28.08 33.43 1.3 47.36c11.04 8.16 21.56 6.06 21.56 6.06 1.44-1.84 2.56-3.78 3.44-5.7-6.16-1.84-8.52-4.52-8.52-4.52.72.48 1.44.92 2.16 1.3 4.92 2.52 10.12 3.78 15.44 3.78s10.52-1.26 15.44-3.78c.72-.38 1.44-.82 2.16-1.3 0 0-2.36 2.68-8.52 4.52.88 1.92 2 3.86 3.44 5.7 0 0 10.52 2.1 21.56-6.06 1.22-13.92-1.38-28.07-9.6-42.8ZM24.76 37.34c-3.12 0-5.68-2.82-5.68-6.28 0-3.46 2.52-6.28 5.68-6.28 3.18 0 5.74 2.82 5.68 6.28 0 3.46-2.5 6.28-5.68 6.28Zm21.48 0c-3.12 0-5.68-2.82-5.68-6.28 0-3.46 2.52-6.28 5.68-6.28 3.18 0 5.74 2.82 5.68 6.28 0 3.46-2.5 6.28-5.68 6.28Z" /></svg>
+              </a>
+            </div>
+          </div>
+          <div className="border-t border-border mt-8 pt-6 text-center text-muted-foreground text-sm">
+            <p>Feinime © 2025. All rights reserved.</p>
           </div>
         </div>
-      </div>
+      </footer>
     </>
   )
 }
