@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///C:/Coding/FeinimeV2/components/theme-provider.tsx"],"sourcesContent":["// components/theme-provider.tsx\n\"use client\"\n\nimport * as React from \"react\"\nimport { ThemeProvider as NextThemesProvider } from \"next-themes\"\n\nexport function ThemeProvider({ children, ...props }: any) {\n  return (\n    <NextThemesProvider \n      attribute=\"class\" \n      defaultTheme=\"system\" \n      enableSystem\n      disableTransitionOnChange // <-- Fitur Anti-Lag bawaan\n      {...props}\n    >\n      {children}\n    </NextThemesProvider>\n  )\n}"],"names":[],"mappings":"AAAA,gCAAgC;;;;;;AAIhC;AAHA;;;AAKO,SAAS,cAAc,EAAE,QAAQ,EAAE,GAAG,OAAY;IACvD,qBACE,8OAAC,iKAAkB;QACjB,WAAU;QACV,cAAa;QACb,YAAY;QACZ,yBAAyB;QACxB,GAAG,KAAK;kBAER;;;;;;AAGP"}}]
-}
