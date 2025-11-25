@@ -129,7 +129,7 @@ export default function UserDashboard() {
           
           <header className="mb-8 pb-6 border-b border-border">
             <h1 className="text-3xl font-bold flex items-center gap-3 text-foreground">
-              <LayoutDashboard className="text-primary" /> Dashboard
+              Dashboard
             </h1>
             <p className="text-muted-foreground mt-2">
                 Welcome, <span className="font-semibold text-foreground">{userName}</span>. Keep track of your anime collection here.
