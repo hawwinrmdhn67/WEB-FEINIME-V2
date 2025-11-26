@@ -16,6 +16,11 @@ export type SkeletonType =
   | 'search'          // Grid 5 Kolom
   | 'my-list'         // Grid 5 Kolom
   | 'genres'          // Grid 6 Kolom
+  // NEW: detail page skeleton types
+  | 'stats'           // StatsSection (bars / compact cards)
+  | 'reviews'         // ReviewsSection (list of reviews)
+  | 'characters'      // CharacterList (grid of characters)
+  | 'related'         // RelatedContent (horizontal / grid of related entries)
 
 interface SkeletonLoaderProps {
   type: SkeletonType
@@ -122,7 +127,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 
   // =========================
   // 4. SECTION HEADER (Judul Section Home + View All)
-  // Dipakai di: Home (Season Now, All Time Popular)
   // =========================
   if (type === 'header-section') {
     return (
@@ -137,7 +141,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 
   // =========================
   // 5. SIDEBAR HEADER (Icon + Title + Link)
-  // Dipakai di: Home Sidebar (Top Charts)
   // =========================
   if (type === 'header-side') {
     return (
@@ -153,7 +156,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 
   // =========================
   // 6. SIDEBAR LIST (List Item Vertical)
-  // Dipakai di: Home Sidebar Content
   // =========================
   if (type === 'trending') {
     return (
@@ -182,7 +184,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
 
   // =========================
   // 7. ACTIVITY LIST (Icon Bulat + Text + Time)
-  // Dipakai di: Activity Page
   // =========================
   if (type === 'activity') {
     return (
@@ -207,7 +208,96 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   }
 
   // =========================
-  // 8. DEFAULT GRID (Universal Card)
+  // NEW: 8. STATS SECTION (multiple compact stat cards + bar placeholders)
+  // Dipakai di: Anime Detail -> StatsSection
+  // =========================
+  if (type === 'stats') {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: Math.max(4, count) }).map((_, i) => (
+          <div key={i} className="bg-card/60 rounded-xl p-4 border border-border/40 animate-pulse">
+            <div className="h-4 w-36 bg-muted dark:bg-muted/70 rounded mb-3" />
+            <div className="h-6 w-20 bg-muted dark:bg-muted/70 rounded mb-4" />
+            <div className="space-y-2">
+              <div className="h-3 w-full bg-muted dark:bg-muted/70 rounded" />
+              <div className="h-3 w-5/6 bg-muted dark:bg-muted/70 rounded" />
+              <div className="h-3 w-3/4 bg-muted dark:bg-muted/70 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // =========================
+  // NEW: 9. REVIEWS SECTION (list of review skeletons)
+  // Dipakai di: Anime Detail -> ReviewsSection
+  // =========================
+  if (type === 'reviews') {
+    return (
+      <div className="flex flex-col gap-4">
+        {Array.from({ length: Math.max(3, count) }).map((_, i) => (
+          <div key={i} className="bg-card/50 border border-border/40 rounded-xl p-4 animate-pulse">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-full bg-muted dark:bg-muted/70 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="h-4 w-1/3 bg-muted dark:bg-muted/70 rounded" />
+                  <div className="h-3 w-16 bg-muted dark:bg-muted/70 rounded" />
+                </div>
+                <div className="mt-3 space-y-2">
+                  <div className="h-3 w-full bg-muted dark:bg-muted/70 rounded" />
+                  <div className="h-3 w-11/12 bg-muted dark:bg-muted/70 rounded" />
+                  <div className="h-3 w-3/4 bg-muted dark:bg-muted/70 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // =========================
+  // NEW: 10. CHARACTERS GRID (image + name + role)
+  // Dipakai di: Anime Detail -> CharacterList
+  // =========================
+  if (type === 'characters') {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {Array.from({ length: Math.max(6, count) }).map((_, i) => (
+          <div key={i} className="flex flex-col items-center bg-card border border-border/50 rounded-xl p-3 animate-pulse">
+            <div className="w-24 h-24 rounded-lg bg-muted dark:bg-muted/70 mb-3" />
+            <div className="h-4 w-3/4 bg-muted dark:bg-muted/70 rounded mb-2" />
+            <div className="h-3 w-1/2 bg-muted dark:bg-muted/70 rounded" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // =========================
+  // NEW: 11. RELATED CONTENT (horizontal row / grid)
+  // Dipakai di: Anime Detail -> RelatedContent
+  // =========================
+  if (type === 'related') {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {Array.from({ length: Math.max(6, count) }).map((_, i) => (
+          <div key={i} className="flex flex-col rounded-xl overflow-hidden bg-card border border-border/50 animate-pulse">
+            <div className="w-full aspect-[2/3] bg-muted dark:bg-muted/70" />
+            <div className="p-3 flex flex-col gap-2">
+              <div className="h-4 bg-muted dark:bg-muted/70 rounded w-3/4" />
+              <div className="h-3 bg-muted dark:bg-muted/70 rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // =========================
+  // 12. DEFAULT GRID (Universal Card)
   // Dipakai di: Seasonal Page, Popular Page, Search, My List
   // =========================
   return (
