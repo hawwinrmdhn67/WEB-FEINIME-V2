@@ -13,6 +13,7 @@ import { SkeletonLoader } from "@/components/skeleton-loader"
 import Link from "next/link"
 import { ArrowRight, Star, TrendingUp, Calendar as CalendarIcon, PlayCircle } from "lucide-react"
 import Image from "next/image"
+import { Footer } from "@/components/feinime-footer"
 
 export default function Home() {
   const [topAnimeData, setTopAnimeData] = useState<Anime[]>([])
@@ -251,32 +252,7 @@ export default function Home() {
           }
         </section>
       </div>
-
-      {/* FOOTER */}
-      <footer className="border-t border-border bg-card mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6 md:gap-12">
-            <div className="text-center md:text-left">
-              <span className="font-bold text-xl tracking-tight text-primary">Feinime</span>
-            </div>
-            <nav className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6 text-sm text-muted-foreground">
-              {['Home', 'Popular', 'Trending', 'About', 'Contact', 'FAQ'].map((item) => (
-                <a key={item} href="#" className="hover:text-primary transition-colors">
-                  {item}
-                </a>
-              ))}
-            </nav>
-            <div className="flex justify-center md:justify-start items-center gap-4 text-muted-foreground">
-               {/* Social Icons Placeholder */}
-               <div className="w-5 h-5 bg-current opacity-20 rounded-full" />
-               <div className="w-5 h-5 bg-current opacity-20 rounded-full" />
-            </div>
-          </div>
-          <div className="border-t border-border mt-8 pt-6 text-center text-muted-foreground text-sm">
-            <p>Feinime © 2025. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }
