@@ -1,23 +1,18 @@
 // lib/supabaseAdmin.ts
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-// service role key must be server-only (no NEXT_PUBLIC_ prefix)
-const url = process.env.SUPABASE_URL
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let adminClient: SupabaseClient | null = null
 
-if (!url || !serviceRoleKey) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment variables')
-}
+export function getSupabaseAdmin(): SupabaseClient {
+  if (adminClient) return adminClient
 
-// Safety: prevent accidental import in client-side bundles
-if (typeof window !== 'undefined') {
-  throw new Error('supabaseAdmin must only be imported on the server')
-}
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-// Create a server-only Supabase client. Disable session persistence / auto refresh on backend.
-export const supabaseAdmin: SupabaseClient = createClient(url, serviceRoleKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false
+  if (!url || !serviceKey) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment (server-only).')
   }
-})
+
+  adminClient = createClient(url, serviceKey)
+  return adminClient
+}

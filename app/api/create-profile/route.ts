@@ -1,7 +1,7 @@
 // app/api/create-profile/route.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 
 type Body = {
   id?: unknown
@@ -16,11 +16,6 @@ function isString(x: unknown): x is string {
 
 export async function POST(req: NextRequest) {
   try {
-    // Optional: simple secret check to avoid public abuse.
-    // NOTE: If you plan to call this route directly from browser/client,
-    // do NOT embed the secret in client code. Better alternatives:
-    //  - Use a server-side flow (call route from your server)
-    //  - Use Supabase Auth webhooks or a function that runs server-side
     const secretExpected = process.env.CREATE_PROFILE_SECRET
     if (secretExpected) {
       const provided = req.headers.get('x-create-profile-secret') ?? ''
@@ -37,7 +32,6 @@ export async function POST(req: NextRequest) {
     }
     const idStr = id.trim()
 
-    // Basic optional validation for email (if provided)
     const emailStr = isString(email) && email.length > 0 ? (email as string) : null
     if (emailStr && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
@@ -54,7 +48,7 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString()
     }
 
-    // Upsert
+    const supabaseAdmin = getSupabaseAdmin() // <-- call the getter
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .upsert(payload, { onConflict: 'id' })
@@ -66,9 +60,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message ?? 'Upsert failed' }, { status: 500 })
     }
 
-    // If data exists and has created_at vs updated_at you could decide 201 vs 200.
-    // We'll return 201 when row was newly created by checking if returned data exists
-    // but keep simple and return 200 (ok) as upsert may either insert or update.
     return NextResponse.json({ data }, { status: 200 })
   } catch (err: any) {
     console.error('create-profile route error', err)

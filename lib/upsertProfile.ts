@@ -1,31 +1,37 @@
 // lib/upsertProfile.ts
-import { supabase } from './supabaseClient';
+import { getBrowserSupabase } from './supabaseClient'
 
 type UserLike = {
-  id: string;
-  email?: string | null;
-  user_metadata?: any;
-};
+  id: string
+  email?: string | null
+  user_metadata?: any
+}
 
 export async function upsertProfile(user: UserLike | null) {
+  const supabase = getBrowserSupabase()
+  if (!supabase) {
+    console.warn('upsertProfile: no browser supabase client available')
+    return null
+  }
+
   if (!user?.id) {
     try {
-      const { data: sessionData, error: sessionErr } = await supabase.auth.getUser();
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getUser()
       if (sessionErr) {
-        console.error('upsertProfile: getUser error:', sessionErr);
-        return null;
+        console.error('upsertProfile: getUser error:', sessionErr)
+        return null
       }
-      user = sessionData?.user ?? null;
+      user = sessionData?.user ?? null
     } catch (err) {
-      console.error('upsertProfile: failed to read session', err);
-      return null;
+      console.error('upsertProfile: failed to read session', err)
+      return null
     }
   }
 
-  if (!user?.id) return null;
+  if (!user?.id) return null
 
-  const full_name = user.user_metadata?.full_name || user.user_metadata?.name || null;
-  const avatar_url = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+  const full_name = user.user_metadata?.full_name || user.user_metadata?.name || null
+  const avatar_url = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
 
   const payload = {
     id: user.id,
@@ -33,26 +39,22 @@ export async function upsertProfile(user: UserLike | null) {
     full_name,
     avatar_url,
     updated_at: new Date().toISOString()
-  };
+  }
 
   try {
     const res = await supabase
       .from('profiles')
       .upsert(payload, { onConflict: 'id' })
       .select()
-      .maybeSingle();
+      .maybeSingle()
 
     if (res.error) {
-      try {
-        console.error('Supabase upsert error (detailed):', JSON.stringify(res.error, Object.getOwnPropertyNames(res.error)));
-      } catch {
-        console.error('Supabase upsert error (raw):', res.error);
-      }
-      return null;
+      console.error('Supabase upsert error (detailed):', res.error)
+      return null
     }
-    return res.data;
+    return res.data
   } catch (err) {
-    console.error('upsertProfile unexpected error:', err);
-    return null;
+    console.error('upsertProfile unexpected error:', err)
+    return null
   }
 }

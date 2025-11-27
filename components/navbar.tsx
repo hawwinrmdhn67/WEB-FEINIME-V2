@@ -11,8 +11,8 @@ import {
 } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import { searchAnime, Anime } from '@/lib/api'
-import { supabase } from '@/lib/supabaseClient'
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
+import { getBrowserSupabase } from '@/lib/supabaseClient'
+import type { Session, User as SupabaseUser, SupabaseClient } from '@supabase/supabase-js'
 import { AnimatePresence, motion } from 'framer-motion'
 
 type ToastMessage = { id: number; text: string; type: 'success' | 'error' | 'info' }
@@ -61,11 +61,9 @@ export function Navbar(): JSX.Element {
   const showToast = (text: string, type: ToastMessage['type'] = 'success') => {
     const now = Date.now()
     if (lastToastRef.current && lastToastRef.current.text === text && (now - lastToastRef.current.ts) < 2000) {
-      // same toast shown in last 2s — skip
       return
     }
     lastToastRef.current = { text, ts: now }
-
     const id = Date.now() + Math.floor(Math.random() * 1000)
     setToasts(prev => [...prev, { id, text, type }])
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
@@ -110,74 +108,72 @@ export function Navbar(): JSX.Element {
     return () => window.removeEventListener('feinime:toast', handler as EventListener)
   }, [])
 
-  // Initialize auth and subscribe
+  // Initialize auth and subscribe (client-side only)
   useEffect(() => {
     let mounted = true
-    let subscription: any = null
+    let unsubRef: any = null
 
     async function initAuth() {
+      const sb = getBrowserSupabase()
+      if (!sb) {
+        // no client available (e.g. build/SSR) -> mark loaded and bail
+        if (mounted) setAuthLoaded(true)
+        return
+      }
+
+      // try to run session-from-url helper if present (OAuth redirect flows)
       try {
-        // attempt to finish OAuth session if SDK provides helper
-        try {
-          const maybeFn = (supabase.auth as any)?.getSessionFromUrl
-          if (typeof maybeFn === 'function') await maybeFn.call(supabase.auth)
-        } catch {
-          // ignore
-        }
+        const maybeFn = (sb.auth as any)?.getSessionFromUrl
+        if (typeof maybeFn === 'function') await maybeFn.call(sb.auth)
+      } catch {
+        // ignore
+      }
 
-        // get current session
+      try {
+        const { data } = await sb.auth.getSession()
+        if (!mounted) return
+        setSession(data.session ?? null)
+        setUser(data.session?.user ?? null)
+
+        // pending login flag handling
         try {
-          const { data } = await supabase.auth.getSession()
+          if (typeof window !== 'undefined' && window.localStorage && data.session) {
+            const pending = window.localStorage.getItem('feinime:show_login_toast')
+            if (pending === '1') {
+              showToast('Login successful', 'success')
+              window.localStorage.removeItem('feinime:show_login_toast')
+            }
+          }
+        } catch {}
+        // handle pending logout fallback
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            const pendingLogout = window.localStorage.getItem('feinime:show_logout_toast_fallback')
+            if (pendingLogout === '1') {
+              window.localStorage.removeItem('feinime:show_logout_toast_fallback')
+              scheduleAuthToast('Logout successful', 'info')
+            }
+          }
+        } catch {}
+      } catch {
+        // fallback: try getUser
+        try {
+          const { data: u } = await sb.auth.getUser()
           if (!mounted) return
-          setSession(data.session ?? null)
-          setUser(data.session?.user ?? null)
-
-          // if there was a pending login toast flag from OAuth, show it now (and remove flag)
-          try {
-            if (typeof window !== 'undefined' && window.localStorage && data.session) {
-              const pending = window.localStorage.getItem('feinime:show_login_toast')
-              if (pending === '1') {
-                showToast('Login successful', 'success')
-                window.localStorage.removeItem('feinime:show_login_toast')
-              }
-            }
-          } catch {
-            // ignore
-          }
-
-          // --- NEW: check pending logout fallback flag (set by handleLogout before navigation)
-          try {
-            if (typeof window !== 'undefined' && window.localStorage) {
-              const pendingLogout = window.localStorage.getItem('feinime:show_logout_toast_fallback')
-              if (pendingLogout === '1') {
-                window.localStorage.removeItem('feinime:show_logout_toast_fallback')
-                scheduleAuthToast('Logout successful', 'info')
-              }
-            }
-          } catch {
-            // ignore
-          }
-          // --- end NEW
+          setSession(null)
+          setUser(u.user ?? null)
         } catch {
-          // fallback: try to get user
-          try {
-            const { data: u } = await supabase.auth.getUser()
-            if (!mounted) return
-            setSession(null)
-            setUser(u.user ?? null)
-          } catch {
-            if (!mounted) return
-            setSession(null)
-            setUser(null)
-          }
+          if (!mounted) return
+          setSession(null)
+          setUser(null)
         }
       } finally {
         if (mounted) setAuthLoaded(true)
       }
 
-      // subscribe to changes
+      // subscribe to auth changes
       try {
-        const listener = supabase.auth.onAuthStateChange((event, s) => {
+        const listener = sb.auth.onAuthStateChange((event, s) => {
           setSession(s ?? null)
           setUser((s as any)?.user ?? null)
 
@@ -191,9 +187,7 @@ export function Navbar(): JSX.Element {
                   return true
                 }
               }
-            } catch {
-              // ignore
-            }
+            } catch {}
             return false
           }
 
@@ -207,7 +201,6 @@ export function Navbar(): JSX.Element {
             const consumed = checkAndConsumeLoginFlag()
             if (!consumed) scheduleAuthToast('Login successful', 'success')
           } else if (event === 'SIGNED_OUT') {
-            // If we earlier set suppress_logout flag (used in cleanupSession), skip logout toast
             try {
               if (typeof window !== 'undefined' && window.localStorage) {
                 const suppr = window.localStorage.getItem('feinime:suppress_logout_toast')
@@ -216,16 +209,14 @@ export function Navbar(): JSX.Element {
                   return
                 }
               }
-            } catch {
-              // ignore
-            }
+            } catch {}
             scheduleAuthToast('Logout successful', 'info')
           } else if (event === 'PASSWORD_RECOVERY') {
             scheduleAuthToast('Password recovery requested', 'info')
           }
         })
 
-        subscription = (listener as any)?.data?.subscription ?? (listener as any)?.subscription ?? listener
+        unsubRef = (listener as any)?.data?.subscription ?? (listener as any)?.subscription ?? listener
       } catch {
         // ignore subscribe errors
       }
@@ -236,11 +227,9 @@ export function Navbar(): JSX.Element {
     return () => {
       mounted = false
       try {
-        if (subscription?.unsubscribe) subscription.unsubscribe()
-        else if (subscription?.remove) subscription.remove()
-      } catch {
-        // ignore
-      }
+        if (unsubRef?.unsubscribe) unsubRef.unsubscribe()
+        else if (unsubRef?.remove) unsubRef.remove()
+      } catch {}
     }
   }, [])
 
@@ -301,8 +290,14 @@ export function Navbar(): JSX.Element {
   }
 
   const handleLogout = async () => {
+    // prefer runtime client
+    const sb = getBrowserSupabase()
     try {
-      await supabase.auth.signOut()
+      if (sb) {
+        await sb.auth.signOut()
+      } else {
+        // fallback: attempt signout via no-op (we still remove local state)
+      }
     } catch (err) {
       console.error('logout error', err)
     } finally {
@@ -317,24 +312,15 @@ export function Navbar(): JSX.Element {
           try { window.localStorage.removeItem('feinime:show_login_toast') } catch {}
           try { window.localStorage.removeItem('feinime:suppress_logout_toast') } catch {}
         }
-      } catch {
-        // ignore
-      }
-
+      } catch {}
       // schedule fallback via localStorage flag (survives navigation)
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem('feinime:show_logout_toast_fallback', '1')
         }
-      } catch { /* ignore */ }
-
-      // navigate to home
+      } catch {}
       try { router.replace('/') } catch {}
-
-      // also attempt to schedule immediate fallback (best-effort) — dedupe prevents duplicates
-      try {
-        scheduleAuthToast('Logout successful', 'info')
-      } catch { /* ignore */ }
+      try { scheduleAuthToast('Logout successful', 'info') } catch {}
     }
   }
 
@@ -493,39 +479,6 @@ export function Navbar(): JSX.Element {
           )}
         </div>
       </nav>
-
-      {mobileSearchOpen && (
-        <div className="fixed inset-0 bg-background/95 backdrop-blur-lg z-[999] p-4 animate-in fade-in duration-200 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Search Anime</h2>
-            <button onClick={() => { setMobileSearchOpen(false); setResults([]); setSearchQuery('') }} className="p-2 rounded-lg hover:bg-secondary">
-              <X size={26} />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3 bg-input border border-border rounded-xl px-4 py-3 focus-within:ring-1 focus-within:ring-primary transition-all">
-            <Search size={20} className="text-muted-foreground" />
-            <form onSubmit={handleSubmitSearch} className="flex-1">
-              <input autoFocus type="text" placeholder="Search anime..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent outline-none text-base w-full placeholder:text-muted-foreground" />
-            </form>
-            {searchLoading && <Loader2 className="animate-spin text-primary" size={20} />}
-          </div>
-
-          <div className="flex-1 mt-4 overflow-y-auto space-y-2">
-            {results.length === 0 && searchQuery && !searchLoading && <p className="text-center text-muted-foreground mt-10">No results found.</p>}
-            {results.map((anime) => (
-              <Link key={anime.mal_id} href={`/anime/${anime.mal_id}`} onClick={() => { setMobileSearchOpen(false) }} className="flex items-center gap-3 p-2 rounded-lg hover:bg-primary/10 transition animate-in slide-in-from-bottom-2">
-                <img src={anime.images.jpg.image_url || anime.images.jpg.large_image_url} alt={anime.title} className="w-12 h-16 object-cover rounded" />
-                <div>
-                  <p className="font-medium line-clamp-1">{anime.title}</p>
-                  <p className="text-xs text-muted-foreground">{anime.type} • {anime.episodes ?? "?"} eps</p>
-                </div>
-              </Link>
-            ))}
-            {results.length > 0 && <button onClick={() => handleSubmitSearch()} className="w-full py-3 mt-2 text-center text-primary font-bold border border-primary/20 rounded-lg hover:bg-primary/10">See all results</button>}
-          </div>
-        </div>
-      )}
     </>
   )
 }

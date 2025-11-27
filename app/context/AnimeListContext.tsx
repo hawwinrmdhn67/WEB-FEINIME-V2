@@ -1,8 +1,9 @@
+// app/context/AnimeListContext.tsx  (atau lokasi yang sesuai)
 'use client'
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { getBrowserSupabase } from '@/lib/supabaseClient'
 
 export interface MyAnimeEntry {
   id?: number
@@ -41,11 +42,16 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
 
-  // fetch user's list from Supabase
+  // fetch user's list from Supabase (guarded)
   async function fetchList(uid: string) {
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      const sb = getBrowserSupabase()
+      if (!sb) {
+        setMyList([])
+        return
+      }
+      const { data, error } = await sb
         .from('user_anime_list')
         .select('id, user_id, mal_id, title, image_url, total_episodes, status, progress, score, created_at')
         .eq('user_id', uid)
@@ -65,29 +71,32 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // helper: requireAuth -> redirect to /login if not authenticated
   function requireAuthRedirect() {
-    const returnTo =
-      typeof window !== 'undefined'
-        ? window.location.href // includes pathname + search + hash
-        : '/'
+    const returnTo = typeof window !== 'undefined' ? window.location.href : '/'
     router.push(`/login?redirect=${encodeURIComponent(returnTo)}`)
   }
 
-  // init auth state + subscribe
+  // init auth state + subscribe (client-side guarded)
   useEffect(() => {
     let mounted = true
     let listenerData: any = null
 
     async function init() {
+      const sb = getBrowserSupabase()
+      if (!sb) {
+        setIsAuthenticated(false)
+        setUserId(null)
+        setMyList([])
+        setLoading(false)
+        return
+      }
+
       try {
-        // prefer getUser() which makes a request to Auth server for trusted data
-        const { data: getUserData, error: getUserError } = await supabase.auth.getUser()
+        const { data: getUserData, error: getUserError } = await sb.auth.getUser()
         if (getUserError) {
           console.warn('getUser error', getUserError)
         }
         const user = getUserData?.user ?? null
-
         if (!mounted) return
 
         if (user) {
@@ -111,7 +120,7 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
 
       // subscribe to auth changes
       try {
-        const ret = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const ret = sb.auth.onAuthStateChange(async (_event, session) => {
           const u = session?.user ?? null
           if (!mounted) return
           if (u) {
@@ -124,7 +133,6 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
             setMyList([])
           }
         })
-        // ret may contain { data } where data may be { subscription } or have unsubscribe directly
         listenerData = ret?.data ?? ret
       } catch (err) {
         console.warn('onAuthStateChange subscribe failed', err)
@@ -136,13 +144,8 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false
-      // unsubscribe safely supporting multiple shapes:
       try {
         if (!listenerData) return
-        // common shapes:
-        // 1) listenerData.subscription.unsubscribe()
-        // 2) listenerData.unsubscribe()
-        // 3) listenerData.subscription?.remove() (older forms)
         if (typeof listenerData.unsubscribe === 'function') {
           listenerData.unsubscribe()
         } else if (listenerData.subscription && typeof listenerData.subscription.unsubscribe === 'function') {
@@ -153,14 +156,12 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
           listenerData.remove()
         }
       } catch (err) {
-        // don't crash on cleanup
         console.warn('failed to unsubscribe auth listener', err)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // PUBLIC API: refresh
   const refresh = async () => {
     if (!userId) {
       setMyList([])
@@ -169,7 +170,6 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     await fetchList(userId)
   }
 
-  // add
   const addToMyList = async (
     item: { mal_id: number; title?: string | null; image_url?: string | null; total_episodes?: number | null },
     status = 'Plan to Watch'
@@ -180,15 +180,16 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true)
     try {
-      // Avoid duplicate by checking existing row
-      const { data: existing, error: existErr } = await supabase
+      const sb = getBrowserSupabase()
+      if (!sb) return
+      const { data: existing, error: existErr } = await sb
         .from('user_anime_list')
         .select('id')
         .eq('user_id', userId)
         .eq('mal_id', item.mal_id)
         .limit(1)
 
-      if (!existErr && existing && existing.length > 0) {
+      if (!existErr && existing && (existing as any).length > 0) {
         await fetchList(userId)
         return
       }
@@ -204,7 +205,7 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
         score: 0
       }
 
-      const { error } = await supabase.from('user_anime_list').insert(payload).select().limit(1)
+      const { error } = await sb.from('user_anime_list').insert(payload).select().limit(1)
       if (error) {
         console.warn('insert error', error)
       } else {
@@ -217,7 +218,6 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // remove
   const removeFromMyList = async (mal_id: number) => {
     if (!userId) {
       requireAuthRedirect()
@@ -225,7 +225,9 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true)
     try {
-      await supabase.from('user_anime_list').delete().match({ user_id: userId, mal_id })
+      const sb = getBrowserSupabase()
+      if (!sb) return
+      await sb.from('user_anime_list').delete().match({ user_id: userId, mal_id })
       await fetchList(userId)
     } catch (err) {
       console.error('removeFromMyList unexpected', err)
@@ -234,7 +236,6 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // update progress
   const updateProgress = async (mal_id: number, progress: number) => {
     if (!userId) {
       requireAuthRedirect()
@@ -242,7 +243,9 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true)
     try {
-      await supabase.from('user_anime_list').update({ progress }).match({ user_id: userId, mal_id })
+      const sb = getBrowserSupabase()
+      if (!sb) return
+      await sb.from('user_anime_list').update({ progress }).match({ user_id: userId, mal_id })
       await fetchList(userId)
     } catch (err) {
       console.error('updateProgress unexpected', err)
@@ -251,7 +254,6 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // update status
   const updateStatus = async (mal_id: number, status: string) => {
     if (!userId) {
       requireAuthRedirect()
@@ -259,7 +261,9 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true)
     try {
-      await supabase.from('user_anime_list').update({ status }).match({ user_id: userId, mal_id })
+      const sb = getBrowserSupabase()
+      if (!sb) return
+      await sb.from('user_anime_list').update({ status }).match({ user_id: userId, mal_id })
       await fetchList(userId)
     } catch (err) {
       console.error('updateStatus unexpected', err)

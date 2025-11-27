@@ -1,10 +1,11 @@
+// app/login/page.tsx
 'use client'
 
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient'
+import { getBrowserSupabase } from '@/lib/supabaseClient'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/feinime-footer'
 
@@ -18,16 +19,14 @@ export default function LoginPage() {
 
   // cleanup session but suppress logout toast so user doesn't see "Logout successful"
   const cleanupSession = async () => {
+    const supabase = getBrowserSupabase()
     try {
-      // set suppress flag so Navbar will skip the SIGNED_OUT toast triggered by this signOut
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem('feinime:suppress_logout_toast', '1')
         }
-      } catch (err) {
-        // ignore localStorage errors
-      }
-
+      } catch {}
+      if (!supabase) return
       await supabase.auth.signOut()
       if (typeof window !== 'undefined') {
         try { localStorage.removeItem('supabase.auth.token') } catch {}
@@ -35,7 +34,6 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.warn('cleanupSession error', err)
-      // ensure we remove suppress flag if signOut failed
       try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:suppress_logout_toast') } catch {}
     }
   }
@@ -45,9 +43,7 @@ export default function LoginPage() {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem('feinime:show_login_toast', '1')
       }
-    } catch (err) {
-      // ignore localStorage errors
-    }
+    } catch (err) {}
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,17 +56,21 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
+        setMessage('Client environment required for login.')
+        return
+      }
+
       // cleanup any stale session but suppress its logout toast
       await cleanupSession()
 
-      // attempt sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
 
       if (error) {
-        // clear any leftover login flag just in case
         try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:show_login_toast') } catch {}
         setMessage(error.message || 'Login failed')
         setPassword('') // clear password after failed attempt
@@ -92,16 +92,21 @@ export default function LoginPage() {
   }
 
   const handleGoogle = async () => {
+    setLoading(true)
+    setMessage(null)
     try {
-      setLoading(true)
-      setMessage(null)
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
+        setMessage('Client environment required for OAuth.')
+        return
+      }
 
       // set a flag so after OAuth redirect we can show a toast from Navbar
       setLoginToastFlag()
 
       const redirectTo = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin : undefined)
       await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
-      // this will redirect the page; Navbar will show the toast after redirect when session is applied
+      // note: this will redirect the page
     } catch (err: any) {
       console.error('Google OAuth start failed', err)
       setMessage(err?.message ?? 'Failed to start Google OAuth')
@@ -118,13 +123,17 @@ export default function LoginPage() {
     }
     setLoading(true)
     try {
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
+        setMessage('Client environment required.')
+        return
+      }
       const redirectTo = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin : undefined)
       const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
       if (error) {
         setMessage(error.message)
         console.error('magic link error', error)
       } else {
-        // magic link started — show page message only (doesn't immediately log user in)
         setMessage('Magic link sent — check your inbox.')
       }
     } catch (err: any) {

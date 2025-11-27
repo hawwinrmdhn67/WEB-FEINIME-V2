@@ -1,10 +1,11 @@
+// app/register/page.tsx
 'use client'
 
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2, User as UserIcon } from 'lucide-react'
-import { supabase } from '@/lib/supabaseClient'
+import { getBrowserSupabase } from '@/lib/supabaseClient'
 import { upsertProfile } from '@/lib/upsertProfile'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/feinime-footer'
@@ -34,6 +35,12 @@ export default function RegisterPage() {
 
     setLoading(true)
     try {
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
+        setMessage('Client environment required for registration.')
+        return
+      }
+
       // supabase v2 signUp shape: supabase.auth.signUp({ email, password, options: { data }})
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -81,7 +88,7 @@ export default function RegisterPage() {
       }
 
       setMessage('Registration successful. Check your email for confirmation.')
-      // short delay to allow user read message then redirect
+      // short delay to allow user to read message then redirect
       setTimeout(() => router.push('/login'), 1000)
     } catch (err: any) {
       console.error('signUp exception', err)
@@ -92,11 +99,15 @@ export default function RegisterPage() {
   }
 
   const handleGoogle = async () => {
+    setLoading(true)
+    setMessage(null)
     try {
-      setLoading(true)
-      setMessage(null)
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
+        setMessage('Client environment required for OAuth.')
+        return
+      }
       const redirectTo = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin : undefined)
-      // start OAuth redirect
       await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
     } catch (err: any) {
       console.error('Google OAuth failed', err)
