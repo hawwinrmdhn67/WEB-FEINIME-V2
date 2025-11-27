@@ -1,4 +1,7 @@
+'use client'
+
 import { Navbar } from '@/components/navbar'
+import { SkeletonLoader } from '@/components/skeleton-loader'
 
 export default function LoadingMangaPage() {
   return (
@@ -75,7 +78,6 @@ export default function LoadingMangaPage() {
           <div className="h-8 w-56 bg-muted rounded mb-4" />
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-card/50 p-6 rounded-xl border border-border">
-            
             {[1, 2, 3].map((x) => (
               <div key={x} className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-muted rounded-full" />
@@ -85,35 +87,13 @@ export default function LoadingMangaPage() {
                 </div>
               </div>
             ))}
-
           </div>
         </section>
 
       </div>
 
-      {/* FOOTER */}
-      <footer className="border-t border-border bg-card mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
-
-            <div className="h-6 w-36 bg-muted rounded" />
-
-            <div className="h-4 w-48 bg-muted rounded" />
-
-            <div className="flex gap-4">
-              <div className="w-5 h-5 bg-muted rounded" />
-              <div className="w-5 h-5 bg-muted rounded" />
-            </div>
-
-          </div>
-
-          <div className="border-t border-border mt-8 pt-6 text-center">
-            <div className="h-4 w-48 mx-auto bg-muted rounded" />
-          </div>
-
-        </div>
-      </footer>
+      {/* FOOTER SKELETON (gunakan SkeletonLoader agar konsisten dengan halaman lain) */}
+      <SkeletonLoader type="footer" />
     </main>
   )
 }

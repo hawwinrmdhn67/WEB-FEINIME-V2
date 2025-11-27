@@ -22,6 +22,7 @@ export default function Home() {
 
   const [loadingTop, setLoadingTop] = useState(true)
   const [loadingOthers, setLoadingOthers] = useState(true)
+  const [loadingFooter, setLoadingFooter] = useState(true) // NEW
 
   const maxItems = 12
   const seasonalAnimeLimited = seasonalAnime.slice(0, maxItems)
@@ -61,6 +62,16 @@ export default function Home() {
     }
     fetchOthers()
   }, [])
+
+  // NEW: hide footer skeleton when main data finished loading
+  useEffect(() => {
+    // Jika kedua loading selesai, matikan loadingFooter
+    if (!loadingTop && !loadingOthers) {
+      // beri sedikit delay opsional agar transisi lebih halus (bisa dihilangkan)
+      const t = setTimeout(() => setLoadingFooter(false), 200)
+      return () => clearTimeout(t)
+    }
+  }, [loadingTop, loadingOthers])
 
   const heroAnimes = topAnimeData.slice(0, 2)
   const sideList = topAnimeData.slice(2, 7)
@@ -252,7 +263,9 @@ export default function Home() {
           }
         </section>
       </div>
-      <Footer />
+
+      {/* FOOTER / SKELETON FOOTER */}
+      {loadingFooter ? <SkeletonLoader type="footer" /> : <Footer />}
     </main>
   )
 }
