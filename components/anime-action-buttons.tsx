@@ -4,6 +4,7 @@ import { Play, Share2, Check, X, Bookmark } from 'lucide-react'
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAnimeList } from '../app/context/AnimeListContext'
+import { useRouter } from 'next/navigation'
 
 interface AnimeActionButtonsProps {
   animeId: number
@@ -19,15 +20,15 @@ interface ToastMessage {
   type: 'success' | 'error' | 'info'
 }
 
-export default function AnimeActionButtons({ 
-  animeId, 
+export default function AnimeActionButtons({
+  animeId,
   title,
   imageUrl,
   totalEpisodes,
-  trailerUrl 
+  trailerUrl
 }: AnimeActionButtonsProps) {
-  
-  const { myList, addToMyList, removeFromMyList } = useAnimeList()
+  const router = useRouter()
+  const { myList, addToMyList, removeFromMyList, isAuthenticated } = useAnimeList()
   const isFavorite = myList.some(item => item.mal_id === animeId)
 
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
@@ -41,17 +42,28 @@ export default function AnimeActionButtons({
   }
 
   // ===================== TOGGLE FAVORITE =====================
-  const toggleFavorite = () => {
+  const toggleFavorite = async () => {
+    // jika belum login -> redirect ke /login (jangan tunjukkan toast)
+    if (!isAuthenticated) {
+      const returnTo = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/'
+      router.push(`/login?redirect=${encodeURIComponent(returnTo)}`)
+      return
+    }
+
     if (isFavorite) {
-      removeFromMyList(animeId)
+      await removeFromMyList(animeId)
       showToast('Removed from My List', 'error')
     } else {
-      addToMyList({
-        mal_id: animeId,
-        title: title,
-        images: { jpg: { image_url: imageUrl } },
-        episodes: totalEpisodes
-      }, 'Plan to Watch') 
+      // <-- Here we normalize payload to match context signature
+      await addToMyList(
+        {
+          mal_id: animeId,
+          title: title,
+          image_url: imageUrl,
+          total_episodes: totalEpisodes ?? null
+        },
+        'Plan to Watch'
+      )
 
       showToast('Added to My List', 'success')
     }
@@ -107,10 +119,9 @@ export default function AnimeActionButtons({
               className="px-4 py-3 rounded-lg shadow-lg border text-sm font-medium flex items-center gap-3"
               style={{
                 background: 'var(--card)',
-                color: 'var(--card-foreground)',
+                color: 'var(--card-foreground)'
               }}
             >
-              {/* ICON BERDASARKAN TYPE */}
               {t.type === 'success' && <Check size={18} className="text-green-500" />}
               {t.type === 'error' && <X size={18} className="text-red-500" />}
               {t.type === 'info' && <Check size={18} className="text-blue-500" />}
@@ -123,11 +134,10 @@ export default function AnimeActionButtons({
 
       {/* ===================== BUTTONS ===================== */}
       <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start w-full">
-
         {/* TRAILER */}
         {trailerUrl ? (
-          <button 
-            className={primaryBtnClass} 
+          <button
+            className={primaryBtnClass}
             onClick={() => window.open(trailerUrl, '_blank')}
           >
             <Play size={18} /> Watch Trailer
@@ -139,8 +149,8 @@ export default function AnimeActionButtons({
         )}
 
         {/* ADD TO LIST */}
-        <button 
-          className={`${glassButtonStyle} ${isFavorite ? 'text-green-500 border-green-200 dark:border-green-900 hover:bg-green-50 dark:hover:bg-green-900/20' : ''}`} 
+        <button
+          className={`${glassButtonStyle} ${isFavorite ? 'text-green-500 border-green-200 dark:border-green-900 hover:bg-green-50 dark:hover:bg-green-900/20' : ''}`}
           onClick={toggleFavorite}
         >
           {isFavorite ? (

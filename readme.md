@@ -117,6 +117,10 @@ npm install framer-motion
 
 npm install next-themes
 
+npm install @supabase/supabase-js
+
+npm install @supabase/supabase-js@latest
+
 ```
 
 ### 4\. Jalankan Development Server
