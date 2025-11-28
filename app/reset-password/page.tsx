@@ -1,7 +1,7 @@
 // app/reset-password/page.tsx
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
@@ -9,28 +9,20 @@ import { getBrowserSupabase } from '@/lib/supabaseClient'
 import { Footer } from '@/components/feinime-footer'
 
 function parseParamsFromLocation(): Record<string, string> {
-  // parse both hash and query params into a single map
   const params: Record<string, string> = {}
-
   if (typeof window === 'undefined') return params
 
-  // parse query string
   const qs = window.location.search
   if (qs && qs.length > 1) {
     const search = new URLSearchParams(qs)
-    for (const [k, v] of search.entries()) {
-      params[k] = v
-    }
+    for (const [k, v] of search.entries()) params[k] = v
   }
 
-  // parse hash (fragment) which may look like "#access_token=...&type=recovery&refresh_token=..."
   const hash = window.location.hash
   if (hash && hash.startsWith('#')) {
     const frag = hash.slice(1)
     const fragParams = new URLSearchParams(frag)
-    for (const [k, v] of fragParams.entries()) {
-      params[k] = v
-    }
+    for (const [k, v] of fragParams.entries()) params[k] = v
   }
 
   return params
@@ -50,8 +42,11 @@ export default function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
+  // NEW: control when to show the "no token" message (grace period)
+  const [showNoTokenMessage, setShowNoTokenMessage] = useState(false)
+  const noTokenTimerRef = useRef<number | null>(null)
+
   useEffect(() => {
-    // parse tokens from URL (hash or query)
     try {
       const params = parseParamsFromLocation()
       const at = params['access_token'] ?? params['accessToken'] ?? null
@@ -62,8 +57,36 @@ export default function ResetPasswordPage() {
       console.error('parse params error', err)
     } finally {
       setLoading(false)
+      // start grace timer for showing the no-token message
+      // if token exists we'll cancel it below
+      // delay chosen short so normal flows aren't affected but refreshes during loading won't flash the message
+      if (noTokenTimerRef.current) {
+        window.clearTimeout(noTokenTimerRef.current)
+        noTokenTimerRef.current = null
+      }
+      noTokenTimerRef.current = window.setTimeout(() => {
+        setShowNoTokenMessage(true)
+      }, 1200)
+    }
+
+    return () => {
+      if (noTokenTimerRef.current) {
+        window.clearTimeout(noTokenTimerRef.current)
+        noTokenTimerRef.current = null
+      }
     }
   }, [])
+
+  // cancel the timer if we discover a token later
+  useEffect(() => {
+    if (accessToken) {
+      if (noTokenTimerRef.current) {
+        window.clearTimeout(noTokenTimerRef.current)
+        noTokenTimerRef.current = null
+      }
+      setShowNoTokenMessage(false)
+    }
+  }, [accessToken])
 
   const ensureSessionFromToken = async () => {
     if (!accessToken) {
@@ -77,7 +100,6 @@ export default function ResetPasswordPage() {
         return { ok: false, message: 'Client environment required.' }
       }
 
-      // If setSession exists (supabase v2+)
       if (typeof (supabase.auth as any).setSession === 'function') {
         const payload: any = { access_token: accessToken }
         if (refreshToken) payload.refresh_token = refreshToken
@@ -91,7 +113,6 @@ export default function ResetPasswordPage() {
         return { ok: true }
       }
 
-      // If setSession not available, attempt to use getSessionFromUrl helper if present
       if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
         try {
           await (supabase.auth as any).getSessionFromUrl()
@@ -109,6 +130,18 @@ export default function ResetPasswordPage() {
     } finally {
       setSettingSession(false)
     }
+  }
+
+  const waitUntilReadyOrTimeout = async (timeoutMs = 3000) => {
+    const start = Date.now()
+    return new Promise<void>((resolve) => {
+      const check = () => {
+        if (!loading && !settingSession) return resolve()
+        if (Date.now() - start >= timeoutMs) return resolve()
+        setTimeout(check, 100)
+      }
+      check()
+    })
   }
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -141,7 +174,6 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Ensure there is a session (using token if provided)
       const sessionResult = await ensureSessionFromToken()
       if (!sessionResult.ok) {
         setMessage(sessionResult.message)
@@ -149,13 +181,10 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Now update user password
-      // Supabase v2: supabase.auth.updateUser({ password })
       let res: any = null
       if (typeof (supabase.auth as any).updateUser === 'function') {
         res = await (supabase.auth as any).updateUser({ password })
       } else if (typeof (supabase.auth as any).update === 'function') {
-        // legacy: try update
         res = await (supabase.auth as any).update({ password })
       } else {
         setMessage('Your Supabase client does not support updating password programmatically.')
@@ -170,11 +199,9 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // success
-      setMessage('Password updated successfully. Redirecting to login...')
+      setMessage('Password updated successfully.')
       setMessageType('success')
 
-      // clear tokens from URL for cleanliness
       try {
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href)
@@ -185,9 +212,9 @@ export default function ResetPasswordPage() {
         }
       } catch {}
 
-      setTimeout(() => {
-        router.replace('/login')
-      }, 1200)
+      await waitUntilReadyOrTimeout(3000)
+      await new Promise((r) => setTimeout(r, 700))
+      router.replace('/login')
     } catch (err: any) {
       console.error('reset password submit exception', err)
       setMessage(err?.message ?? 'Unexpected error while resetting password.')
@@ -207,7 +234,6 @@ export default function ResetPasswordPage() {
               <p className="text-sm text-muted-foreground mt-1">Set a new password for your account.</p>
             </div>
 
-            {/* If we don't have a token, show brief instructions */}
             {loading ? (
               <div className="p-6 text-center">
                 <Loader2 className="animate-spin mx-auto" />
@@ -215,7 +241,8 @@ export default function ResetPasswordPage() {
               </div>
             ) : (
               <>
-                {!accessToken && (
+                {/* showNoTokenMessage prevents an immediate flash of the instruction text on refresh */}
+                {showNoTokenMessage && !accessToken && !settingSession && !submitting && (
                   <div className="mb-4 text-sm text-muted-foreground">
                     No password reset token detected in the URL. If you clicked a reset link from email, make sure you opened the full link (some email clients truncate).<br />
                     You can also copy the link from the email and open it in the browser.
@@ -284,7 +311,7 @@ export default function ResetPasswordPage() {
                   <div>
                     <button
                       type="submit"
-                      disabled={submitting || settingSession}
+                      disabled={submitting || settingSession || loading}
                       className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
                     >
                       {(submitting || settingSession) ? <Loader2 className="animate-spin w-4 h-4" /> : 'Set new password'}
