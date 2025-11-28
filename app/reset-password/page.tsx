@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // NEW: control when to show the "no token" message (grace period)
+  // control when to show the "no token" message (grace period)
   const [showNoTokenMessage, setShowNoTokenMessage] = useState(false)
   const noTokenTimerRef = useRef<number | null>(null)
 
@@ -57,9 +57,6 @@ export default function ResetPasswordPage() {
       console.error('parse params error', err)
     } finally {
       setLoading(false)
-      // start grace timer for showing the no-token message
-      // if token exists we'll cancel it below
-      // delay chosen short so normal flows aren't affected but refreshes during loading won't flash the message
       if (noTokenTimerRef.current) {
         window.clearTimeout(noTokenTimerRef.current)
         noTokenTimerRef.current = null
@@ -77,7 +74,6 @@ export default function ResetPasswordPage() {
     }
   }, [])
 
-  // cancel the timer if we discover a token later
   useEffect(() => {
     if (accessToken) {
       if (noTokenTimerRef.current) {
@@ -98,6 +94,15 @@ export default function ResetPasswordPage() {
       const supabase = getBrowserSupabase()
       if (!supabase) {
         return { ok: false, message: 'Client environment required.' }
+      }
+
+      // SUPPRESS login toast while we consume the session from the URL
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.setItem('feinime:suppress_login_toast', '1')
+        }
+      } catch (err) {
+        // ignore storage errors
       }
 
       if (typeof (supabase.auth as any).setSession === 'function') {
@@ -129,6 +134,8 @@ export default function ResetPasswordPage() {
       return { ok: false, message: err?.message ?? 'Unexpected error while establishing session.' }
     } finally {
       setSettingSession(false)
+      // NOTE: do NOT remove the suppress flag here — we remove it after the whole submit flow
+      // so Navbar/auth-listener has chance to read it when SIGNED_IN fires.
     }
   }
 
@@ -174,6 +181,7 @@ export default function ResetPasswordPage() {
         return
       }
 
+      // Ensure there is a session (using token if provided)
       const sessionResult = await ensureSessionFromToken()
       if (!sessionResult.ok) {
         setMessage(sessionResult.message)
@@ -181,6 +189,7 @@ export default function ResetPasswordPage() {
         return
       }
 
+      // Now update user password
       let res: any = null
       if (typeof (supabase.auth as any).updateUser === 'function') {
         res = await (supabase.auth as any).updateUser({ password })
@@ -202,6 +211,7 @@ export default function ResetPasswordPage() {
       setMessage('Password updated successfully.')
       setMessageType('success')
 
+      // clean tokens from URL for cleanliness
       try {
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href)
@@ -212,8 +222,13 @@ export default function ResetPasswordPage() {
         }
       } catch {}
 
+      // Wait little bit to ensure auth listener processed SIGNED_IN (if any)
       await waitUntilReadyOrTimeout(3000)
+
+      // Small delay so user sees the message
       await new Promise((r) => setTimeout(r, 700))
+
+      // Redirect to login page
       router.replace('/login')
     } catch (err: any) {
       console.error('reset password submit exception', err)
@@ -221,6 +236,14 @@ export default function ResetPasswordPage() {
       setMessageType('error')
     } finally {
       setSubmitting(false)
+      // Remove the suppress flag now that the whole flow is done (success or fail)
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.removeItem('feinime:suppress_login_toast')
+        }
+      } catch (err) {
+        // ignore
+      }
     }
   }
 
@@ -241,7 +264,6 @@ export default function ResetPasswordPage() {
               </div>
             ) : (
               <>
-                {/* showNoTokenMessage prevents an immediate flash of the instruction text on refresh */}
                 {showNoTokenMessage && !accessToken && !settingSession && !submitting && (
                   <div className="mb-4 text-sm text-muted-foreground">
                     No password reset token detected in the URL. If you clicked a reset link from email, make sure you opened the full link (some email clients truncate).<br />
@@ -319,6 +341,7 @@ export default function ResetPasswordPage() {
                   </div>
                 </form>
 
+                {/* Inline notification (below confirm password) */}
                 {message && (
                   <div className={`mt-4 text-sm text-center ${messageType === 'error' ? 'text-red-500' : 'text-green-500'}`}>
                     {message}

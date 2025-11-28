@@ -18,28 +18,12 @@ import useIsDesktop from '@/lib/useIsDesktop'
 
 type ToastMessage = { id: number; text: string; type: 'success' | 'error' | 'info' }
 
-function UserDropdown({ onLogout, onNavigate }: { onLogout: () => void; onNavigate: () => void }) {
-  return (
-    <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50 animate-in slide-in-from-top-2">
-      <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 transition-colors">
-        <LayoutDashboard size={18} /> Dashboard
-      </Link>
-      <Link href="/settings" onClick={onNavigate} className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 transition-colors">
-        <Settings size={18} /> Settings
-      </Link>
-      <button onClick={onLogout} className="flex items-center gap-2 w-full text-left px-4 py-2 text-red-500 hover:bg-red-500/10 transition-colors border-t border-border/50">
-        <LogOut size={18} /> Logout
-      </button>
-    </div>
-  )
-}
-
 export function Navbar(): JSX.Element {
   const router = useRouter()
   const pathname = usePathname()
-  const isDesktop = useIsDesktop() // <-- hook
+  const isDesktop = useIsDesktop()
 
-  // UI state
+  // UI
   const [isOpen, setIsOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -47,127 +31,100 @@ export function Navbar(): JSX.Element {
   const [searchLoading, setSearchLoading] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
-  // auth state
+  // Auth
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [authLoaded, setAuthLoaded] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
 
-  // toasts
+  // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([])
 
-  // refs for toast dedupe/debounce
   const lastToastRef = useRef<{ text: string; ts: number } | null>(null)
   const authToastTimerRef = useRef<number | null>(null)
+  const initialAuthHandledRef = useRef(false)
 
-  const showToast = (text: string, type: ToastMessage['type'] = 'success') => {
+  // store the previous session state so we can tell whether a SIGNED_OUT came from a logged-in user
+  const prevSessionRef = useRef<Session | null>(null)
+
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
+
+  const showToast = (text: string, type: ToastMessage['type']) => {
     const now = Date.now()
-    if (lastToastRef.current && lastToastRef.current.text === text && (now - lastToastRef.current.ts) < 2000) {
-      return
-    }
+    if (lastToastRef.current && lastToastRef.current.text === text && now - lastToastRef.current.ts < 1500) return
     lastToastRef.current = { text, ts: now }
-    const id = Date.now() + Math.floor(Math.random() * 1000)
+    const id = now + Math.floor(Math.random() * 1000)
     setToasts(prev => [...prev, { id, text, type }])
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2500)
   }
 
-  const scheduleAuthToast = (text: string, type: ToastMessage['type'] = 'success', delay = 400) => {
+  const scheduleAuthToast = (text: string, type: ToastMessage['type']) => {
     try {
-      if (authToastTimerRef.current) {
-        window.clearTimeout(authToastTimerRef.current)
-        authToastTimerRef.current = null
-      }
-    } catch { /* ignore */ }
-
+      if (authToastTimerRef.current) window.clearTimeout(authToastTimerRef.current)
+    } catch {}
     try {
       authToastTimerRef.current = window.setTimeout(() => {
         showToast(text, type)
         authToastTimerRef.current = null
-      }, delay)
+      }, 350)
     } catch {
       showToast(text, type)
     }
   }
 
-  // refs
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const dropdownRef = useRef<HTMLDivElement | null>(null)
-
-  // prevent toast flash on initial mount
-  const initialAuthHandledRef = useRef(false)
-
-  // global toast event listener (so pages can dispatch to Navbar)
-  useEffect(() => {
-    function handler(e: Event) {
-      try {
-        const d = (e as CustomEvent).detail
-        if (d && d.text) showToast(d.text, d.type || 'success')
-      } catch {
-        // ignore
-      }
-    }
-    window.addEventListener('feinime:toast', handler as EventListener)
-    return () => window.removeEventListener('feinime:toast', handler as EventListener)
-  }, [])
-
-  // Initialize auth and subscribe (client-side only)
+  // Auth init + subscribe
   useEffect(() => {
     let mounted = true
     let unsubRef: any = null
 
-    async function initAuth() {
-      const sb = getBrowserSupabase()
-      if (!sb) {
-        // no client available (e.g. build/SSR) -> mark loaded and bail
+    const initAuth = async () => {
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
         if (mounted) setAuthLoaded(true)
         return
       }
 
-      // try to run session-from-url helper if present (OAuth redirect flows)
+      // try getSessionFromUrl for OAuth / recovery flows (safe if missing)
       try {
-        const maybeFn = (sb.auth as any)?.getSessionFromUrl
-        if (typeof maybeFn === 'function') await maybeFn.call(sb.auth)
-      } catch {
-        // ignore
-      }
+        const maybeFn = (supabase.auth as any)?.getSessionFromUrl
+        if (typeof maybeFn === 'function') await maybeFn.call(supabase.auth)
+      } catch {}
 
+      // fetch session
       try {
-        const { data } = await sb.auth.getSession()
+        const { data } = await supabase.auth.getSession()
         if (!mounted) return
         setSession(data.session ?? null)
         setUser(data.session?.user ?? null)
 
-        // pending login flag handling
+        // initialize prevSessionRef so we know whether there's a prior logged-in user
+        prevSessionRef.current = data.session ?? null
+
+        // pending login handling (on initial load) — keep previous behaviour: show toast on pending login
         try {
           if (typeof window !== 'undefined' && window.localStorage && data.session) {
-            const pending = window.localStorage.getItem('feinime:show_login_toast')
-            if (pending === '1') {
+            const suppressed = window.localStorage.getItem('feinime:suppress_login_toast') === '1'
+            const pending = window.localStorage.getItem('feinime:show_login_toast') === '1'
+            if (pending && !suppressed) {
               showToast('Login successful', 'success')
-              window.localStorage.removeItem('feinime:show_login_toast')
             }
-          }
-        } catch {}
-        // handle pending logout fallback
-        try {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            const pendingLogout = window.localStorage.getItem('feinime:show_logout_toast_fallback')
-            if (pendingLogout === '1') {
-              window.localStorage.removeItem('feinime:show_logout_toast_fallback')
-              scheduleAuthToast('Logout successful', 'info')
-            }
+            try { window.localStorage.removeItem('feinime:show_login_toast') } catch {}
           }
         } catch {}
       } catch {
         // fallback: try getUser
         try {
-          const { data: u } = await sb.auth.getUser()
+          const { data: u } = await supabase.auth.getUser()
           if (!mounted) return
           setSession(null)
           setUser(u.user ?? null)
+          prevSessionRef.current = null
         } catch {
           if (!mounted) return
           setSession(null)
           setUser(null)
+          prevSessionRef.current = null
         }
       } finally {
         if (mounted) setAuthLoaded(true)
@@ -175,53 +132,84 @@ export function Navbar(): JSX.Element {
 
       // subscribe to auth changes
       try {
-        const listener = sb.auth.onAuthStateChange((event, s) => {
+        const listener = supabase.auth.onAuthStateChange((event, s) => {
+          // s is the new session
+          const previousSession = prevSessionRef.current
+          const wasLoggedIn = !!(previousSession && previousSession.user)
+          // update local state with new session
           setSession(s ?? null)
           setUser((s as any)?.user ?? null)
 
-          const checkAndConsumeLoginFlag = (): boolean => {
-            try {
-              if (typeof window !== 'undefined' && window.localStorage) {
-                const pending = window.localStorage.getItem('feinime:show_login_toast')
-                if (pending === '1') {
-                  window.localStorage.removeItem('feinime:show_login_toast')
-                  showToast('Login successful', 'success')
-                  return true
-                }
-              }
-            } catch {}
-            return false
-          }
-
-          // avoid flash during initial auth load
+          // avoid initial flash (first event emitted by subscription after init)
           if (!initialAuthHandledRef.current) {
             initialAuthHandledRef.current = true
+            // update prevSessionRef for future events
+            prevSessionRef.current = s ?? null
             return
           }
 
+          // SIGNED_IN handling — show login toast/banner if pending
           if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-            const consumed = checkAndConsumeLoginFlag()
-            if (!consumed) scheduleAuthToast('Login successful', 'success')
-          } else if (event === 'SIGNED_OUT') {
             try {
               if (typeof window !== 'undefined' && window.localStorage) {
-                const suppr = window.localStorage.getItem('feinime:suppress_logout_toast')
-                if (suppr === '1') {
-                  window.localStorage.removeItem('feinime:suppress_logout_toast')
-                  return
+                const suppressed = window.localStorage.getItem('feinime:suppress_login_toast') === '1'
+                const pending = window.localStorage.getItem('feinime:show_login_toast') === '1'
+                try { window.localStorage.removeItem('feinime:show_login_toast') } catch {}
+                if (!suppressed && pending) {
+                  scheduleAuthToast('Login successful', 'success')
                 }
+              } else {
+                scheduleAuthToast('Login successful', 'success')
               }
             } catch {}
-            scheduleAuthToast('Logout successful', 'info')
-          } else if (event === 'PASSWORD_RECOVERY') {
+            prevSessionRef.current = s ?? null
+            return
+          }
+
+          // SIGNED_OUT handling — only show logout toast if there was a previous logged-in session
+          if (event === 'SIGNED_OUT') {
+            try {
+              if (typeof window !== 'undefined' && window.localStorage) {
+                const suppressLogout = window.localStorage.getItem('feinime:suppress_logout_toast') === '1'
+
+                if (suppressLogout) {
+                  // explicit suppression for silent cleanup flows (login page cleanupSession)
+                  try { window.localStorage.removeItem('feinime:suppress_logout_toast') } catch {}
+                  try { window.localStorage.removeItem('feinime:expected_signout') } catch {}
+                  // update prevSessionRef
+                  prevSessionRef.current = null
+                  return
+                }
+
+                // If user WAS logged in before this SIGNED_OUT event, show toast.
+                if (wasLoggedIn) {
+                  scheduleAuthToast('Logout successful', 'success')
+                }
+
+                // cleanup other transient flags regardless
+                try { window.localStorage.removeItem('feinime:expected_signout') } catch {}
+                try { window.localStorage.removeItem('feinime:show_login_toast') } catch {}
+                try { window.localStorage.removeItem('feinime:suppress_login_toast') } catch {}
+              } else {
+                // no window/localStorage — fallback: rely on wasLoggedIn only
+                if (wasLoggedIn) scheduleAuthToast('Logout successful', 'success')
+              }
+            } catch {}
+            prevSessionRef.current = null
+            return
+          }
+
+          // other events (optional)
+          if (event === 'PASSWORD_RECOVERY') {
             scheduleAuthToast('Password recovery requested', 'info')
           }
+
+          // update prevSessionRef at end for any other event
+          prevSessionRef.current = s ?? null
         })
 
         unsubRef = (listener as any)?.data?.subscription ?? (listener as any)?.subscription ?? listener
-      } catch {
-        // ignore subscribe errors
-      }
+      } catch {}
     }
 
     initAuth()
@@ -235,7 +223,7 @@ export function Navbar(): JSX.Element {
     }
   }, [])
 
-  // search effect (debounced)
+  // Search effect
   useEffect(() => {
     if (!searchQuery.trim()) {
       setResults([])
@@ -264,7 +252,7 @@ export function Navbar(): JSX.Element {
           setDropdownOpen(false)
         }
       }
-    }, 500)
+    }, 450)
 
     return () => {
       clearTimeout(id)
@@ -291,38 +279,18 @@ export function Navbar(): JSX.Element {
     router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
   }
 
+  // logout dari user menu — DO NOT set suppress flag here so SIGNED_OUT will show toast
   const handleLogout = async () => {
-    // prefer runtime client
     const sb = getBrowserSupabase()
     try {
-      if (sb) {
-        await sb.auth.signOut()
-      } else {
-        // fallback: attempt signout via no-op (we still remove local state)
-      }
+      await sb?.auth.signOut()
     } catch (err) {
       console.error('logout error', err)
     } finally {
-      // local cleanup so UI updates immediately
-      try {
-        setSession(null)
-        setUser(null)
-        setIsUserDropdownOpen(false)
-        if (typeof window !== 'undefined') {
-          try { localStorage.removeItem('supabase.auth.token') } catch {}
-          try { sessionStorage.clear() } catch {}
-          try { window.localStorage.removeItem('feinime:show_login_toast') } catch {}
-          try { window.localStorage.removeItem('feinime:suppress_logout_toast') } catch {}
-        }
-      } catch {}
-      // schedule fallback via localStorage flag (survives navigation)
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem('feinime:show_logout_toast_fallback', '1')
-        }
-      } catch {}
+      setSession(null)
+      setUser(null)
+      setIsUserDropdownOpen(false)
       try { router.replace('/') } catch {}
-      try { scheduleAuthToast('Logout successful', 'info') } catch {}
     }
   }
 
@@ -370,12 +338,27 @@ export function Navbar(): JSX.Element {
 
             <div className="hidden md:flex flex-1 justify-center items-center gap-6">
               {menuItems.map(item => (
-                <Link key={item.href} href={item.href} className={`flex items-center gap-2 text-sm font-medium transition-colors ${pathname === item.href ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                    pathname === item.href ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+                  }`}
+                >
                   <item.icon size={16} />
                   {item.label}
                 </Link>
               ))}
-              {session && <Link href="/my-list" className={`flex items-center gap-2 text-sm font-medium ${pathname === '/my-list' ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}><List size={16} /> My List</Link>}
+              {session && (
+                <Link
+                  href="/my-list"
+                  className={`flex items-center gap-2 text-sm font-medium ${
+                    pathname === '/my-list' ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+                  }`}
+                >
+                  <List size={16} /> My List
+                </Link>
+              )}
             </div>
 
             <div className="hidden md:flex items-center gap-2 relative">
@@ -390,20 +373,33 @@ export function Navbar(): JSX.Element {
                     className="bg-transparent outline-none text-sm w-full placeholder:text-muted-foreground"
                     onFocus={() => searchQuery.trim() && setDropdownOpen(true)}
                   />
-                  {/* Spinner only on desktop */}
                   {isDesktop && searchLoading && <Loader2 size={16} className="animate-spin text-primary" />}
                 </div>
 
                 {dropdownOpen && results.length > 0 && (
-                  <div ref={dropdownRef} className="absolute top-full right-0 mt-2 w-72 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2">
+                  <div
+                    ref={dropdownRef}
+                    className="absolute top-full right-0 mt-2 w-72 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-in slide-in-from-top-2"
+                  >
                     <div className="p-2 space-y-1">
                       {results.map(anime => (
-                        <Link key={anime.mal_id} href={`/anime/${anime.mal_id}`} onClick={() => setDropdownOpen(false)} className="flex items-start gap-3 px-2 py-2 hover:bg-secondary rounded-lg transition-colors group">
+                        <Link
+                          key={anime.mal_id}
+                          href={`/anime/${anime.mal_id}`}
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-start gap-3 px-2 py-2 hover:bg-secondary rounded-lg transition-colors group"
+                        >
                           <div className="w-10 h-14 rounded overflow-hidden flex-shrink-0 bg-secondary">
-                            <img src={anime.images.jpg.image_url} alt={anime.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                            <img
+                              src={anime.images.jpg.image_url}
+                              alt={anime.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{anime.title}</p>
+                            <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                              {anime.title}
+                            </p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                               <span className="uppercase">{anime.type || 'TV'}</span>
                               <span>•</span>
@@ -413,7 +409,12 @@ export function Navbar(): JSX.Element {
                         </Link>
                       ))}
                     </div>
-                    <button onClick={() => handleSubmitSearch()} className="w-full text-center text-xs font-medium text-muted-foreground bg-secondary/50 py-2 hover:bg-secondary hover:text-primary transition-colors border-t border-border">View all results</button>
+                    <button
+                      onClick={() => handleSubmitSearch()}
+                      className="w-full text-center text-xs font-medium text-muted-foreground bg-secondary/50 py-2 hover:bg-secondary hover:text-primary transition-colors border-t border-border"
+                    >
+                      View all results
+                    </button>
                   </div>
                 )}
               </form>
@@ -424,13 +425,43 @@ export function Navbar(): JSX.Element {
                 {authLoaded ? (
                   session ? (
                     <>
-                      <button className="w-9 h-9 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-colors border border-border" title="User menu" onClick={() => setIsUserDropdownOpen(v => !v)}>
+                      <button
+                        className="w-9 h-9 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center transition-colors border border-border"
+                        title="User menu"
+                        onClick={() => setIsUserDropdownOpen(v => !v)}
+                      >
                         <User className="w-4 h-4 text-foreground" />
                       </button>
-                      {isUserDropdownOpen && <UserDropdown onLogout={handleLogout} onNavigate={() => setIsUserDropdownOpen(false)} />}
+                      {isUserDropdownOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50 animate-in slide-in-from-top-2">
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setIsUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 transition-colors"
+                          >
+                            <LayoutDashboard size={18} /> Dashboard
+                          </Link>
+                          <Link
+                            href="/settings"
+                            onClick={() => setIsUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2 hover:bg-primary/10 transition-colors"
+                          >
+                            <Settings size={18} /> Settings
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 w-full text-left px-4 py-2 text-red-500 hover:bg-red-500/10 transition-colors border-t border-border/50"
+                          >
+                            <LogOut size={18} /> Logout
+                          </button>
+                        </div>
+                      )}
                     </>
                   ) : (
-                    <Link href="/login" className="flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground px-4 py-1.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+                    <Link
+                      href="/login"
+                      className="flex items-center gap-1.5 text-sm font-medium bg-primary text-primary-foreground px-4 py-1.5 rounded-full hover:bg-primary/90 transition-colors shadow-sm"
+                    >
                       <LogIn size={16} /> Login
                     </Link>
                   )
@@ -443,38 +474,75 @@ export function Navbar(): JSX.Element {
             </div>
 
             <div className="flex md:hidden items-center gap-2">
-              <button className="p-2 hover:bg-secondary rounded-lg transition-colors" onClick={() => setMobileSearchOpen(true)}><Search className="w-6 h-6" /></button>
+              <button className="p-2 hover:bg-secondary rounded-lg transition-colors" onClick={() => setMobileSearchOpen(true)}>
+                <Search className="w-6 h-6" />
+              </button>
               <ThemeToggle />
-              <button className="p-2 hover:bg-secondary rounded-lg transition-colors text-foreground" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}</button>
+              <button
+                className="p-2 hover:bg-secondary rounded-lg transition-colors text-foreground"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           </div>
 
           {isOpen && (
             <div className="md:hidden mt-2 space-y-2 px-2 pb-4 animate-in slide-in-from-top-5 bg-card border-t border-border pt-4">
               {menuItems.map(item => (
-                <Link key={item.href} href={item.href} className={`block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium ${pathname === item.href ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}`} onClick={() => setIsOpen(false)}>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium ${
+                    pathname === item.href
+                      ? 'bg-secondary text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                  }`}
+                  onClick={() => setIsOpen(false)}
+                >
                   <item.icon size={18} /> {item.label}
                 </Link>
               ))}
 
               {session && (
                 <>
-                  <Link href="/my-list" className="block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50" onClick={() => setIsOpen(false)}>
+                  <Link
+                    href="/my-list"
+                    className="block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    onClick={() => setIsOpen(false)}
+                  >
                     <List size={18} /> My List
                   </Link>
                   <div className="h-px bg-border my-2" />
-                  <Link href="/dashboard" className="block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50" onClick={() => setIsOpen(false)}>
+                  <Link
+                    href="/dashboard"
+                    className="block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    onClick={() => setIsOpen(false)}
+                  >
                     <LayoutDashboard size={18} /> Dashboard
                   </Link>
-                  <Link href="/settings" className="block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50" onClick={() => setIsOpen(false)}>
+                  <Link
+                    href="/settings"
+                    className="block px-3 py-2 rounded-md transition-colors flex items-center gap-3 font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    onClick={() => setIsOpen(false)}
+                  >
                     <Settings size={18} /> Settings
                   </Link>
-                  <button onClick={handleLogout} className="block w-full text-left px-3 py-2 rounded-md text-red-500 hover:bg-red-500/10"> <LogOut size={18} /> Logout</button>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-3 py-2 rounded-md text-red-500 hover:bg-red-500/10"
+                  >
+                    <LogOut size={18} /> Logout
+                  </button>
                 </>
               )}
 
               {!session && authLoaded && (
-                <Link href="/login" className="block px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/50" onClick={() => setIsOpen(false)}>
+                <Link
+                  href="/login"
+                  className="block px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  onClick={() => setIsOpen(false)}
+                >
                   <LogIn size={18} /> Login
                 </Link>
               )}
@@ -483,14 +551,15 @@ export function Navbar(): JSX.Element {
         </div>
       </nav>
 
-      {/* Mobile search overlay — tampilkan hanya saat mobileSearchOpen true */}
+      {/* Mobile search overlay */}
       {mobileSearchOpen && (
         <div className="fixed inset-0 z-60 flex items-start justify-center p-4 md:hidden">
           <div className="w-full max-w-xl bg-card border border-border rounded-xl shadow-lg overflow-hidden">
             <div className="flex items-center gap-2 p-3 border-b border-border">
               <form
                 onSubmit={(e) => {
-                  handleSubmitSearch(e)
+                  e.preventDefault()
+                  handleSubmitSearch()
                   setMobileSearchOpen(false)
                 }}
                 className="flex-1"
@@ -505,8 +574,9 @@ export function Navbar(): JSX.Element {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-transparent outline-none text-sm w-full placeholder:text-muted-foreground"
                   />
-                  {/* spinner NOT shown in mobile because isDesktop === false */}
-                  {isDesktop && searchLoading && <Loader2 size={16} className="animate-spin text-primary" />}
+                  {isDesktop && searchLoading && (
+                    <Loader2 size={16} className="animate-spin text-primary" />
+                  )}
                 </div>
               </form>
 
@@ -519,17 +589,14 @@ export function Navbar(): JSX.Element {
               </button>
             </div>
 
-            {/* Show results area ONLY after user mulai mengetik */}
             {searchQuery.trim() !== '' && (
               <div className="max-h-72 overflow-auto">
-                {/* Saat sedang loading: tampilkan indikator searching */}
                 {searchLoading ? (
                   <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 size={16} className="animate-spin" />
                     <span>Searching…</span>
                   </div>
                 ) : (
-                  // Setelah loading selesai: tampilkan hasil atau pesan No results
                   <>
                     {results.length > 0 ? (
                       <div className="p-2 space-y-1">
@@ -544,10 +611,16 @@ export function Navbar(): JSX.Element {
                             className="flex items-start gap-3 px-3 py-2 hover:bg-secondary rounded-md transition-colors group"
                           >
                             <div className="w-12 h-16 rounded overflow-hidden flex-shrink-0 bg-secondary">
-                              <img src={anime.images.jpg.image_url} alt={anime.title} className="w-full h-full object-cover" />
+                              <img
+                                src={anime.images.jpg.image_url}
+                                alt={anime.title}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{anime.title}</p>
+                              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                                {anime.title}
+                              </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                                 <span className="uppercase">{anime.type || 'TV'}</span>
                                 <span>•</span>
@@ -565,7 +638,6 @@ export function Navbar(): JSX.Element {
               </div>
             )}
 
-            {/* View all results — hanya tampil setelah user mengetik dan loading selesai */}
             {searchQuery.trim() !== '' && !searchLoading && (
               <div className="border-t border-border p-2 text-center">
                 <button
@@ -585,3 +657,5 @@ export function Navbar(): JSX.Element {
     </>
   )
 }
+
+export default Navbar
