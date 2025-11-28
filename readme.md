@@ -79,7 +79,7 @@ Feinime V2 dilengkapi dengan fitur-fitur yang memaksimalkan navigasi dan *user e
 
 ## ⚙️ Instalasi & Setup Lokal
 
-Ikuti langkah-langkah di bawah ini untuk menjalankan proyek Feinime V2 di lingkungan lokal Anda.
+Ikuti langkah-langkah di bawah ini untuk menjalankan proyek Feinime V2 di lingkungan lokal Kamu.
 
 ### 1. Clone Repository
 
@@ -101,7 +101,7 @@ npm install
 
 ```
 
-> **Catatan:** Jika Anda mengalami error versi React, coba install ulang dengan spesifik: `npm install react@18 react-dom@18`.
+> **Catatan:** Jika Kamu mengalami error versi React, coba install ulang dengan spesifik: `npm install react@18 react-dom@18`.
 
 ### 3\. Install Utilities Tambahan
 

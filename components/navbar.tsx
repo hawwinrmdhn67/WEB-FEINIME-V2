@@ -12,8 +12,9 @@ import {
 import { ThemeToggle } from './theme-toggle'
 import { searchAnime, Anime } from '@/lib/api'
 import { getBrowserSupabase } from '@/lib/supabaseClient'
-import type { Session, User as SupabaseUser, SupabaseClient } from '@supabase/supabase-js'
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
 import { AnimatePresence, motion } from 'framer-motion'
+import useIsDesktop from '@/lib/useIsDesktop'
 
 type ToastMessage = { id: number; text: string; type: 'success' | 'error' | 'info' }
 
@@ -36,6 +37,7 @@ function UserDropdown({ onLogout, onNavigate }: { onLogout: () => void; onNaviga
 export function Navbar(): JSX.Element {
   const router = useRouter()
   const pathname = usePathname()
+  const isDesktop = useIsDesktop() // <-- hook
 
   // UI state
   const [isOpen, setIsOpen] = useState(false)
@@ -388,7 +390,8 @@ export function Navbar(): JSX.Element {
                     className="bg-transparent outline-none text-sm w-full placeholder:text-muted-foreground"
                     onFocus={() => searchQuery.trim() && setDropdownOpen(true)}
                   />
-                  {searchLoading && <Loader2 size={16} className="animate-spin text-primary" />}
+                  {/* Spinner only on desktop */}
+                  {isDesktop && searchLoading && <Loader2 size={16} className="animate-spin text-primary" />}
                 </div>
 
                 {dropdownOpen && results.length > 0 && (
@@ -479,6 +482,106 @@ export function Navbar(): JSX.Element {
           )}
         </div>
       </nav>
+
+      {/* Mobile search overlay — tampilkan hanya saat mobileSearchOpen true */}
+      {mobileSearchOpen && (
+        <div className="fixed inset-0 z-60 flex items-start justify-center p-4 md:hidden">
+          <div className="w-full max-w-xl bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+            <div className="flex items-center gap-2 p-3 border-b border-border">
+              <form
+                onSubmit={(e) => {
+                  handleSubmitSearch(e)
+                  setMobileSearchOpen(false)
+                }}
+                className="flex-1"
+              >
+                <div className="flex items-center gap-2 bg-input border border-border rounded-md px-3 py-2 w-full">
+                  <Search size={18} className="text-muted-foreground" />
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search anime..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent outline-none text-sm w-full placeholder:text-muted-foreground"
+                  />
+                  {/* spinner NOT shown in mobile because isDesktop === false */}
+                  {isDesktop && searchLoading && <Loader2 size={16} className="animate-spin text-primary" />}
+                </div>
+              </form>
+
+              <button
+                aria-label="Close search"
+                onClick={() => setMobileSearchOpen(false)}
+                className="p-2 rounded-md hover:bg-secondary transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Show results area ONLY after user mulai mengetik */}
+            {searchQuery.trim() !== '' && (
+              <div className="max-h-72 overflow-auto">
+                {/* Saat sedang loading: tampilkan indikator searching */}
+                {searchLoading ? (
+                  <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Searching…</span>
+                  </div>
+                ) : (
+                  // Setelah loading selesai: tampilkan hasil atau pesan No results
+                  <>
+                    {results.length > 0 ? (
+                      <div className="p-2 space-y-1">
+                        {results.map(anime => (
+                          <Link
+                            key={anime.mal_id}
+                            href={`/anime/${anime.mal_id}`}
+                            onClick={() => {
+                              setMobileSearchOpen(false)
+                              setDropdownOpen(false)
+                            }}
+                            className="flex items-start gap-3 px-3 py-2 hover:bg-secondary rounded-md transition-colors group"
+                          >
+                            <div className="w-12 h-16 rounded overflow-hidden flex-shrink-0 bg-secondary">
+                              <img src={anime.images.jpg.image_url} alt={anime.title} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{anime.title}</p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                <span className="uppercase">{anime.type || 'TV'}</span>
+                                <span>•</span>
+                                <span>{anime.year || 'N/A'}</span>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-sm text-muted-foreground">No results</div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* View all results — hanya tampil setelah user mengetik dan loading selesai */}
+            {searchQuery.trim() !== '' && !searchLoading && (
+              <div className="border-t border-border p-2 text-center">
+                <button
+                  onClick={() => {
+                    handleSubmitSearch()
+                    setMobileSearchOpen(false)
+                  }}
+                  className="w-full text-xs font-medium bg-secondary/50 py-2 rounded-md hover:bg-secondary transition-colors"
+                >
+                  View all results
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }

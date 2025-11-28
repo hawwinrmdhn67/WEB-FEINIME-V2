@@ -134,7 +134,7 @@ export default function LoginPage() {
         setMessage(error.message)
         console.error('magic link error', error)
       } else {
-        setMessage('Magic link sent — check your inbox.')
+        setMessage('Magic link sent check your inbox.')
       }
     } catch (err: any) {
       console.error('sendMagicLink exception', err)
@@ -153,7 +153,7 @@ export default function LoginPage() {
           <div className="bg-card border border-border/50 rounded-2xl shadow-md p-6 sm:p-8">
             <div className="text-center mb-6">
               <h1 className="text-2xl sm:text-3xl font-extrabold">Login</h1>
-              <p className="text-sm text-muted-foreground mt-1">Sign in to continue</p>
+              <p className="text-sm text-muted-foreground mt-1">Sign in to continue Feinime</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
@@ -206,8 +206,13 @@ export default function LoginPage() {
                 </div>
 
                 <div className="flex items-center justify-between mt-2">
-                  <button type="button" onClick={handleSendMagicLink} disabled={loading} className="text-xs text-muted-foreground hover:underline">Send magic link</button>
-                  <Link href="/register" className="text-xs text-muted-foreground hover:underline">Create account</Link>
+                  <Link href="/forgot-password" className="text-xs text-muted-foreground hover:underline">
+                    Forgot password?
+                  </Link>
+
+                  <Link href="/register" className="text-xs text-muted-foreground hover:underline">
+                    Create account
+                  </Link>
                 </div>
               </div>
 
@@ -235,8 +240,11 @@ export default function LoginPage() {
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg border border-border/40 bg-transparent hover:bg-secondary/50 transition-colors text-sm disabled:opacity-60"
                 aria-label="Continue with Google"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
-                  <path fill="#EA4335" d="M12 11v2h6.5c-.3 1.5-1.7 4.4-6.5 4.4-3.9 0-7-3.1-7-7s3.1-7 7-7c2.2 0 3.7.9 4.6 1.6l1.6-1.6C17.6 4 15.9 3 12 3 6.5 3 2 7.5 2 13s4.5 10 10 10 10-4.5 10-10c0-.7-.1-1.3-.2-1.9H12z"/>
+                <svg className="w-4 h-4" viewBox="0 0 48 48" aria-hidden>
+                  <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 34.9 30.1 38 24 38c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.3 0 6.3 1.2 8.6 3.2l6.4-6.4C34.9 4.3 29.8 2 24 2 12.3 2 3 11.3 3 23s9.3 21 21 21 21-9.3 21-21c0-1.1-.1-2.0-.3-3Z"/>
+                  <path fill="#34A853" d="M6.3 14.7l7 5.1C15 15.2 19.2 12 24 12c3.3 0 6.3 1.2 8.6 3.2l6.4-6.4C34.9 4.3 29.8 2 24 2 15.3 2 7.8 7.3 6.3 14.7Z"/>
+                  <path fill="#FBBC05" d="M24 44c5.8 0 10.9-2.3 14.7-6l-6.8-5.5C29.9 34.5 27.1 36 24 36c-6 0-10.6-4.1-12.2-9.6l-7.2 5.6C7.7 39.1 15.3 44 24 44Z"/>
+                  <path fill="#EA4335" d="M44.5 20H24v8.5h11.8a12 12 0 0 1-3.8 5.7l6.8 5.5C43.8 34.9 45 29.2 45 24c0-1.1-.1-2.0-.3-3Z"/>
                 </svg>
                 Continue with Google
               </button>

@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -25,11 +26,11 @@ export default function RegisterPage() {
     setMessage(null)
 
     if (!email || !password) {
-      setMessage('Email dan password wajib diisi.')
+      setMessage('Email and password are required.')
       return
     }
     if (password !== confirm) {
-      setMessage('Password dan konfirmasi tidak cocok.')
+      setMessage('Password and confirmation do not match.')
       return
     }
 
@@ -87,7 +88,7 @@ export default function RegisterPage() {
         }
       }
 
-      setMessage('Registration successful. Check your email for confirmation.')
+      setMessage('Registration successful. Please check your email for confirmation.')
       // short delay to allow user to read message then redirect
       setTimeout(() => router.push('/login'), 1000)
     } catch (err: any) {
@@ -111,7 +112,7 @@ export default function RegisterPage() {
       await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
     } catch (err: any) {
       console.error('Google OAuth failed', err)
-      setMessage(err?.message ?? 'Gagal memulai Google OAuth')
+      setMessage(err?.message ?? 'Failed to start Google OAuth')
     } finally {
       setLoading(false)
     }
@@ -125,7 +126,7 @@ export default function RegisterPage() {
           <div className="bg-card border border-border/50 rounded-2xl shadow-md p-6 sm:p-8">
             <div className="text-center mb-6">
               <h1 className="text-2xl sm:text-3xl font-extrabold">Create account</h1>
-              <p className="text-sm text-muted-foreground mt-1">Sign up to join</p>
+              <p className="text-sm text-muted-foreground mt-1">Sign up to join Feinime</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
@@ -196,17 +197,41 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="confirm" className="block text-sm font-medium mb-2">Confirm Password</label>
-                <input
-                  id="confirm"
-                  name="confirm"
-                  type="password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Confirm password"
-                  className="w-full pl-3 pr-3 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                  required
-                />
+                <label htmlFor="confirm" className="block text-sm font-medium mb-2">
+                  Confirm Password
+                </label>
+
+                <div className="relative">
+                  {/* ICON KUNCI */}
+                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                    <Lock className="w-4 h-4" />
+                  </span>
+
+                  <input
+                    id="confirm"
+                    name="confirm"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="Confirm password"
+                    className="w-full pl-10 pr-10 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    required
+                  />
+
+                  {/* ICON SHOW/HIDE PASSWORD */}
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(v => !v)}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -232,8 +257,11 @@ export default function RegisterPage() {
                 className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg border border-border/40 bg-transparent hover:bg-secondary/50 transition-colors text-sm"
                 aria-label="Continue with Google"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
-                  <path fill="#EA4335" d="M12 11v2h6.5c-.3 1.5-1.7 4.4-6.5 4.4-3.9 0-7-3.1-7-7s3.1-7 7-7c2.2 0 3.7.9 4.6 1.6l1.6-1.6C17.6 4 15.9 3 12 3 6.5 3 2 7.5 2 13s4.5 10 10 10 10-4.5 10-10c0-.7-.1-1.3-.2-1.9H12z"/>
+                <svg className="w-4 h-4" viewBox="0 0 48 48" aria-hidden>
+                  <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 34.9 30.1 38 24 38c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.3 0 6.3 1.2 8.6 3.2l6.4-6.4C34.9 4.3 29.8 2 24 2 12.3 2 3 11.3 3 23s9.3 21 21 21 21-9.3 21-21c0-1.1-.1-2.0-.3-3Z"/>
+                  <path fill="#34A853" d="M6.3 14.7l7 5.1C15 15.2 19.2 12 24 12c3.3 0 6.3 1.2 8.6 3.2l6.4-6.4C34.9 4.3 29.8 2 24 2 15.3 2 7.8 7.3 6.3 14.7Z"/>
+                  <path fill="#FBBC05" d="M24 44c5.8 0 10.9-2.3 14.7-6l-6.8-5.5C29.9 34.5 27.1 36 24 36c-6 0-10.6-4.1-12.2-9.6l-7.2 5.6C7.7 39.1 15.3 44 24 44Z"/>
+                  <path fill="#EA4335" d="M44.5 20H24v8.5h11.8a12 12 0 0 1-3.8 5.7l6.8 5.5C43.8 34.9 45 29.2 45 24c0-1.1-.1-2.0-.3-3Z"/>
                 </svg>
                 Continue with Google
               </button>
