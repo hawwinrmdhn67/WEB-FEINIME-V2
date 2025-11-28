@@ -9,59 +9,31 @@ import { getBrowserSupabase } from '@/lib/supabaseClient'
 import { Footer } from '@/components/feinime-footer'
 
 function parseParamsFromLocation(): Record<string, string> {
+  // parse both hash and query params into a single map
   const params: Record<string, string> = {}
+
   if (typeof window === 'undefined') return params
 
-  // querystring
+  // parse query string
   const qs = window.location.search
   if (qs && qs.length > 1) {
     const search = new URLSearchParams(qs)
-    for (const [k, v] of search.entries()) params[k] = v
+    for (const [k, v] of search.entries()) {
+      params[k] = v
+    }
   }
 
-  // hash/fragment
+  // parse hash (fragment) which may look like "#access_token=...&type=recovery&refresh_token=..."
   const hash = window.location.hash
   if (hash && hash.startsWith('#')) {
     const frag = hash.slice(1)
     const fragParams = new URLSearchParams(frag)
-    for (const [k, v] of fragParams.entries()) params[k] = v
+    for (const [k, v] of fragParams.entries()) {
+      params[k] = v
+    }
   }
 
   return params
-}
-
-function extractTokensFromString(s: string) {
-  try {
-    if (!s) return { access_token: null, refresh_token: null }
-
-    // full URL
-    if (s.startsWith('http://') || s.startsWith('https://')) {
-      const u = new URL(s)
-      const qp = new URLSearchParams(u.search)
-      if (qp.get('access_token')) {
-        return { access_token: qp.get('access_token'), refresh_token: qp.get('refresh_token') }
-      }
-      if (u.hash && u.hash.startsWith('#')) {
-        const frag = new URLSearchParams(u.hash.slice(1))
-        return { access_token: frag.get('access_token'), refresh_token: frag.get('refresh_token') }
-      }
-    }
-
-    // fragment-like or query-like string
-    if (s.includes('access_token=')) {
-      const frag = new URLSearchParams(s.replace(/^#/, ''))
-      return { access_token: frag.get('access_token'), refresh_token: frag.get('refresh_token') }
-    }
-
-    // bare token (heuristic)
-    const trimmed = s.trim()
-    if (/^[A-Za-z0-9\-_\.]{20,}$/.test(trimmed)) {
-      return { access_token: trimmed, refresh_token: null }
-    }
-  } catch (err) {
-    // ignore
-  }
-  return { access_token: null, refresh_token: null }
 }
 
 export default function ResetPasswordPage() {
@@ -72,19 +44,14 @@ export default function ResetPasswordPage() {
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [messageType, setMessageType] = useState<'error' | 'success' | null>(null)
-
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // manual paste fallback
-  const [manualInput, setManualInput] = useState('')
-  const [manualProcessing, setManualProcessing] = useState(false)
-
   useEffect(() => {
-    // parse tokens from URL (fragment or query)
+    // parse tokens from URL (hash or query)
     try {
       const params = parseParamsFromLocation()
       const at = params['access_token'] ?? params['accessToken'] ?? null
@@ -98,30 +65,33 @@ export default function ResetPasswordPage() {
     }
   }, [])
 
-  // helper: try set session from token (compatible with supabase v2)
-  const ensureSessionFromToken = async (at?: string, rt?: string) => {
-    const supabase = getBrowserSupabase()
-    if (!supabase) return { ok: false, message: 'Client environment required.' }
-    const token = at ?? accessToken
-    const refresh = rt ?? refreshToken
-
-    if (!token) return { ok: false, message: 'No access token provided.' }
+  const ensureSessionFromToken = async () => {
+    if (!accessToken) {
+      return { ok: false, message: 'No access token found in URL. Make sure you used the link from your email.' }
+    }
 
     setSettingSession(true)
     try {
-      // prefer setSession (v2)
+      const supabase = getBrowserSupabase()
+      if (!supabase) {
+        return { ok: false, message: 'Client environment required.' }
+      }
+
+      // If setSession exists (supabase v2+)
       if (typeof (supabase.auth as any).setSession === 'function') {
-        const payload: any = { access_token: token }
-        if (refresh) payload.refresh_token = refresh
+        const payload: any = { access_token: accessToken }
+        if (refreshToken) payload.refresh_token = refreshToken
+
         const res: any = await (supabase.auth as any).setSession(payload)
         if (res?.error) {
           console.error('setSession error', res.error)
           return { ok: false, message: res.error.message || 'Failed to set session from token.' }
         }
+
         return { ok: true }
       }
 
-      // older helper
+      // If setSession not available, attempt to use getSessionFromUrl helper if present
       if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
         try {
           await (supabase.auth as any).getSessionFromUrl()
@@ -141,124 +111,6 @@ export default function ResetPasswordPage() {
     }
   }
 
-  // If user is already signed in (session exists), allow them to proceed w/o token
-  const checkExistingSession = async () => {
-    try {
-      const supabase = getBrowserSupabase()
-      if (!supabase) return null
-      if (typeof (supabase.auth as any).getSession === 'function') {
-        const res: any = await (supabase.auth as any).getSession()
-        const sess = res?.data?.session ?? null
-        if (sess) return sess
-      } else if (typeof (supabase.auth as any).getUser === 'function') {
-        const res: any = await (supabase.auth as any).getUser()
-        if (res?.data?.user) return res.data.user
-      }
-    } catch (err) {
-      // ignore
-    }
-    return null
-  }
-
-  // allow manual paste of token/link
-  const handleManualSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault()
-    setManualProcessing(true)
-    setMessage(null)
-    try {
-      const { access_token: at, refresh_token: rt } = extractTokensFromString(manualInput || '')
-      if (!at) {
-        setMessage('No token found in the input. Paste the full link or the access_token value.')
-        setMessageType('error')
-        return
-      }
-
-      const supabase = getBrowserSupabase()
-      if (!supabase) {
-        setMessage('Client environment required.')
-        setMessageType('error')
-        return
-      }
-
-      // try setSession
-      if (typeof (supabase.auth as any).setSession === 'function') {
-        const payload: any = { access_token: at }
-        if (rt) payload.refresh_token = rt
-        const res: any = await (supabase.auth as any).setSession(payload)
-        if (res?.error) {
-          console.error('setSession error', res.error)
-          setMessage(res.error.message || 'Failed to set session from pasted token.')
-          setMessageType('error')
-          return
-        }
-
-        setAccessToken(at)
-        setRefreshToken(rt)
-        setMessage('Token accepted — you can now set a new password.')
-        setMessageType('success')
-        return
-      }
-
-      // fallback
-      if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
-        try {
-          await (supabase.auth as any).getSessionFromUrl()
-          setMessage('Session established — you can now set a new password.')
-          setMessageType('success')
-          return
-        } catch (err: any) {
-          console.error(err)
-          setMessage('Failed to process pasted token.')
-          setMessageType('error')
-          return
-        }
-      }
-
-      setMessage('Your Supabase client does not support programmatic session setting.')
-      setMessageType('error')
-    } catch (err: any) {
-      console.error(err)
-      setMessage(err?.message ?? 'Failed to process pasted token.')
-      setMessageType('error')
-    } finally {
-      setManualProcessing(false)
-    }
-  }
-
-  // Try to ensure session if token present when component mounts/updates
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      if (!mounted) return
-      if (accessToken) {
-        setMessage('Processing reset link…')
-        setMessageType(null)
-        const r = await ensureSessionFromToken()
-        if (!r.ok) {
-          setMessage(r.message)
-          setMessageType('error')
-        } else {
-          setMessage('Session established — you can set a new password.')
-          setMessageType('success')
-        }
-      } else {
-        // no token in URL — check whether user is already signed in
-        const sess = await checkExistingSession()
-        if (sess) {
-          setMessage('You are already signed in — you can change your password below.')
-          setMessageType('success')
-        } else {
-          setMessage(null)
-          setMessageType(null)
-        }
-      }
-    })()
-
-    return () => { mounted = false }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken])
-
-  // Submit new password
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
     setMessage(null)
@@ -289,30 +141,21 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // ensure session exists (in case setSession hasn't been called)
-      const sessCheck = await checkExistingSession()
-      if (!sessCheck) {
-        // try to set session from accessToken if available
-        if (accessToken) {
-          const r = await ensureSessionFromToken()
-          if (!r.ok) {
-            setMessage(r.message)
-            setMessageType('error')
-            return
-          }
-        } else {
-          setMessage('No session found. Paste your reset link or sign in and try again.')
-          setMessageType('error')
-          return
-        }
+      // Ensure there is a session (using token if provided)
+      const sessionResult = await ensureSessionFromToken()
+      if (!sessionResult.ok) {
+        setMessage(sessionResult.message)
+        setMessageType('error')
+        return
       }
 
-      // update password
+      // Now update user password
+      // Supabase v2: supabase.auth.updateUser({ password })
       let res: any = null
       if (typeof (supabase.auth as any).updateUser === 'function') {
         res = await (supabase.auth as any).updateUser({ password })
       } else if (typeof (supabase.auth as any).update === 'function') {
-        // legacy
+        // legacy: try update
         res = await (supabase.auth as any).update({ password })
       } else {
         setMessage('Your Supabase client does not support updating password programmatically.')
@@ -327,6 +170,7 @@ export default function ResetPasswordPage() {
         return
       }
 
+      // success
       setMessage('Password updated successfully. Redirecting to login...')
       setMessageType('success')
 
@@ -341,7 +185,9 @@ export default function ResetPasswordPage() {
         }
       } catch {}
 
-      setTimeout(() => router.replace('/login'), 1200)
+      setTimeout(() => {
+        router.replace('/login')
+      }, 1200)
     } catch (err: any) {
       console.error('reset password submit exception', err)
       setMessage(err?.message ?? 'Unexpected error while resetting password.')
@@ -361,6 +207,7 @@ export default function ResetPasswordPage() {
               <p className="text-sm text-muted-foreground mt-1">Set a new password for your account.</p>
             </div>
 
+            {/* If we don't have a token, show brief instructions */}
             {loading ? (
               <div className="p-6 text-center">
                 <Loader2 className="animate-spin mx-auto" />
@@ -368,42 +215,13 @@ export default function ResetPasswordPage() {
               </div>
             ) : (
               <>
-                {/* If token not detected, show paste/token fallback */}
                 {!accessToken && (
-                  <div className="mb-4 text-sm text-muted-foreground space-y-3">
-                    <p>
-                      No password reset token detected in the URL. If you clicked a reset link from email, some email clients remove part of the link.
-                      Copy the full link from the email and paste it below, or paste the access_token value directly.
-                    </p>
-
-                    <form onSubmit={handleManualSubmit} className="flex gap-2">
-                      <input
-                        value={manualInput}
-                        onChange={(e) => setManualInput(e.target.value)}
-                        placeholder="Paste full reset link or access_token here"
-                        className="flex-1 px-3 py-2 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-                      />
-                      <button
-                        type="submit"
-                        disabled={manualProcessing}
-                        className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm disabled:opacity-60"
-                      >
-                        {manualProcessing ? 'Processing…' : 'Use token'}
-                      </button>
-                    </form>
-
-                    <p className="text-xs text-muted-foreground">Tip: copy the link address from the email, paste it here and press Use token.</p>
+                  <div className="mb-4 text-sm text-muted-foreground">
+                    No password reset token detected in the URL. If you clicked a reset link from email, make sure you opened the full link (some email clients truncate).<br />
+                    You can also copy the link from the email and open it in the browser.
                   </div>
                 )}
 
-                {/* messages */}
-                {message && (
-                  <div className={`mb-4 text-sm text-center ${messageType === 'error' ? 'text-red-500' : 'text-green-500'}`}>
-                    {message}
-                  </div>
-                )}
-
-                {/* Password form (always shown so signed-in users can change immediately) */}
                 <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium mb-2">New password</label>
@@ -473,6 +291,12 @@ export default function ResetPasswordPage() {
                     </button>
                   </div>
                 </form>
+
+                {message && (
+                  <div className={`mt-4 text-sm text-center ${messageType === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+                    {message}
+                  </div>
+                )}
 
                 <div className="text-center mt-6 text-sm">
                   <p className="text-muted-foreground">
