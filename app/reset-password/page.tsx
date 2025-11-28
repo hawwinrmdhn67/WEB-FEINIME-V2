@@ -1,4 +1,4 @@
-// Updated: app/reset-password/page.tsx
+// app/reset-password/page.tsx
 'use client'
 
 import React, { useEffect, useState } from 'react'
@@ -30,7 +30,7 @@ function parseParamsFromLocation(): Record<string, string> {
 
 export default function ResetPasswordPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true) // initial parsing/loading state
   const [settingSession, setSettingSession] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
@@ -43,6 +43,7 @@ export default function ResetPasswordPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    // parse tokens from URL (hash or query)
     try {
       const params = parseParamsFromLocation()
       const at = params['access_token'] ?? params['accessToken'] ?? null
@@ -52,6 +53,7 @@ export default function ResetPasswordPage() {
     } catch (err) {
       console.error('parse params error', err)
     } finally {
+      // parsing done — toggle loading off so UI can render messages correctly
       setLoading(false)
     }
   }, [])
@@ -68,22 +70,13 @@ export default function ResetPasswordPage() {
         return { ok: false, message: 'Client environment required.' }
       }
 
-      // SUPPRESS signin toast coming from this recovery flow
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem('feinime:suppress_signin_toast', '1')
-        }
-      } catch (e) { /* ignore */ }
-
       if (typeof (supabase.auth as any).setSession === 'function') {
         const payload: any = { access_token: accessToken }
         if (refreshToken) payload.refresh_token = refreshToken
 
         const res: any = await (supabase.auth as any).setSession(payload)
-        console.log('setSession result', res)
         if (res?.error) {
           console.error('setSession error', res.error)
-          try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:suppress_signin_toast') } catch {}
           return { ok: false, message: res.error.message || 'Failed to set session from token.' }
         }
 
@@ -92,25 +85,34 @@ export default function ResetPasswordPage() {
 
       if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
         try {
-          const res = await (supabase.auth as any).getSessionFromUrl()
-          console.log('getSessionFromUrl result', res)
+          await (supabase.auth as any).getSessionFromUrl()
           return { ok: true }
         } catch (err: any) {
           console.error('getSessionFromUrl error', err)
-          try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:suppress_signin_toast') } catch {}
           return { ok: false, message: 'Failed to consume session from URL.' }
         }
       }
 
-      try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:suppress_signin_toast') } catch {}
       return { ok: false, message: 'Supabase client does not support programmatic session setting.' }
     } catch (err: any) {
       console.error('ensureSessionFromToken exception', err)
-      try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:suppress_signin_toast') } catch {}
       return { ok: false, message: err?.message ?? 'Unexpected error while establishing session.' }
     } finally {
       setSettingSession(false)
     }
+  }
+
+  // small helper: wait until loading && settingSession are false, but no longer than timeoutMs
+  const waitUntilReadyOrTimeout = async (timeoutMs = 3000) => {
+    const start = Date.now()
+    return new Promise<void>((resolve) => {
+      const check = () => {
+        if (!loading && !settingSession) return resolve()
+        if (Date.now() - start >= timeoutMs) return resolve()
+        setTimeout(check, 100)
+      }
+      check()
+    })
   }
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -140,18 +142,18 @@ export default function ResetPasswordPage() {
       if (!supabase) {
         setMessage('Client environment required.')
         setMessageType('error')
-        setSubmitting(false)
         return
       }
 
+      // Ensure there is a session (using token if provided)
       const sessionResult = await ensureSessionFromToken()
       if (!sessionResult.ok) {
         setMessage(sessionResult.message)
         setMessageType('error')
-        setSubmitting(false)
         return
       }
 
+      // Now update user password
       let res: any = null
       if (typeof (supabase.auth as any).updateUser === 'function') {
         res = await (supabase.auth as any).updateUser({ password })
@@ -160,25 +162,21 @@ export default function ResetPasswordPage() {
       } else {
         setMessage('Your Supabase client does not support updating password programmatically.')
         setMessageType('error')
-        setSubmitting(false)
         return
       }
 
-      console.log('update password response', res)
-
-      const err = res?.error ?? (res?.error === undefined ? null : res.error)
-      if (err) {
-        console.error('update password error', err)
-        setMessage(err.message || 'Failed to update password.')
+      if (res?.error) {
+        console.error('update password error', res.error)
+        setMessage(res.error.message || 'Failed to update password.')
         setMessageType('error')
-        try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:suppress_signin_toast') } catch {}
-        setSubmitting(false)
         return
       }
 
-      setMessage('Password updated successfully. Redirecting to login...')
+      // success: show message under the reset form (do NOT use toast)
+      setMessage('Password updated successfully.')
       setMessageType('success')
 
+      // clear tokens from URL for cleanliness
       try {
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href)
@@ -187,9 +185,16 @@ export default function ResetPasswordPage() {
           url.searchParams.delete('refresh_token')
           window.history.replaceState({}, document.title, url.toString())
         }
-      } catch {}
+      } catch (err) {
+        // ignore
+      }
 
-      try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:suppress_signin_toast') } catch {}
+      // Wait until parse/loading/settingSession finishes (or timeout) before redirecting.
+      // This prevents "success redirect" happening while page still thinks it's loading.
+      await waitUntilReadyOrTimeout(3000)
+
+      // small delay so user sees the success message (optional)
+      await new Promise((r) => setTimeout(r, 700))
 
       router.replace('/login')
     } catch (err: any) {
@@ -198,7 +203,6 @@ export default function ResetPasswordPage() {
       setMessageType('error')
     } finally {
       setSubmitting(false)
-      setSettingSession(false)
     }
   }
 
@@ -219,6 +223,7 @@ export default function ResetPasswordPage() {
               </div>
             ) : (
               <>
+                {/* only show the "no token" instruction after initial parsing is done */}
                 {!accessToken && (
                   <div className="mb-4 text-sm text-muted-foreground">
                     No password reset token detected in the URL. If you clicked a reset link from email, make sure you opened the full link (some email clients truncate).<br />
@@ -288,7 +293,7 @@ export default function ResetPasswordPage() {
                   <div>
                     <button
                       type="submit"
-                      disabled={submitting || settingSession}
+                      disabled={submitting || settingSession || loading}
                       className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
                     >
                       {(submitting || settingSession) ? <Loader2 className="animate-spin w-4 h-4" /> : 'Set new password'}
@@ -296,6 +301,7 @@ export default function ResetPasswordPage() {
                   </div>
                 </form>
 
+                {/* Inline notification area (below the form) — replaces toast */}
                 {message && (
                   <div className={`mt-4 text-sm text-center ${messageType === 'error' ? 'text-red-500' : 'text-green-500'}`}>
                     {message}
