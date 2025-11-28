@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
       }
 
       // prefer explicit redirect if provided, else fallback to current origin
-      const redirectTo = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin + '/reset-password' : undefined)
+      const redirectTo = (typeof window !== 'undefined') ? `${window.location.origin}/reset-password` : process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || ''
 
       // use resetPasswordForEmail if available (Supabase v2+), otherwise try signInWithOtp as fallback
       let error = null
