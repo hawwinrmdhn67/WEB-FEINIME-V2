@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getBrowserSupabase } from '@/lib/supabaseClient'
-import { Footer } from '@/components/feinime-footer'
 
 function parseParamsFromLocation(): Record<string, string> {
   const params: Record<string, string> = {}
@@ -359,8 +358,6 @@ export default function ResetPasswordPage() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </main>
   )
 }
