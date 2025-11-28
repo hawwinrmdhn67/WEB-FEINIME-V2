@@ -1,4 +1,4 @@
-// app/forgot-password/page.tsx
+// Updated: app/forgot-password/page.tsx
 'use client'
 
 import React, { useState } from 'react'
@@ -41,10 +41,12 @@ export default function ForgotPasswordPage() {
       if (typeof (supabase.auth as any).resetPasswordForEmail === 'function') {
         const res: any = await (supabase.auth as any).resetPasswordForEmail(email, { redirectTo })
         error = res?.error ?? null
+        console.log('resetPasswordForEmail result', res)
       } else if (typeof (supabase.auth as any).signInWithOtp === 'function') {
         // fallback: signInWithOtp can be used for sending email-based links depending on project setup
         const res: any = await (supabase.auth as any).signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
         error = res?.error ?? null
+        console.log('signInWithOtp result', res)
       } else {
         setMessage('Reset password is not supported by your Supabase client.')
         return
