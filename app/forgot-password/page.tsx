@@ -17,19 +17,28 @@ export default function ForgotPasswordPage() {
 
   const handleSendReset = async (e?: React.FormEvent) => {
     e?.preventDefault()
+
+    // clear previous messages right away so UI shows current state
     setMessage(null)
     setSuccess(false)
 
     if (!email) {
       setMessage('Please enter your email.')
+      setSuccess(false)
       return
     }
 
     setLoading(true)
+
+    // prepare result placeholders so we only update UI once at the end
+    let resultMessage: string | null = null
+    let resultSuccess = false
+
     try {
       const supabase = getBrowserSupabase()
       if (!supabase) {
-        setMessage('Client environment required.')
+        resultMessage = 'Client environment required.'
+        resultSuccess = false
         return
       }
 
@@ -37,37 +46,41 @@ export default function ForgotPasswordPage() {
       const redirectTo = (typeof window !== 'undefined') ? `${window.location.origin}/reset-password` : process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || ''
 
       // use resetPasswordForEmail if available (Supabase v2+), otherwise try signInWithOtp as fallback
-      let error = null
+      let error: any = null
       if (typeof (supabase.auth as any).resetPasswordForEmail === 'function') {
         const res: any = await (supabase.auth as any).resetPasswordForEmail(email, { redirectTo })
         error = res?.error ?? null
       } else if (typeof (supabase.auth as any).signInWithOtp === 'function') {
-        // fallback: signInWithOtp can be used for sending email-based links depending on project setup
         const res: any = await (supabase.auth as any).signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
         error = res?.error ?? null
       } else {
-        setMessage('Reset password is not supported by your Supabase client.')
+        resultMessage = 'Reset password is not supported by your Supabase client.'
+        resultSuccess = false
         return
       }
 
       if (error) {
         console.error('reset password error', error)
-        setMessage(error.message || 'Failed to send reset email.')
+        resultMessage = error.message || 'Failed to send reset email.'
+        resultSuccess = false
       } else {
-        setSuccess(true)
-        setMessage('If an account exists, a password reset email was sent. Check your inbox (and spam).')
+        resultMessage = 'If an account exists, a password reset email was sent. Check your inbox (and spam).'
+        resultSuccess = true
       }
     } catch (err: any) {
       console.error('unexpected reset-password exception', err)
-      setMessage(err?.message ?? 'Unexpected error while sending reset email.')
+      resultMessage = err?.message ?? 'Unexpected error while sending reset email.'
+      resultSuccess = false
     } finally {
+      // ensure loading is reset before we update the visible message
       setLoading(false)
+      setMessage(resultMessage)
+      setSuccess(resultSuccess)
     }
   }
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Note: Navbar may be rendered globally in layout; not necessary here */}
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md mx-auto">
           <div className="bg-card border border-border/50 rounded-2xl shadow-md p-6 sm:p-8">
@@ -92,6 +105,7 @@ export default function ForgotPasswordPage() {
                     placeholder="Your email"
                     className="w-full pl-10 pr-3 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                     required
+                    aria-invalid={message && !success ? 'true' : 'false'}
                   />
                 </div>
               </div>
@@ -107,7 +121,8 @@ export default function ForgotPasswordPage() {
               </div>
             </form>
 
-            <div className="mt-4 text-sm text-center">
+            {/* Inline notification area (below the form) — avoid toasts */}
+            <div className="mt-4 text-sm text-center min-h-[1.25rem]">
               {message && (
                 <p className={success ? 'text-green-500' : 'text-red-500'}>
                   {message}
