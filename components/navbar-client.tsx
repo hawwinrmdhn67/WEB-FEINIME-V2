@@ -13,8 +13,7 @@ const Navbar = dynamic(
 
 export default function NavbarClient() {
   const pathname = usePathname()
-
-  // ⛔ Jangan tampilkan navbar di halaman reset password
+  
   if (pathname === '/reset-password') {
     return null
   }
