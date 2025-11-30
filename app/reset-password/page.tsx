@@ -2,8 +2,8 @@
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getBrowserSupabase } from '@/lib/supabaseClient'
 
@@ -11,14 +11,12 @@ function parseParamsFromLocation(): Record<string, string> {
   const params: Record<string, string> = {}
   if (typeof window === 'undefined') return params
 
-  // query string ?a=b
   const qs = window.location.search
   if (qs && qs.length > 1) {
     const search = new URLSearchParams(qs)
     for (const [k, v] of search.entries()) params[k] = v
   }
 
-  // fragment/hash #access_token=...
   const hash = window.location.hash
   if (hash && hash.startsWith('#')) {
     const frag = hash.slice(1)
@@ -46,12 +44,9 @@ export default function ResetPasswordPage() {
   const [showNoTokenMessage, setShowNoTokenMessage] = useState(false)
   const noTokenTimerRef = useRef<number | null>(null)
 
-  // Parse params on mount and attempt to handle common flows:
-  // - fragment with access_token (implicit)
-  // - query with code (PKCE) -> attempt exchange
   useEffect(() => {
     let mounted = true
-    const doParse = async () => {
+    const init = async () => {
       try {
         const params = parseParamsFromLocation()
         console.log('reset params', params)
@@ -61,63 +56,34 @@ export default function ResetPasswordPage() {
         setAccessToken(at)
         setRefreshToken(rt)
 
-        // If there is an access token in fragment, that's easiest: keep it and setSession later
-        if (at) {
-          console.log('Found access_token in URL fragment.')
-          // no immediate action here; ensureSessionFromToken will consume it on submit
-        } else if (code) {
-          // Try to exchange code for session (PKCE). This ONLY works in same browser where code_verifier exists.
-          console.log('Found code in URL — attempting exchangeCodeForSession (PKCE).')
-          const supabase = getBrowserSupabase()
-          if (!supabase) {
-            setMessage('Client environment required to complete exchange.')
-            setMessageType('error')
-            return
-          }
-
+        const supabase = getBrowserSupabase()
+        // Try PKCE exchange if `code` present and supabase supports it
+        if (!at && code && supabase) {
           try {
-            // supabase-js API differs by version; try common method names
-            let exchangeResult: any = null
+            // try common method names across versions
             if (typeof (supabase.auth as any).exchangeCodeForSession === 'function') {
-              exchangeResult = await (supabase.auth as any).exchangeCodeForSession(code)
-            } else if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
-              // some versions automatically parse getSessionFromUrl()
-              try {
-                await (supabase.auth as any).getSessionFromUrl()
-                // after this, parse params again to pick up session in fragment
-                const after = parseParamsFromLocation()
-                setAccessToken(after['access_token'] ?? null)
-                setRefreshToken(after['refresh_token'] ?? null)
-                console.log('getSessionFromUrl succeeded, params now', after)
-              } catch (err) {
-                console.error('getSessionFromUrl threw', err)
-                exchangeResult = { error: err }
-              }
-            } else {
-              // fallback: try a generic method name many examples use
-              if (typeof (supabase.auth as any).exchange === 'function') {
-                exchangeResult = await (supabase.auth as any).exchange(code)
-              }
-            }
-
-            // If we got a structured response:
-            if (exchangeResult) {
-              if (exchangeResult.error) {
-                console.error('exchangeCodeForSession error', exchangeResult.error)
-                setMessage('Failed to exchange code for session. Try opening the link in the original browser where you requested the reset.')
+              const res: any = await (supabase.auth as any).exchangeCodeForSession(code)
+              if (res?.error) {
+                console.warn('exchangeCodeForSession error', res.error)
+                setMessage('Failed to exchange auth code. Try opening the link in the original browser or request a new reset link.')
                 setMessageType('error')
-              } else if (exchangeResult.data?.session) {
-                const s = exchangeResult.data.session
-                setAccessToken(s.access_token ?? null)
-                setRefreshToken(s.refresh_token ?? null)
-                console.log('exchanged session', s)
-              } else {
-                console.log('exchange result (unexpected)', exchangeResult)
+              } else if (res?.data?.session) {
+                setAccessToken(res.data.session.access_token ?? null)
+                setRefreshToken(res.data.session.refresh_token ?? null)
               }
+            } else if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
+              // some SDKs auto-handle this
+              await (supabase.auth as any).getSessionFromUrl()
+              const after = parseParamsFromLocation()
+              setAccessToken(after['access_token'] ?? null)
+              setRefreshToken(after['refresh_token'] ?? null)
+              console.log('getSessionFromUrl succeeded, params now', after)
+            } else {
+              console.log('No PKCE exchange method available on supabase client.')
             }
-          } catch (err: any) {
-            console.error('exchange exception', err)
-            setMessage('Unexpected error while exchanging code. Open the link in the original browser or request a new reset link.')
+          } catch (err) {
+            console.error('PKCE exchange exception', err)
+            setMessage('Unexpected error while exchanging code. Request a new reset link.')
             setMessageType('error')
           }
         }
@@ -134,7 +100,7 @@ export default function ResetPasswordPage() {
       }
     }
 
-    doParse()
+    init()
 
     return () => {
       mounted = false
@@ -157,7 +123,7 @@ export default function ResetPasswordPage() {
 
   const ensureSessionFromToken = async () => {
     if (!accessToken) {
-      return { ok: false, message: 'No access token found in URL. Make sure you opened the full reset link from your email (some email clients truncate links).' }
+      return { ok: false, message: 'No access token found in URL. Make sure you opened the full reset link from your email.' }
     }
 
     setSettingSession(true)
@@ -167,14 +133,6 @@ export default function ResetPasswordPage() {
         return { ok: false, message: 'Client environment required.' }
       }
 
-      // suppress login toast if you use one in your app
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem('feinime:suppress_login_toast', '1')
-        }
-      } catch {}
-
-      // Try programmatic session set (varies by supabase-js version)
       try {
         if (typeof (supabase.auth as any).setSession === 'function') {
           const payload: any = { access_token: accessToken }
@@ -186,11 +144,15 @@ export default function ResetPasswordPage() {
           }
           return { ok: true }
         } else if (typeof (supabase.auth as any).setAuth === 'function') {
-          // older API: setAuth(token) only sets header for client; may not create browser session
-          (supabase.auth as any).setAuth(accessToken)
-          return { ok: true }
+          // older API: setAuth just sets header for client usage
+          try {
+            ;(supabase.auth as any).setAuth(accessToken)
+            return { ok: true }
+          } catch (err: any) {
+            console.error('setAuth error', err)
+            return { ok: false, message: err?.message ?? 'Failed to set auth token.' }
+          }
         } else if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
-          // attempt to parse session from URL if supported
           try {
             await (supabase.auth as any).getSessionFromUrl()
             return { ok: true }
@@ -199,7 +161,7 @@ export default function ResetPasswordPage() {
             return { ok: false, message: 'Failed to consume session from URL.' }
           }
         } else {
-          return { ok: false, message: 'Supabase client does not support programmatic session setting; update SDK or handle session via server.' }
+          return { ok: false, message: 'Supabase client does not support programmatic session setting; update SDK or handle server-side.' }
         }
       } catch (err: any) {
         console.error('ensureSessionFromToken inner error', err)
@@ -210,7 +172,6 @@ export default function ResetPasswordPage() {
       return { ok: false, message: err?.message ?? 'Unexpected error while establishing session.' }
     } finally {
       setSettingSession(false)
-      // do not remove suppress flag here — remove after submit
     }
   }
 
@@ -256,7 +217,6 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Ensure session (using token if present)
       const sessionResult = await ensureSessionFromToken()
       if (!sessionResult.ok) {
         setMessage(sessionResult.message)
@@ -264,29 +224,40 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Now update user password; different SDK versions expose different methods
-      let res: any = null
-      if (typeof (supabase.auth as any).updateUser === 'function') {
-        res = await (supabase.auth as any).updateUser({ password })
-      } else if (typeof (supabase.auth as any).update === 'function') {
-        res = await (supabase.auth as any).update({ password })
-      } else {
-        setMessage('Your Supabase client does not support updating password programmatically. Update SDK or handle password change server-side.')
+      // Try update password using the correct SDK method (v2: updateUser, v1: update)
+      let updateResult: any = null
+      try {
+        if (typeof (supabase.auth as any).updateUser === 'function') {
+          updateResult = await (supabase.auth as any).updateUser({ password })
+        } else if (typeof (supabase.auth as any).update === 'function') {
+          updateResult = await (supabase.auth as any).update({ password })
+        } else {
+          setMessage('Your Supabase client does not support updating password programmatically. Update SDK or handle server-side.')
+          setMessageType('error')
+          return
+        }
+      } catch (err: any) {
+        console.error('update call threw', err)
+        setMessage(err?.message ?? 'Failed to update password.')
         setMessageType('error')
         return
       }
 
-      if (res?.error) {
-        console.error('update password error', res.error)
-        setMessage(res.error.message || 'Failed to update password.')
+      // Normalize response shape and check for errors
+      const maybeError = updateResult?.error ?? updateResult?.data?.error ?? updateResult?.error_description
+      if (maybeError) {
+        console.error('update password error payload', updateResult)
+        setMessage(maybeError?.message ?? JSON.stringify(maybeError))
         setMessageType('error')
         return
       }
 
+      // Some SDKs return { data, error } or { user, error }
+      // Consider success if there's no error
       setMessage('Password updated successfully.')
       setMessageType('success')
 
-      // clean tokens from URL
+      // Clear tokens from URL for cleanliness
       try {
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href)
@@ -296,8 +267,11 @@ export default function ResetPasswordPage() {
           url.searchParams.delete('code')
           window.history.replaceState({}, document.title, url.toString())
         }
-      } catch {}
+      } catch (err) {
+        // ignore
+      }
 
+      // Wait a bit to allow auth listener to react, then redirect to login
       await waitUntilReadyOrTimeout(3000)
       await new Promise((r) => setTimeout(r, 700))
       router.replace('/login')
@@ -335,7 +309,7 @@ export default function ResetPasswordPage() {
                 {showNoTokenMessage && !accessToken && !settingSession && !submitting && (
                   <div className="mb-4 text-sm text-muted-foreground">
                     No password reset token detected in the URL. If you clicked a reset link from email, make sure you opened the full link (some email clients truncate).<br />
-                    If you opened the link in a different browser or device than where you requested the reset, the link may fail — try opening it in the original browser or request a new reset.
+                    If you opened the link in a different browser or device than where you requested the reset, the link may fail — open the link in the original browser or request a new reset.
                   </div>
                 )}
 
