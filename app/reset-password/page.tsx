@@ -1,3 +1,4 @@
+// app/reset-password/page.tsx
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
@@ -6,21 +7,42 @@ import Link from 'next/link'
 import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getBrowserSupabase } from '@/lib/supabaseClient'
 
+/**
+ * Reset password page with robust token consumption for Supabase flows.
+ * - Parses tokens from query string and fragment/hash (many email clients strip fragments)
+ * - Attempts to consume session via getSessionFromUrl() (if available) then setSession()
+ * - Handles Supabase v2 response shapes { data, error } gracefully
+ * - Shows debug box (token/type/email) for quick Vercel/browser debugging
+ */
+
 function parseParamsFromLocation(): Record<string, string> {
   const params: Record<string, string> = {}
   if (typeof window === 'undefined') return params
 
-  const qs = window.location.search
-  if (qs && qs.length > 1) {
-    const search = new URLSearchParams(qs)
-    for (const [k, v] of search.entries()) params[k] = v
-  }
+  try {
+    // Query string
+    const qs = window.location.search
+    if (qs && qs.length > 1) {
+      const search = new URLSearchParams(qs)
+      for (const [k, v] of search.entries()) params[k] = v
+    }
 
-  const hash = window.location.hash
-  if (hash && hash.startsWith('#')) {
-    const frag = hash.slice(1)
-    const fragParams = new URLSearchParams(frag)
-    for (const [k, v] of fragParams.entries()) params[k] = v
+    // Fragment/hash (e.g. #access_token=...&type=...)
+    const hash = window.location.hash
+    if (hash && hash.startsWith('#')) {
+      const frag = hash.slice(1)
+      const fragParams = new URLSearchParams(frag)
+      for (const [k, v] of fragParams.entries()) params[k] = v
+    }
+
+    // Some providers use slightly different names
+    // Normalize common variants to consistent keys for later usage
+    if (params['accessToken'] && !params['access_token']) params['access_token'] = params['accessToken']
+    if (params['refreshToken'] && !params['refresh_token']) params['refresh_token'] = params['refreshToken']
+  } catch (err) {
+    // no-op, but allow debugging log below
+    // eslint-disable-next-line no-console
+    console.error('[reset-password] parseParamsFromLocation error', err)
   }
 
   return params
@@ -40,86 +62,37 @@ export default function ResetPasswordPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // control when to show the "no token" message (grace period)
   const [showNoTokenMessage, setShowNoTokenMessage] = useState(false)
   const noTokenTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    let mounted = true
+    try {
+      const params = parseParamsFromLocation()
+      const at = params['access_token'] ?? params['token'] ?? null
+      const rt = params['refresh_token'] ?? null
 
-    async function init() {
-      try {
-        const params = parseParamsFromLocation()
+      setAccessToken(at)
+      setRefreshToken(rt)
 
-        // Accept many token param names (token from verify?token=..., access_token in hash, etc.)
-        const rawAccess = params['access_token'] ?? params['accessToken'] ?? params['token'] ?? null
-        const rawRefresh = params['refresh_token'] ?? params['refreshToken'] ?? null
-
-        const at = rawAccess ? String(rawAccess).trim() : null
-        const rt = rawRefresh ? String(rawRefresh).trim() : null
-
-        if (!mounted) return
-        setAccessToken(at)
-        setRefreshToken(rt)
-
-        // If token found, try to set session automatically (convenience for users)
-        if (at) {
-          setSettingSession(true)
-          try {
-            const supabase = getBrowserSupabase()
-            if (supabase) {
-              // Try setSession if available
-              if (typeof (supabase.auth as any).setSession === 'function') {
-                try {
-                  const payload: any = { access_token: at }
-                  if (rt) payload.refresh_token = rt
-                  const res: any = await (supabase.auth as any).setSession(payload)
-                  if (res?.error) {
-                    // fallback to getSessionFromUrl
-                    console.warn('setSession automatic failed', res.error)
-                    if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
-                      try {
-                        await (supabase.auth as any).getSessionFromUrl()
-                      } catch (e) {
-                        console.warn('getSessionFromUrl fallback failed', e)
-                      }
-                    }
-                  }
-                } catch (err) {
-                  console.warn('auto setSession error (inner)', err)
-                }
-              } else if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
-                try {
-                  await (supabase.auth as any).getSessionFromUrl()
-                } catch (e) {
-                  console.warn('getSessionFromUrl error', e)
-                }
-              }
-            }
-          } catch (err) {
-            console.warn('auto setSession error', err)
-          } finally {
-            if (mounted) setSettingSession(false)
-          }
-        }
-      } catch (err) {
-        console.error('parse params error', err)
-      } finally {
-        if (mounted) setLoading(false)
-        if (noTokenTimerRef.current) {
-          window.clearTimeout(noTokenTimerRef.current)
-          noTokenTimerRef.current = null
-        }
-        noTokenTimerRef.current = window.setTimeout(() => {
-          if (mounted) setShowNoTokenMessage(true)
-        }, 1200)
+      // debug logs (will appear in browser console and Vercel client logs if any)
+      // eslint-disable-next-line no-console
+      console.log('[reset-password] parsed params:', params)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[reset-password] parse params error', err)
+    } finally {
+      setLoading(false)
+      if (noTokenTimerRef.current) {
+        window.clearTimeout(noTokenTimerRef.current)
+        noTokenTimerRef.current = null
       }
+      // show "no token" message after a short grace period so fragments have time to be consumed
+      noTokenTimerRef.current = window.setTimeout(() => {
+        setShowNoTokenMessage(true)
+      }, 1200)
     }
 
-    init()
-
     return () => {
-      mounted = false
       if (noTokenTimerRef.current) {
         window.clearTimeout(noTokenTimerRef.current)
         noTokenTimerRef.current = null
@@ -137,71 +110,78 @@ export default function ResetPasswordPage() {
     }
   }, [accessToken])
 
+  /**
+   * Try to establish a session in the browser using the provided token.
+   * Strategy:
+   * 1. If supabase.auth.getSessionFromUrl exists, call it (it will parse fragment and set session)
+   * 2. Otherwise, if supabase.auth.setSession exists, call it with { access_token, refresh_token }
+   */
   const ensureSessionFromToken = async () => {
     if (!accessToken) {
-      return { ok: false, message: 'No access token found in URL. Make sure you used the link from your email.' }
+      return { ok: false, message: 'No access token found in URL. Make sure you opened the full link from your email.' }
     }
 
     setSettingSession(true)
     try {
       const supabase = getBrowserSupabase()
       if (!supabase) {
-        return { ok: false, message: 'Client environment required.' }
+        return { ok: false, message: 'Supabase client not available in the browser environment.' }
       }
 
-      // SUPPRESS login toast while we consume the session from the URL
+      // Suppress any login toasts in your app while we handle session
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.setItem('feinime:suppress_login_toast', '1')
         }
-      } catch (err) {
+      } catch (e) {
         // ignore storage errors
       }
 
+      // Try getSessionFromUrl first — it's the canonical way to consume fragment on some SDK versions
+      if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
+        try {
+          // eslint-disable-next-line no-console
+          console.log('[reset-password] calling getSessionFromUrl()')
+          await (supabase.auth as any).getSessionFromUrl()
+          return { ok: true }
+        } catch (err: any) {
+          // eslint-disable-next-line no-console
+          console.warn('[reset-password] getSessionFromUrl failed, falling back to setSession', err)
+          // continue to try setSession below
+        }
+      }
+
+      // Fallback: try to programmatically set session
       if (typeof (supabase.auth as any).setSession === 'function') {
         const payload: any = { access_token: accessToken }
         if (refreshToken) payload.refresh_token = refreshToken
+        // eslint-disable-next-line no-console
+        console.log('[reset-password] calling setSession with payload keys:', Object.keys(payload))
 
         const res: any = await (supabase.auth as any).setSession(payload)
-        if (res?.error) {
-          console.error('setSession error', res.error)
-          // fallback: try getSessionFromUrl if available
-          if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
-            try {
-              await (supabase.auth as any).getSessionFromUrl()
-            } catch (err: any) {
-              console.error('getSessionFromUrl error', err)
-              return { ok: false, message: res.error.message || 'Failed to set session from token.' }
-            }
-          } else {
-            return { ok: false, message: res.error.message || 'Failed to set session from token.' }
-          }
+
+        // supabase v2 typically returns { data, error } but some wrappers return { error }
+        const err = res?.error ?? (res?.status && res.status >= 400 ? res : null)
+        if (err) {
+          // eslint-disable-next-line no-console
+          console.error('[reset-password] setSession error', err)
+          return { ok: false, message: err.message || 'Failed to set session from token.' }
         }
 
         return { ok: true }
       }
 
-      if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
-        try {
-          await (supabase.auth as any).getSessionFromUrl()
-          return { ok: true }
-        } catch (err: any) {
-          console.error('getSessionFromUrl error', err)
-          return { ok: false, message: 'Failed to consume session from URL.' }
-        }
-      }
-
-      return { ok: false, message: 'Supabase client does not support programmatic session setting.' }
+      return { ok: false, message: 'Supabase client does not support programmatic session consumption in this version.' }
     } catch (err: any) {
-      console.error('ensureSessionFromToken exception', err)
+      // eslint-disable-next-line no-console
+      console.error('[reset-password] ensureSessionFromToken exception', err)
       return { ok: false, message: err?.message ?? 'Unexpected error while establishing session.' }
     } finally {
       setSettingSession(false)
-      // NOTE: do NOT remove the suppress flag here — we remove it after the whole submit flow
-      // so Navbar/auth-listener has chance to read it when SIGNED_IN fires.
     }
   }
 
+  // Wait until loading + settingSession finish or until timeout
   const waitUntilReadyOrTimeout = async (timeoutMs = 3000) => {
     const start = Date.now()
     return new Promise<void>((resolve) => {
@@ -244,7 +224,7 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Ensure there is a session (using token if provided)
+      // Ensure session exists (consume token if needed)
       const sessionResult = await ensureSessionFromToken()
       if (!sessionResult.ok) {
         setMessage(sessionResult.message)
@@ -252,11 +232,12 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Now update user password
+      // Now update user password. Supabase v2 returns { data, error } from updateUser
       let res: any = null
       if (typeof (supabase.auth as any).updateUser === 'function') {
         res = await (supabase.auth as any).updateUser({ password })
       } else if (typeof (supabase.auth as any).update === 'function') {
+        // older/alternate API
         res = await (supabase.auth as any).update({ password })
       } else {
         setMessage('Your Supabase client does not support updating password programmatically.')
@@ -264,43 +245,50 @@ export default function ResetPasswordPage() {
         return
       }
 
-      if (res?.error) {
-        console.error('update password error', res.error)
-        setMessage(res.error.message || 'Failed to update password.')
+      // Normalize error extraction
+      const updateError = res?.error ?? (res?.status && res.status >= 400 ? res : null)
+      if (updateError) {
+        // eslint-disable-next-line no-console
+        console.error('[reset-password] update password error', updateError)
+        setMessage(updateError.message || 'Failed to update password.')
         setMessageType('error')
         return
       }
 
+      // If the response returned user data, it's good
       setMessage('Password updated successfully.')
       setMessageType('success')
 
-      // clean tokens from URL for cleanliness
+      // Clean sensitive tokens from URL for cleanliness
       try {
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href)
           url.hash = ''
           url.searchParams.delete('access_token')
           url.searchParams.delete('refresh_token')
+          // also delete common alias
           url.searchParams.delete('token')
           window.history.replaceState({}, document.title, url.toString())
         }
-      } catch {}
+      } catch (err) {
+        // ignore
+      }
 
-      // Wait little bit to ensure auth listener processed SIGNED_IN (if any)
+      // Wait for any auth listener to pick up SIGNED_IN
       await waitUntilReadyOrTimeout(3000)
 
-      // Small delay so user sees the message
+      // short delay so user sees message
       await new Promise((r) => setTimeout(r, 700))
 
-      // Redirect to login page
       router.replace('/login')
     } catch (err: any) {
-      console.error('reset password submit exception', err)
+      // eslint-disable-next-line no-console
+      console.error('[reset-password] submit exception', err)
       setMessage(err?.message ?? 'Unexpected error while resetting password.')
       setMessageType('error')
     } finally {
       setSubmitting(false)
-      // Remove the suppress flag now that the whole flow is done (success or fail)
+      // Remove the suppress flag now that the flow is done (success or fail)
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
           window.localStorage.removeItem('feinime:suppress_login_toast')
@@ -310,6 +298,15 @@ export default function ResetPasswordPage() {
       }
     }
   }
+
+  const DebugBox = () => (
+    <div className="mt-4 p-3 border rounded bg-gray-50 text-sm text-gray-700">
+      <div><strong>Debug (token parsing)</strong></div>
+      <div>access_token: <code>{accessToken ?? '— tidak ada —'}</code></div>
+      <div>refresh_token: <code>{refreshToken ?? '—'}</code></div>
+      <div className="text-xs text-gray-500 mt-2">Check browser console or Vercel client logs for more info.</div>
+    </div>
+  )
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
@@ -405,7 +402,6 @@ export default function ResetPasswordPage() {
                   </div>
                 </form>
 
-                {/* Inline notification (below confirm password) */}
                 {message && (
                   <div className={`mt-4 text-sm text-center ${messageType === 'error' ? 'text-red-500' : 'text-green-500'}`}>
                     {message}
@@ -418,6 +414,8 @@ export default function ResetPasswordPage() {
                     <Link href="/login" className="text-primary hover:underline">Sign in</Link>
                   </p>
                 </div>
+
+                <DebugBox />
               </>
             )}
           </div>
