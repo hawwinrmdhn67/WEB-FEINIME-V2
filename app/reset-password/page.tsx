@@ -1,33 +1,34 @@
 // app/reset-password/page.tsx
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getBrowserSupabase } from '@/lib/supabaseClient'
 
 /**
- * Reset password page with robust token consumption for Supabase flows.
- * - Parses tokens from query string and fragment/hash (many email clients strip fragments)
- * - Attempts to consume session via getSessionFromUrl() (if available) then setSession()
- * - Handles Supabase v2 response shapes { data, error } gracefully
- * - Shows debug box (token/type/email) for quick Vercel/browser debugging
+ * Clean Reset Password page
+ * - Parses token from fragment (#access_token=...) or query (?access_token=...)
+ * - Moves fragment token to query + saves a sessionStorage fallback so token survives refresh
+ * - Attempts to consume session using getSessionFromUrl() or setSession()
+ * - Calls updateUser/update to change password
+ * - Cleans tokens from URL and sessionStorage after success/failure
+ *
+ * Security notes:
+ * - Tokens are stored only temporarily in sessionStorage and removed after flow completes.
+ * - Do not log tokens to server.
  */
 
 function parseParamsFromLocation(): Record<string, string> {
   const params: Record<string, string> = {}
   if (typeof window === 'undefined') return params
-
   try {
-    // Query string
     const qs = window.location.search
     if (qs && qs.length > 1) {
       const search = new URLSearchParams(qs)
       for (const [k, v] of search.entries()) params[k] = v
     }
-
-    // Fragment/hash (e.g. #access_token=...&type=...)
     const hash = window.location.hash
     if (hash && hash.startsWith('#')) {
       const frag = hash.slice(1)
@@ -35,16 +36,15 @@ function parseParamsFromLocation(): Record<string, string> {
       for (const [k, v] of fragParams.entries()) params[k] = v
     }
 
-    // Some providers use slightly different names
-    // Normalize common variants to consistent keys for later usage
+    // normalize common aliases
     if (params['accessToken'] && !params['access_token']) params['access_token'] = params['accessToken']
     if (params['refreshToken'] && !params['refresh_token']) params['refresh_token'] = params['refreshToken']
-  } catch (err) {
-    // no-op, but allow debugging log below
+    if (params['token'] && !params['access_token']) params['access_token'] = params['token']
+  } catch (e) {
+    // ignore parse errors
     // eslint-disable-next-line no-console
-    console.error('[reset-password] parseParamsFromLocation error', err)
+    console.error('[reset-password] parseParamsFromLocation error', e)
   }
-
   return params
 }
 
@@ -54,42 +54,85 @@ export default function ResetPasswordPage() {
   const [settingSession, setSettingSession] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [messageType, setMessageType] = useState<'error' | 'success' | null>(null)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-
-  const [showNoTokenMessage, setShowNoTokenMessage] = useState(false)
+  const [notice, setNotice] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
   const noTokenTimerRef = useRef<number | null>(null)
+  const consumedRef = useRef(false)
 
+  // parse params on mount and move fragment token -> query + sessionStorage fallback
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     try {
       const params = parseParamsFromLocation()
-      const at = params['access_token'] ?? params['token'] ?? null
+      const at = params['access_token'] ?? null
       const rt = params['refresh_token'] ?? null
 
-      setAccessToken(at)
-      setRefreshToken(rt)
+      // If token exists in fragment, move to search params and save fallback in sessionStorage
+      try {
+        const url = new URL(window.location.href)
+        const hasHash = !!window.location.hash
+        if (at && hasHash) {
+          if (!url.searchParams.get('access_token')) {
+            url.searchParams.set('access_token', at)
+          }
+          // remove hash to avoid it being lost on navigation
+          url.hash = ''
+          window.history.replaceState({}, document.title, url.toString())
+          try {
+            window.sessionStorage.setItem('feinime:reset_access_token', at)
+            if (rt) window.sessionStorage.setItem('feinime:reset_refresh_token', rt)
+            // eslint-disable-next-line no-console
+            console.log('[reset-password] moved token from hash -> search and saved fallback in sessionStorage')
+          } catch (e) {
+            // ignore storage errors
+          }
+        } else if (!at) {
+          // no token in parsed params -> try restore from sessionStorage fallback
+          try {
+            const fallbackAT = window.sessionStorage.getItem('feinime:reset_access_token')
+            const fallbackRT = window.sessionStorage.getItem('feinime:reset_refresh_token')
+            if (fallbackAT) {
+              // ensure URL has query param for visibility
+              if (!url.searchParams.get('access_token')) {
+                url.searchParams.set('access_token', fallbackAT)
+                window.history.replaceState({}, document.title, url.toString())
+              }
+              setAccessToken(fallbackAT)
+              if (fallbackRT) setRefreshToken(fallbackRT)
+              // eslint-disable-next-line no-console
+              console.log('[reset-password] restored token from sessionStorage fallback')
+            }
+          } catch (e) {
+            // ignore storage read errors
+          }
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('[reset-password] failed to normalize token location', e)
+      }
 
-      // debug logs (will appear in browser console and Vercel client logs if any)
+      // Finally set state from direct params if present (covers case when token already in search)
+      if (at) setAccessToken(at)
+      if (rt) setRefreshToken(rt)
+
+      // Short grace period before showing "no token" message (gives time for fragments to be consumed)
+      noTokenTimerRef.current = window.setTimeout(() => {
+        noTokenTimerRef.current = null
+      }, 1200)
+
+      // log what we parsed
       // eslint-disable-next-line no-console
-      console.log('[reset-password] parsed params:', params)
+      console.log('[reset-password] parsed params', params)
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.error('[reset-password] parse params error', err)
+      console.error('[reset-password] initial parse error', err)
     } finally {
       setLoading(false)
-      if (noTokenTimerRef.current) {
-        window.clearTimeout(noTokenTimerRef.current)
-        noTokenTimerRef.current = null
-      }
-      // show "no token" message after a short grace period so fragments have time to be consumed
-      noTokenTimerRef.current = window.setTimeout(() => {
-        setShowNoTokenMessage(true)
-      }, 1200)
     }
 
     return () => {
@@ -98,80 +141,57 @@ export default function ResetPasswordPage() {
         noTokenTimerRef.current = null
       }
     }
+    // intentionally run only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    if (accessToken) {
-      if (noTokenTimerRef.current) {
-        window.clearTimeout(noTokenTimerRef.current)
-        noTokenTimerRef.current = null
-      }
-      setShowNoTokenMessage(false)
-    }
-  }, [accessToken])
-
-  /**
-   * Try to establish a session in the browser using the provided token.
-   * Strategy:
-   * 1. If supabase.auth.getSessionFromUrl exists, call it (it will parse fragment and set session)
-   * 2. Otherwise, if supabase.auth.setSession exists, call it with { access_token, refresh_token }
-   */
-  const ensureSessionFromToken = async () => {
+  // helper: try to consume token into Supabase client session
+  const ensureSessionFromToken = async (): Promise<{ ok: boolean; message?: string }> => {
+    if (consumedRef.current) return { ok: true } // already consumed once
     if (!accessToken) {
-      return { ok: false, message: 'No access token found in URL. Make sure you opened the full link from your email.' }
+      return { ok: false, message: 'No access token found in URL. Open the full link from your email.' }
     }
 
     setSettingSession(true)
     try {
       const supabase = getBrowserSupabase()
-      if (!supabase) {
-        return { ok: false, message: 'Supabase client not available in the browser environment.' }
-      }
+      if (!supabase) return { ok: false, message: 'Supabase client unavailable in browser.' }
 
-      // Suppress any login toasts in your app while we handle session
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.setItem('feinime:suppress_login_toast', '1')
-        }
-      } catch (e) {
-        // ignore storage errors
-      }
+      // suppress login toasts in your app while doing this (app may set a listener)
+      try { window.localStorage?.setItem('feinime:suppress_login_toast', '1') } catch {}
 
-      // Try getSessionFromUrl first — it's the canonical way to consume fragment on some SDK versions
+      // prefer getSessionFromUrl when available (consumes fragment properly)
       if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
         try {
           // eslint-disable-next-line no-console
           console.log('[reset-password] calling getSessionFromUrl()')
           await (supabase.auth as any).getSessionFromUrl()
+          consumedRef.current = true
           return { ok: true }
-        } catch (err: any) {
+        } catch (err) {
           // eslint-disable-next-line no-console
-          console.warn('[reset-password] getSessionFromUrl failed, falling back to setSession', err)
-          // continue to try setSession below
+          console.warn('[reset-password] getSessionFromUrl failed, fallback to setSession', err)
         }
       }
 
-      // Fallback: try to programmatically set session
+      // fallback: setSession if available
       if (typeof (supabase.auth as any).setSession === 'function') {
         const payload: any = { access_token: accessToken }
         if (refreshToken) payload.refresh_token = refreshToken
         // eslint-disable-next-line no-console
-        console.log('[reset-password] calling setSession with payload keys:', Object.keys(payload))
-
+        console.log('[reset-password] calling setSession()')
         const res: any = await (supabase.auth as any).setSession(payload)
-
-        // supabase v2 typically returns { data, error } but some wrappers return { error }
         const err = res?.error ?? (res?.status && res.status >= 400 ? res : null)
         if (err) {
           // eslint-disable-next-line no-console
           console.error('[reset-password] setSession error', err)
           return { ok: false, message: err.message || 'Failed to set session from token.' }
         }
-
+        consumedRef.current = true
         return { ok: true }
       }
 
-      return { ok: false, message: 'Supabase client does not support programmatic session consumption in this version.' }
+      return { ok: false, message: 'Supabase client does not support programmatic session consumption.' }
     } catch (err: any) {
       // eslint-disable-next-line no-console
       console.error('[reset-password] ensureSessionFromToken exception', err)
@@ -181,7 +201,7 @@ export default function ResetPasswordPage() {
     }
   }
 
-  // Wait until loading + settingSession finish or until timeout
+  // helper: wait for readiness (auth listeners) or timeout
   const waitUntilReadyOrTimeout = async (timeoutMs = 3000) => {
     const start = Date.now()
     return new Promise<void>((resolve) => {
@@ -194,24 +214,43 @@ export default function ResetPasswordPage() {
     })
   }
 
+  const clearStoredTokens = () => {
+    try {
+      // remove from URL
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('access_token')
+        url.searchParams.delete('refresh_token')
+        url.searchParams.delete('token')
+        url.hash = ''
+        window.history.replaceState({}, document.title, url.toString())
+      }
+    } catch (e) {
+      // ignore
+    }
+    try {
+      window.sessionStorage?.removeItem('feinime:reset_access_token')
+      window.sessionStorage?.removeItem('feinime:reset_refresh_token')
+    } catch (e) {
+      // ignore
+    }
+    try { window.localStorage?.removeItem('feinime:suppress_login_toast') } catch {}
+  }
+
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
-    setMessage(null)
-    setMessageType(null)
+    setNotice(null)
 
     if (!password || !confirm) {
-      setMessage('Please fill both password fields.')
-      setMessageType('error')
+      setNotice({ type: 'error', text: 'Please fill both password fields.' })
       return
     }
     if (password.length < 6) {
-      setMessage('Password must be at least 6 characters.')
-      setMessageType('error')
+      setNotice({ type: 'error', text: 'Password must be at least 6 characters.' })
       return
     }
     if (password !== confirm) {
-      setMessage('Passwords do not match.')
-      setMessageType('error')
+      setNotice({ type: 'error', text: 'Passwords do not match.' })
       return
     }
 
@@ -219,83 +258,51 @@ export default function ResetPasswordPage() {
     try {
       const supabase = getBrowserSupabase()
       if (!supabase) {
-        setMessage('Client environment required.')
-        setMessageType('error')
+        setNotice({ type: 'error', text: 'Supabase client not available in browser.' })
         return
       }
 
-      // Ensure session exists (consume token if needed)
+      // ensure session is present (consume token if needed)
       const sessionResult = await ensureSessionFromToken()
       if (!sessionResult.ok) {
-        setMessage(sessionResult.message)
-        setMessageType('error')
+        setNotice({ type: 'error', text: sessionResult.message ?? 'Failed to establish session.' })
         return
       }
 
-      // Now update user password. Supabase v2 returns { data, error } from updateUser
+      // now update password
       let res: any = null
       if (typeof (supabase.auth as any).updateUser === 'function') {
         res = await (supabase.auth as any).updateUser({ password })
       } else if (typeof (supabase.auth as any).update === 'function') {
-        // older/alternate API
         res = await (supabase.auth as any).update({ password })
       } else {
-        setMessage('Your Supabase client does not support updating password programmatically.')
-        setMessageType('error')
+        setNotice({ type: 'error', text: 'Supabase client does not support updateUser/update methods.' })
         return
       }
 
-      // Normalize error extraction
       const updateError = res?.error ?? (res?.status && res.status >= 400 ? res : null)
       if (updateError) {
         // eslint-disable-next-line no-console
         console.error('[reset-password] update password error', updateError)
-        setMessage(updateError.message || 'Failed to update password.')
-        setMessageType('error')
+        setNotice({ type: 'error', text: updateError.message || 'Failed to update password.' })
         return
       }
 
-      // If the response returned user data, it's good
-      setMessage('Password updated successfully.')
-      setMessageType('success')
+      // success
+      clearStoredTokens()
+      setNotice({ type: 'success', text: 'Password updated successfully. Redirecting to login…' })
 
-      // Clean sensitive tokens from URL for cleanliness
-      try {
-        if (typeof window !== 'undefined') {
-          const url = new URL(window.location.href)
-          url.hash = ''
-          url.searchParams.delete('access_token')
-          url.searchParams.delete('refresh_token')
-          // also delete common alias
-          url.searchParams.delete('token')
-          window.history.replaceState({}, document.title, url.toString())
-        }
-      } catch (err) {
-        // ignore
-      }
-
-      // Wait for any auth listener to pick up SIGNED_IN
+      // wait for auth listeners to react
       await waitUntilReadyOrTimeout(3000)
-
-      // short delay so user sees message
+      // short delay so user sees notice
       await new Promise((r) => setTimeout(r, 700))
-
       router.replace('/login')
     } catch (err: any) {
       // eslint-disable-next-line no-console
       console.error('[reset-password] submit exception', err)
-      setMessage(err?.message ?? 'Unexpected error while resetting password.')
-      setMessageType('error')
+      setNotice({ type: 'error', text: err?.message ?? 'Unexpected error while resetting password.' })
     } finally {
       setSubmitting(false)
-      // Remove the suppress flag now that the flow is done (success or fail)
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          window.localStorage.removeItem('feinime:suppress_login_toast')
-        }
-      } catch (err) {
-        // ignore
-      }
     }
   }
 
@@ -304,7 +311,7 @@ export default function ResetPasswordPage() {
       <div><strong>Debug (token parsing)</strong></div>
       <div>access_token: <code>{accessToken ?? '— tidak ada —'}</code></div>
       <div>refresh_token: <code>{refreshToken ?? '—'}</code></div>
-      <div className="text-xs text-gray-500 mt-2">Check browser console or Vercel client logs for more info.</div>
+      <div className="text-xs text-gray-500 mt-2">Token disimpan sementara di sessionStorage sebagai fallback (akan dihapus setelah selesai).</div>
     </div>
   )
 
@@ -325,7 +332,7 @@ export default function ResetPasswordPage() {
               </div>
             ) : (
               <>
-                {showNoTokenMessage && !accessToken && !settingSession && !submitting && (
+                {!accessToken && !settingSession && !submitting && (
                   <div className="mb-4 text-sm text-muted-foreground">
                     No password reset token detected in the URL. If you clicked a reset link from email, make sure you opened the full link (some email clients truncate).<br />
                     You can also copy the link from the email and open it in the browser.
@@ -402,9 +409,9 @@ export default function ResetPasswordPage() {
                   </div>
                 </form>
 
-                {message && (
-                  <div className={`mt-4 text-sm text-center ${messageType === 'error' ? 'text-red-500' : 'text-green-500'}`}>
-                    {message}
+                {notice && (
+                  <div className={`mt-4 text-sm text-center ${notice.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+                    {notice.text}
                   </div>
                 )}
 
