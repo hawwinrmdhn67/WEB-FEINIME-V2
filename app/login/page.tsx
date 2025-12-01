@@ -11,7 +11,7 @@ import { Footer } from '@/components/feinime-footer'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState('') // still named email for minimal change
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -46,11 +46,41 @@ export default function LoginPage() {
     } catch (err) {}
   }
 
+  // --- minimal helpers to support username OR email input ---
+  const looksLikeEmail = (v: string) => /\S+@\S+\.\S+/.test(v.trim())
+
+  // expects a server route /api/resolve-username that returns { email } or 4xx/5xx with { error }
+  const resolveIdentifierToEmail = async (identifier: string) => {
+    const trimmed = identifier.trim()
+    if (looksLikeEmail(trimmed)) return trimmed
+
+    // not an email -> treat as username, resolve on server
+    try {
+      const res = await fetch('/api/lookup-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: trimmed })
+      })
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j?.error || 'Username not found')
+      }
+
+      const json = await res.json().catch(() => ({}))
+      if (!json || !json.email) throw new Error('Username not found')
+      return json.email as string
+    } catch (err: any) {
+      throw new Error(err?.message ?? 'Failed to resolve username')
+    }
+  }
+  // ----------------------------------------------------------
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setMessage(null)
     if (!email || !password) {
-      setMessage('Please fill email and password.')
+      setMessage('Please fill email or username and password.')
       return
     }
 
@@ -59,14 +89,25 @@ export default function LoginPage() {
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required for login.')
+        setLoading(false)
         return
       }
 
       // cleanup any stale session but suppress its logout toast
       await cleanupSession()
 
+      // Resolve identifier (email or username) to an email address
+      let emailToUse = ''
+      try {
+        emailToUse = await resolveIdentifierToEmail(email)
+      } catch (err: any) {
+        setMessage(err?.message ?? 'Username not found.')
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: emailToUse,
         password
       })
 
@@ -74,6 +115,7 @@ export default function LoginPage() {
         try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:show_login_toast') } catch {}
         setMessage(error.message || 'Login failed')
         setPassword('') // clear password after failed attempt
+        setLoading(false)
         return
       }
 
@@ -85,7 +127,6 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('unexpected auth exception', err)
       setMessage(err?.message ?? 'Unexpected error during login')
-      try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:show_login_toast') } catch {}
     } finally {
       setLoading(false)
     }
@@ -98,6 +139,7 @@ export default function LoginPage() {
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required for OAuth.')
+        setLoading(false)
         return
       }
 
@@ -118,7 +160,7 @@ export default function LoginPage() {
 
   const handleSendMagicLink = async () => {
     if (!email) {
-      setMessage('Please enter your email to send a magic link.')
+      setMessage('Please enter your email or username to send a magic link.')
       return
     }
     setLoading(true)
@@ -126,10 +168,22 @@ export default function LoginPage() {
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required.')
+        setLoading(false)
         return
       }
+
+      // Resolve identifier to email first
+      let emailToUse = ''
+      try {
+        emailToUse = await resolveIdentifierToEmail(email)
+      } catch (err: any) {
+        setMessage(err?.message ?? 'Username not found.')
+        setLoading(false)
+        return
+      }
+
       const redirectTo = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin : undefined)
-      const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } })
+      const { error } = await supabase.auth.signInWithOtp({ email: emailToUse, options: { emailRedirectTo: redirectTo } })
       if (error) {
         setMessage(error.message)
         console.error('magic link error', error)
@@ -158,7 +212,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
+                <label htmlFor="email" className="block text-sm font-medium mb-2">Email or username</label>
                 <div className="relative">
                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                     <Mail className="w-4 h-4" />
@@ -166,10 +220,10 @@ export default function LoginPage() {
                   <input
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Your email"
+                    placeholder="Your Email or username"
                     className="w-full pl-10 pr-3 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                     required
                   />

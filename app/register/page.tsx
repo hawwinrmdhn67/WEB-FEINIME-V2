@@ -1,7 +1,6 @@
-// app/register/page.tsx
 'use client'
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2, User as UserIcon } from 'lucide-react'
@@ -20,46 +19,122 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  // --- Validation rules ---------------------------------------------------
+  const usernameValid = useMemo(() => {
+    const u = username.trim()
+    return u.length === 0 || (/^[a-zA-Z0-9_.-]{3,20}$/.test(u) && u.length >= 3)
+  }, [username])
+
+  const emailValid = useMemo(() => {
+    // simple RFC-like check
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  }, [email])
+
+  const passwordChecks = useMemo(() => {
+    const p = password
+    return {
+      length: p.length >= 8,
+      upper: /[A-Z]/.test(p),
+      lower: /[a-z]/.test(p),
+      number: /\d/.test(p),
+      special: /[!@#$%^&*()\-_+=[\]{};':"\\|,.<>/?]/.test(p)
+    }
+  }, [password])
+
+  const passwordValid =
+    password.length > 0 &&
+    passwordChecks.length &&
+    passwordChecks.upper &&
+    passwordChecks.lower &&
+    passwordChecks.number
+
+  const confirmMatches = password === confirm
+
+  const formValid =
+    emailValid && passwordValid && confirmMatches && usernameValid && !loading
+
+  // ------------------------------------------------------------------------
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setMessage(null)
+    setSuccess(false)
 
-    if (!email || !password) {
-      setMessage('Email and password are required.')
+    // Basic client validation first
+    if (!username.trim()) {
+      setMessage('Please enter a username (3-20 characters).')
       return
     }
-    if (password !== confirm) {
+    if (!usernameValid) {
+      setMessage('Username may contain letters, numbers, _ . - and be 3-20 chars.')
+      return
+    }
+    if (!emailValid) {
+      setMessage('Please enter a valid email address.')
+      return
+    }
+    if (!passwordValid) {
+      setMessage('Password is too weak. Minimum: 8 chars, upper & lower & number.')
+      return
+    }
+    if (!confirmMatches) {
       setMessage('Password and confirmation do not match.')
       return
     }
 
     setLoading(true)
+
     try {
+      // 1) Check if email already exists (reuse your check-email-reset endpoint which returns { exists })
+      const checkRes = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() })
+      })
+
+      if (!checkRes.ok) {
+        // if server returns non-OK, read message for better UX
+        const errJson = await checkRes.json().catch(() => ({}))
+        setMessage(errJson?.message || errJson?.error || 'Failed to validate email availability.')
+        return
+      }
+
+      const { exists } = await checkRes.json().catch(() => ({ exists: false }))
+
+      if (exists) {
+        setMessage('Email already registered. Try logging in or reset password.')
+        return
+      }
+
+      // 2) If email free, sign up with Supabase
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required for registration.')
         return
       }
 
-      // supabase v2 signUp shape: supabase.auth.signUp({ email, password, options: { data }})
-      const { data, error } = await supabase.auth.signUp({
-        email,
+      const signUpRes = await supabase.auth.signUp({
+        email: email.trim(),
         password,
-        options: { data: { username: username || null } }
+        options: { data: { username: username.trim() } }
       })
 
-      console.log('signUp response', { data, error })
+      // supabase v2 returns { data, error }
+      const signUpError = (signUpRes as any)?.error
+      const signUpData = (signUpRes as any)?.data
 
-      if (error) {
-        setMessage(error.message)
+      if (signUpError) {
+        console.error('signUp error', signUpError)
+        setMessage(signUpError.message || 'Registration failed.')
         return
       }
 
-      const user = (data as any)?.user ?? null
-      const session = (data as any)?.session ?? null
+      const user = signUpData?.user ?? null
+      const session = signUpData?.session ?? null
 
-      // If we have a session (immediate sign-in), upsert profile client-side
+      // upsert profile if session exists (immediate logged in)
       if (user && session) {
         await upsertProfile({
           id: user.id,
@@ -67,33 +142,31 @@ export default function RegisterPage() {
           user_metadata: user.user_metadata
         } as any)
       } else if (user && !session) {
-        // Email confirmation flow (no client session) -> create profile server-side
+        // create-profile server side for confirmed-but-no-session flow
         try {
-          const res = await fetch('/api/create-profile', {
+          await fetch('/api/create-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               id: user.id,
               email: user.email ?? null,
               full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-              avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null
+              avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+              username: username.trim()
             })
           })
-
-          if (!res.ok) {
-            console.warn('create-profile server returned non-ok', await res.text())
-          }
         } catch (err) {
           console.warn('create-profile server call failed', err)
         }
       }
 
+      setSuccess(true)
       setMessage('Registration successful. Please check your email for confirmation.')
-      // short delay to allow user to read message then redirect
       setTimeout(() => router.push('/login'), 1000)
     } catch (err: any) {
       console.error('signUp exception', err)
-      setMessage(err?.message ?? 'Register failed')
+      setSuccess(false)
+      setMessage(err?.message ?? 'Register failed.')
     } finally {
       setLoading(false)
     }
@@ -102,13 +175,16 @@ export default function RegisterPage() {
   const handleGoogle = async () => {
     setLoading(true)
     setMessage(null)
+    setSuccess(false)
     try {
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required for OAuth.')
+        setLoading(false)
         return
       }
-      const redirectTo = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin : undefined)
+      const redirectTo =
+        process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin : undefined)
       await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
     } catch (err: any) {
       console.error('Google OAuth failed', err)
@@ -143,9 +219,14 @@ export default function RegisterPage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Your username"
-                    className="w-full pl-10 pr-3 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    className={`w-full pl-10 pr-3 py-3 rounded-lg bg-input border ${
+                      usernameValid ? 'border-border/40' : 'border-red-400'
+                    } focus:outline-none focus:ring-1 focus:ring-primary text-sm`}
                   />
                 </div>
+                {!usernameValid && (
+                  <p className="text-xs text-red-500 mt-1">Username 3–20 chars. Allowed: letters, numbers, _ . -</p>
+                )}
               </div>
 
               <div>
@@ -161,10 +242,15 @@ export default function RegisterPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Your email"
-                    className="w-full pl-10 pr-3 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    className={`w-full pl-10 pr-3 py-3 rounded-lg bg-input border ${
+                      emailValid || email.length === 0 ? 'border-border/40' : 'border-red-400'
+                    } focus:outline-none focus:ring-1 focus:ring-primary text-sm`}
                     required
                   />
                 </div>
+                {email.length > 0 && !emailValid && (
+                  <p className="text-xs text-red-500 mt-1">Please enter a valid email.</p>
+                )}
               </div>
 
               <div>
@@ -181,7 +267,9 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Your password"
-                    className="w-full pl-10 pr-10 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    className={`w-full pl-10 pr-10 py-3 rounded-lg bg-input border ${
+                      password.length === 0 || passwordValid ? 'border-border/40' : 'border-red-400'
+                    } focus:outline-none focus:ring-1 focus:ring-primary text-sm`}
                     required
                   />
 
@@ -194,6 +282,22 @@ export default function RegisterPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+
+                {/* password hints */}
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <p className={passwordChecks.length ? 'text-green-600' : 'text-muted-foreground'}>
+                    • At least 8 characters
+                  </p>
+                  <p className={passwordChecks.upper ? 'text-green-600' : 'text-muted-foreground'}>
+                    • 1 uppercase letter
+                  </p>
+                  <p className={passwordChecks.lower ? 'text-green-600' : 'text-muted-foreground'}>
+                    • 1 lowercase letter
+                  </p>
+                  <p className={passwordChecks.number ? 'text-green-600' : 'text-muted-foreground'}>
+                    • 1 number
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -202,7 +306,6 @@ export default function RegisterPage() {
                 </label>
 
                 <div className="relative">
-                  {/* ICON KUNCI */}
                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                     <Lock className="w-4 h-4" />
                   </span>
@@ -214,30 +317,31 @@ export default function RegisterPage() {
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="Confirm password"
-                    className="w-full pl-10 pr-10 py-3 rounded-lg bg-input border border-border/40 focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    className={`w-full pl-10 pr-10 py-3 rounded-lg bg-input border ${
+                      confirm.length === 0 || confirmMatches ? 'border-border/40' : 'border-red-400'
+                    } focus:outline-none focus:ring-1 focus:ring-primary text-sm`}
                     required
                   />
 
-                  {/* ICON SHOW/HIDE PASSWORD */}
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(v => !v)}
                     aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground"
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+
+                {!confirmMatches && confirm.length > 0 && (
+                  <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+                )}
               </div>
 
               <div>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={!formValid}
                   className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-60"
                 >
                   {loading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Create account'}
@@ -267,7 +371,11 @@ export default function RegisterPage() {
               </button>
             </div>
 
-            {message && <div className="mt-4 text-sm text-center text-red-500">{message}</div>}
+            {message && (
+              <div className={`mt-4 text-sm text-center ${success ? 'text-green-500' : 'text-red-500'}`}>
+                {message}
+              </div>
+            )}
 
             <div className="text-center mt-6 text-sm">
               <p className="text-muted-foreground">

@@ -4,10 +4,11 @@ BEGIN;
 -- 1) TABLE: profiles
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id uuid PRIMARY KEY,                 -- must match auth.users.id (set by your app / service)
+  id uuid PRIMARY KEY,
   email text,
   full_name text,
   avatar_url text,
+  username text,
   updated_at timestamptz DEFAULT now()
 );
 
@@ -15,10 +16,57 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 CREATE INDEX IF NOT EXISTS idx_profiles_email_lower
   ON public.profiles (lower(email));
 
--- Enable RLS
+-- Normalize existing username to lowercase
+UPDATE public.profiles
+SET username = lower(username)
+WHERE username IS NOT NULL AND username <> lower(username);
+
+-- Fill username from auth.users if profile has none
+UPDATE public.profiles p
+SET username = lower(u.user_metadata ->> 'username')
+FROM auth.users u
+WHERE p.id = u.id
+  AND (p.username IS NULL OR p.username = '')
+  AND (u.user_metadata ->> 'username') IS NOT NULL;
+
+-- AUTO LOWERCASE FUNCTION
+CREATE OR REPLACE FUNCTION public.normalize_profile_username()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.username IS NOT NULL THEN
+    NEW.username := lower(NEW.username);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- TRIGGER
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'trg_profiles_username_normalize'
+      AND tgrelid = 'public.profiles'::regclass
+  ) THEN
+    CREATE TRIGGER trg_profiles_username_normalize
+      BEFORE INSERT OR UPDATE ON public.profiles
+      FOR EACH ROW
+      EXECUTE FUNCTION public.normalize_profile_username();
+  END IF;
+END;
+$$;
+
+-- UNIQUE INDEX FOR USERNAME
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_username_unique
+  ON public.profiles (lower(username))
+  WHERE username IS NOT NULL;
+
+-- Enable RLS for profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- Policy: allow users to SELECT their own profile
+-- POLICY: SELECT own profile
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -33,7 +81,7 @@ BEGIN
   END IF;
 END$$;
 
--- Policy: allow users to INSERT their own profile (auth.uid() must equal id)
+-- POLICY: INSERT own profile
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -48,7 +96,7 @@ BEGIN
   END IF;
 END$$;
 
--- Policy: allow users to UPDATE their own profile
+-- POLICY: UPDATE own profile
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -63,7 +111,6 @@ BEGIN
       WITH CHECK (auth.uid() = id);
   END IF;
 END$$;
-
 
 -- ============================================================
 -- 2) TABLE: user_anime_list
@@ -81,31 +128,25 @@ CREATE TABLE IF NOT EXISTS public.user_anime_list (
   created_at timestamptz DEFAULT now()
 );
 
--- Unique constraint: one (user, mal_id) pair
+-- Unique constraint on (user_id, mal_id)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_anime_list_user_mal_unique
   ON public.user_anime_list (user_id, mal_id);
 
--- Indexes for performance
+-- Performance indexes
 CREATE INDEX IF NOT EXISTS idx_user_anime_list_user_created_at
   ON public.user_anime_list (user_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_user_anime_list_user_mal
   ON public.user_anime_list (user_id, mal_id);
 
--- Normalize existing nulls (only set if column exists and values are NULL)
--- (If DB already had rows without progress/score, this will update them)
-UPDATE public.user_anime_list
-  SET progress = 0
-  WHERE progress IS NULL;
-
-UPDATE public.user_anime_list
-  SET score = 0
-  WHERE score IS NULL;
+-- Normalize null progress/score
+UPDATE public.user_anime_list SET progress = 0 WHERE progress IS NULL;
+UPDATE public.user_anime_list SET score = 0 WHERE score IS NULL;
 
 -- Enable RLS
 ALTER TABLE public.user_anime_list ENABLE ROW LEVEL SECURITY;
 
--- Policy: allow users to SELECT only their rows
+-- POLICY: SELECT own rows
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -120,7 +161,7 @@ BEGIN
   END IF;
 END$$;
 
--- Policy: allow users to INSERT rows for themselves
+-- POLICY: INSERT own rows
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -135,7 +176,7 @@ BEGIN
   END IF;
 END$$;
 
--- Policy: allow users to UPDATE their rows
+-- POLICY: UPDATE own rows
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -151,7 +192,7 @@ BEGIN
   END IF;
 END$$;
 
--- Policy: allow users to DELETE their rows
+-- POLICY: DELETE own rows
 DO $$
 BEGIN
   IF NOT EXISTS (
