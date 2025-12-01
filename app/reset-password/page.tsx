@@ -1,4 +1,3 @@
-// app/reset-password/page.tsx
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
@@ -46,26 +45,81 @@ export default function ResetPasswordPage() {
   const noTokenTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    try {
-      const params = parseParamsFromLocation()
-      const at = params['access_token'] ?? params['accessToken'] ?? null
-      const rt = params['refresh_token'] ?? params['refreshToken'] ?? null
-      setAccessToken(at)
-      setRefreshToken(rt)
-    } catch (err) {
-      console.error('parse params error', err)
-    } finally {
-      setLoading(false)
-      if (noTokenTimerRef.current) {
-        window.clearTimeout(noTokenTimerRef.current)
-        noTokenTimerRef.current = null
+    let mounted = true
+
+    async function init() {
+      try {
+        const params = parseParamsFromLocation()
+
+        // Accept many token param names (token from verify?token=..., access_token in hash, etc.)
+        const rawAccess = params['access_token'] ?? params['accessToken'] ?? params['token'] ?? null
+        const rawRefresh = params['refresh_token'] ?? params['refreshToken'] ?? null
+
+        const at = rawAccess ? String(rawAccess).trim() : null
+        const rt = rawRefresh ? String(rawRefresh).trim() : null
+
+        if (!mounted) return
+        setAccessToken(at)
+        setRefreshToken(rt)
+
+        // If token found, try to set session automatically (convenience for users)
+        if (at) {
+          setSettingSession(true)
+          try {
+            const supabase = getBrowserSupabase()
+            if (supabase) {
+              // Try setSession if available
+              if (typeof (supabase.auth as any).setSession === 'function') {
+                try {
+                  const payload: any = { access_token: at }
+                  if (rt) payload.refresh_token = rt
+                  const res: any = await (supabase.auth as any).setSession(payload)
+                  if (res?.error) {
+                    // fallback to getSessionFromUrl
+                    console.warn('setSession automatic failed', res.error)
+                    if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
+                      try {
+                        await (supabase.auth as any).getSessionFromUrl()
+                      } catch (e) {
+                        console.warn('getSessionFromUrl fallback failed', e)
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.warn('auto setSession error (inner)', err)
+                }
+              } else if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
+                try {
+                  await (supabase.auth as any).getSessionFromUrl()
+                } catch (e) {
+                  console.warn('getSessionFromUrl error', e)
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('auto setSession error', err)
+          } finally {
+            if (mounted) setSettingSession(false)
+          }
+        }
+      } catch (err) {
+        console.error('parse params error', err)
+      } finally {
+        if (mounted) setLoading(false)
+        if (noTokenTimerRef.current) {
+          window.clearTimeout(noTokenTimerRef.current)
+          noTokenTimerRef.current = null
+        }
+        noTokenTimerRef.current = window.setTimeout(() => {
+          if (mounted) setShowNoTokenMessage(true)
+        }, 1200)
       }
-      noTokenTimerRef.current = window.setTimeout(() => {
-        setShowNoTokenMessage(true)
-      }, 1200)
     }
 
+    init()
+
     return () => {
+      mounted = false
       if (noTokenTimerRef.current) {
         window.clearTimeout(noTokenTimerRef.current)
         noTokenTimerRef.current = null
@@ -111,7 +165,17 @@ export default function ResetPasswordPage() {
         const res: any = await (supabase.auth as any).setSession(payload)
         if (res?.error) {
           console.error('setSession error', res.error)
-          return { ok: false, message: res.error.message || 'Failed to set session from token.' }
+          // fallback: try getSessionFromUrl if available
+          if (typeof (supabase.auth as any).getSessionFromUrl === 'function') {
+            try {
+              await (supabase.auth as any).getSessionFromUrl()
+            } catch (err: any) {
+              console.error('getSessionFromUrl error', err)
+              return { ok: false, message: res.error.message || 'Failed to set session from token.' }
+            }
+          } else {
+            return { ok: false, message: res.error.message || 'Failed to set session from token.' }
+          }
         }
 
         return { ok: true }
@@ -217,6 +281,7 @@ export default function ResetPasswordPage() {
           url.hash = ''
           url.searchParams.delete('access_token')
           url.searchParams.delete('refresh_token')
+          url.searchParams.delete('token')
           window.history.replaceState({}, document.title, url.toString())
         }
       } catch {}
