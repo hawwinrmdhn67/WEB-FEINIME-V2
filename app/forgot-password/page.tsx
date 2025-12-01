@@ -1,3 +1,4 @@
+// app/forgot-password/page.tsx
 'use client'
 
 import React, { useState } from 'react'
@@ -14,8 +15,6 @@ export default function ForgotPasswordPage() {
 
   const handleSendReset = async (e?: React.FormEvent) => {
     e?.preventDefault()
-
-    // Reset messages
     setMessage(null)
     setSuccess(false)
 
@@ -25,52 +24,58 @@ export default function ForgotPasswordPage() {
     }
 
     setLoading(true)
-
-    let finalMessage = ''
-    let finalSuccess = false
-
     try {
+      // 1) Validate if email exists
+      const check = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const checkRes = await check.json()
+
+      if (!checkRes.exists) {
+        setMessage('This email is not registered.')
+        setSuccess(false)
+        setLoading(false)
+        return
+      }
+
+      // 2) Send reset email
       const supabase = getBrowserSupabase()
       if (!supabase) {
-        finalMessage = 'Client environment required.'
+        setMessage('Client environment required.')
         return
       }
 
       const redirectTo =
         typeof window !== 'undefined'
           ? `${window.location.origin}/reset-password`
-          : process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || ''
+          : ''
 
       let error = null
 
-      // Modern API
       if (typeof supabase.auth.resetPasswordForEmail === 'function') {
         const res = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
         error = res.error
-      }
-
-      // Fallback
-      else if (typeof supabase.auth.signInWithOtp === 'function') {
-        const res = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: redirectTo }
-        })
-        error = res.error
+      } else {
+        setMessage('Unsupported Supabase client.')
+        setLoading(false)
+        return
       }
 
       if (error) {
-        console.error(error)
-        finalMessage = error.message || 'Failed to send reset email.'
+        setMessage(error.message || 'Failed to send reset email.')
+        setSuccess(false)
       } else {
-        finalMessage = 'If an account exists, a password reset email was sent. Check your inbox.'
-        finalSuccess = true
+        setMessage('Password reset email has been sent. Check your inbox.')
+        setSuccess(true)
       }
     } catch (err: any) {
-      finalMessage = err?.message ?? 'Unexpected error occured.'
+      setMessage(err?.message ?? 'Unexpected error occurred.')
+      setSuccess(false)
     } finally {
       setLoading(false)
-      setMessage(finalMessage)
-      setSuccess(finalSuccess)
     }
   }
 
@@ -79,7 +84,7 @@ export default function ForgotPasswordPage() {
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md mx-auto">
           <div className="bg-card border border-border/50 rounded-2xl shadow-md p-6 sm:p-8">
-
+            
             <div className="text-center mb-6">
               <h1 className="text-2xl sm:text-3xl font-extrabold">Reset password</h1>
               <p className="text-sm text-muted-foreground mt-1">
@@ -87,9 +92,10 @@ export default function ForgotPasswordPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSendReset} className="space-y-4" autoComplete="on">
+            <form onSubmit={handleSendReset} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Email</label>
+
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
 
@@ -97,8 +103,7 @@ export default function ForgotPasswordPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-3 rounded-lg bg-input border border-border/40 
-                      focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    className="w-full pl-10 pr-3 py-3 rounded-lg bg-input border border-border/40 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                     placeholder="Your email"
                     required
                   />
@@ -108,8 +113,7 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg 
-                bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 disabled:opacity-60"
               >
                 {loading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Send reset email'}
               </button>
@@ -123,11 +127,10 @@ export default function ForgotPasswordPage() {
 
             <div className="text-center mt-6 text-sm">
               <p className="text-muted-foreground">
-                Remembered your password?{' '}
-                <Link href="/login" className="text-primary hover:underline">Sign in</Link>
+                Remember your password?{' '}
+                <Link href="/login" className="text-primary hover:opacity-80">Sign in</Link>
               </p>
             </div>
-
           </div>
         </div>
       </div>
