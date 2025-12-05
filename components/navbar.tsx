@@ -452,7 +452,8 @@ export function Navbar(): JSX.Element {
                             onClick={handleLogout}
                             className="flex items-center gap-2 w-full text-left px-4 py-2 text-red-500 hover:bg-red-500/10 transition-colors border-t border-border/50"
                           >
-                            <LogOut size={18} /> Logout
+                            <LogOut size={18} />
+                            <span>Logout</span>
                           </button>
                         </div>
                       )}
@@ -530,9 +531,10 @@ export function Navbar(): JSX.Element {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-3 py-2 rounded-md text-red-500 hover:bg-red-500/10"
+                    className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-md text-red-500 hover:bg-red-500/10"
                   >
-                    <LogOut size={18} /> Logout
+                    <LogOut size={18} />
+                    <span>Logout</span>
                   </button>
                 </>
               )}
@@ -540,10 +542,11 @@ export function Navbar(): JSX.Element {
               {!session && authLoaded && (
                 <Link
                   href="/login"
-                  className="block px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                   onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                 >
-                  <LogIn size={18} /> Login
+                  <LogIn size={18} />
+                  <span>Login</span>
                 </Link>
               )}
             </div>

@@ -13,8 +13,17 @@ const Navbar = dynamic(
 
 export default function NavbarClient() {
   const pathname = usePathname()
-  
-  if (pathname === '/reset-password') {
+
+  // Hide navbar on specific routes
+  const hideNavbarRoutes = ['/reset-password', '/auth/thank-you']
+
+  // If the exact route matches, hide it
+  if (hideNavbarRoutes.includes(pathname)) {
+    return null
+  }
+
+  // Hide navbar for ALL auth routes (e.g., /auth/login, /auth/register, /auth/abc...)
+  if (pathname.startsWith('/auth')) {
     return null
   }
 

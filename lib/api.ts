@@ -1,9 +1,20 @@
 // lib/api.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Robust Jikan API helper (TypeScript)
+ * - rate limiting + semaphore (serial by default)
+ * - retries with exponential backoff + jitter
+ * - global pause when many 429s happen
+ * - safe JSON parsing
+ *
+ * Usage:
+ * import { getTopAnime, getAnimeDetail, tuneRateLimit } from '@/lib/api'
+ */
 
 const JIKAN_API_BASE = 'https://api.jikan.moe/v4'
 
 // =========================
-// 1. INTERFACES / TYPES
+// 1) INTERFACES / TYPES
 // =========================
 
 export interface RelationEntry {
@@ -99,7 +110,7 @@ export interface Anime {
     prop?: any
     string?: string
   }
-  duration: string
+  duration?: string
   rating?: string
   score?: number
   scored_by?: number
@@ -147,159 +158,286 @@ export interface Pagination {
 
 export interface AnimeResponse {
   data: Anime[]
-  pagination?: Pagination
+  pagination?: Pagination | null
 }
 
 // =========================
-// 2. RATE LIMITER & QUEUE SYSTEM
+// 2) CONFIG & HELPERS
 // =========================
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+// Make config mutable so tuneRateLimit can override in dev/runtime
+let RATE_LIMIT_MS = 800 // ms between requests per worker (jikan is strict)
+let MAX_CONCURRENT = 1 // conservative concurrency to avoid 429
+let REQUEST_TIMEOUT_MS = 15_000 // per-request timeout
+let DEFAULT_RETRIES = 4
+let INITIAL_BACKOFF = 1000 // ms
 
-/**
- * GLOBAL QUEUE:
- * Variabel ini bertugas menampung Promise chain.
- * FIX: Menggunakan Promise<any> agar kompatibel dengan berbagai return type.
- */
-let apiQueue: Promise<any> = Promise.resolve()
+const RECENT_429_WINDOW_MS = 10_000 // window to count recent 429s
+const RECENT_429_THRESHOLD = 3 // threshold to trigger global pause
 
-/**
- * scheduleRequest:
- * Fungsi ini memastikan setiap request ke API Jikan diberi jeda waktu 400ms
- * dan dieksekusi secara berurutan (sequential).
- */
-function scheduleRequest(callback: () => Promise<Response>): Promise<Response> {
-  // Tambahkan request baru ke ujung antrian
-  const operation = apiQueue.then(async () => {
-    // Tunggu 400ms SEBELUM melakukan fetch
-    await delay(400)
-    return callback()
-  })
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const nowMs = () => Date.now()
+const jitter = (baseMs: number) =>
+  baseMs + Math.floor(Math.random() * Math.max(1, Math.floor(baseMs * 0.3)))
 
-  // Update pointer antrian agar request berikutnya menunggu request ini selesai
-  // Kita catch error agar jika satu request gagal, antrian tidak macet
-  apiQueue = operation.catch(() => {})
-
-  return operation
+function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>) {
+  const url = path.startsWith('http') ? new URL(path) : new URL(`${JIKAN_API_BASE}${path}`)
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) url.searchParams.append(k, String(v))
+    })
+  }
+  return url.toString()
 }
 
-/**
- * fetchWithRetry:
- * Menggunakan scheduleRequest untuk membungkus fetch.
- * Jika masih terkena 429, dia akan melakukan retry dengan backoff.
- */
-async function fetchWithRetry<T>(
+// fallback for Array.prototype.findLast for environments that don't have it
+function findLast<T>(arr: T[], predicate: (v: T) => boolean): T | undefined {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (predicate(arr[i])) return arr[i]
+  }
+  return undefined
+}
+
+// =========================
+// 3) CONCURRENCY + GLOBAL PAUSE (semaphore + queue)
+// =========================
+
+let activeWorkers = 0
+const workerQueue: Array<() => void> = []
+
+async function acquireWorker() {
+  if (activeWorkers < MAX_CONCURRENT) {
+    activeWorkers++
+    return
+  }
+  await new Promise<void>((resolve) =>
+    workerQueue.push(() => {
+      activeWorkers++
+      resolve()
+    })
+  )
+}
+
+function releaseWorker() {
+  activeWorkers = Math.max(0, activeWorkers - 1)
+  const next = workerQueue.shift()
+  if (next) next()
+}
+
+// Global pause logic when many 429s happen in short window
+let last429Timestamps: number[] = []
+let globalPauseUntil: number | null = null
+
+function record429() {
+  const t = nowMs()
+  last429Timestamps.push(t)
+  last429Timestamps = last429Timestamps.filter((ts) => ts > t - RECENT_429_WINDOW_MS)
+  const recentCount = last429Timestamps.length
+  if (recentCount >= RECENT_429_THRESHOLD) {
+    const pauseMs = 5000 + Math.floor(Math.random() * 4000) // 5-9s pause
+    globalPauseUntil = nowMs() + pauseMs
+    // eslint-disable-next-line no-console
+    console.warn(`[GLOBAL PAUSE] Detected ${recentCount} recent 429s — pausing requests for ${pauseMs}ms`)
+  }
+}
+
+function isGloballyPaused() {
+  return globalPauseUntil !== null && nowMs() < globalPauseUntil
+}
+
+// scheduleRequest: acquires worker slot, waits rate-limit + jitter, executes callback
+async function scheduleRequest(callback: () => Promise<Response>): Promise<Response> {
+  // if global pause active, wait until cleared (but check periodically)
+  while (isGloballyPaused()) {
+    const msLeft = (globalPauseUntil ?? 0) - nowMs()
+    // eslint-disable-next-line no-console
+    console.warn(`[GLOBAL PAUSE] waiting ${msLeft}ms before sending more requests`)
+    await delay(Math.max(200, msLeft))
+  }
+
+  await acquireWorker()
+  try {
+    await delay(jitter(RATE_LIMIT_MS))
+    const res = await callback()
+    return res
+  } finally {
+    // tiny breathing room
+    await delay(30)
+    releaseWorker()
+  }
+}
+
+// =========================
+// 4) fetchWithRetry (robust + timeout + Retry-After + backoff)
+// =========================
+
+async function fetchWithRetry<T = any>(
   endpoint: string,
   options: RequestInit = {},
-  retries = 3,
-  backoff = 1000
+  retries = DEFAULT_RETRIES,
+  backoff = INITIAL_BACKOFF
 ): Promise<T | null> {
   const url = endpoint.startsWith('http') ? endpoint : `${JIKAN_API_BASE}${endpoint}`
 
   try {
-    // PENTING: Gunakan scheduleRequest, jangan langsung fetch
-    const res = await scheduleRequest(() => fetch(url, options))
+    // Build AbortController for timeout
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
-    // Jika masih terkena limit (kasus sangat jarang dengan queue), lakukan retry manual
+    // If caller passed a signal, prefer caller's signal; otherwise use our controller
+    const signal = options.signal ?? controller.signal
+    const mergedOptions: RequestInit = { ...options, signal }
+
+    // Use scheduleRequest to respect rate-limit and concurrency
+    const res = await scheduleRequest(() => fetch(url, mergedOptions))
+
+    clearTimeout(timeout)
+
+    // Handle 429 explicitly
     if (res.status === 429) {
-      if (retries > 0) {
-        console.warn(`[API 429] Rate limit hit for ${url}, queueing retry in ${backoff}ms...`)
-        await delay(backoff)
-        return fetchWithRetry<T>(endpoint, options, retries - 1, backoff * 2)
-      } else {
-        console.error(`[API Fail] Max retries reached for ${url}`)
-        return null
+      record429()
+      const ra = res.headers.get('Retry-After')
+      // Retry-After can be seconds or HTTP-date; parse as seconds when possible
+      let raMs: number | null = null
+      if (ra) {
+        const asNum = Number(ra)
+        if (!Number.isNaN(asNum)) {
+          raMs = Math.max(1000, Math.floor(asNum * 1000))
+        } else {
+          const parsed = Date.parse(ra)
+          if (!Number.isNaN(parsed)) {
+            raMs = Math.max(1000, parsed - Date.now())
+          }
+        }
       }
-    }
 
-    if (!res.ok) {
+      const waitMs = raMs ?? jitter(backoff)
+
+      // eslint-disable-next-line no-console
+      console.warn(`[API 429] Rate limit hit for ${url}, queueing retry in ${waitMs}ms (retries left ${retries})`)
+
+      if (retries > 0) {
+        await delay(waitMs)
+        return fetchWithRetry<T>(endpoint, options, retries - 1, Math.min(backoff * 2, 30_000))
+      }
+      // eslint-disable-next-line no-console
+      console.error(`[API Fail] Max retries reached for ${url}`)
       return null
     }
 
-    return await res.json()
-  } catch (err) {
-    if (retries > 0) {
-      await delay(backoff)
-      return fetchWithRetry<T>(endpoint, options, retries - 1, backoff * 2)
+    if (!res.ok) {
+      // attempt to read small portion of body for logging
+      let bodyText = ''
+      try {
+        bodyText = await res.text()
+      } catch (_) {
+        /* ignore */
+      }
+      // eslint-disable-next-line no-console
+      console.warn(`[API] Non-OK response ${res.status} for ${url}: ${bodyText.slice(0, 200)}`)
+      return null
     }
-    console.error(`[API Error] ${err}`)
+
+    try {
+      const json = await res.json()
+      return json as T
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`[API] JSON parse error for ${url}:`, err)
+      return null
+    }
+  } catch (err: any) {
+    // eslint-disable-next-line no-console
+    if (err?.name === 'AbortError') {
+      console.warn(`[API] Request timeout/aborted for ${url}`)
+    } else {
+      console.error(`[API Error] ${String(err)} for ${url}`)
+    }
+
+    if (retries > 0) {
+      await delay(jitter(backoff))
+      return fetchWithRetry<T>(endpoint, options, retries - 1, Math.min(backoff * 2, 30_000))
+    }
     return null
   }
 }
 
-/**
- * Helper untuk membangun URL dengan Query Params
- */
-function buildUrl(path: string, params: Record<string, string | number | boolean>): string {
-  const url = new URL(`${JIKAN_API_BASE}${path}`)
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      url.searchParams.append(key, String(value))
-    }
-  })
-  return url.toString()
-}
+// =========================
+// 5) High-level helpers (list fetcher with pages)
+// =========================
 
-/**
- * fetchAnimeList:
- * Mengambil list anime dengan dukungan pagination otomatis melalui Queue System.
- */
-async function fetchAnimeList(
+export async function fetchAnimeList(
   path: string,
-  params: Record<string, any>,
+  params: Record<string, any> = {},
   pages = 1,
   revalidate = 3600
 ): Promise<AnimeResponse> {
   try {
-    if (pages === 1) {
+    if (pages <= 1) {
       const url = buildUrl(path, params)
-      const data = await fetchWithRetry<AnimeResponse>(url, { next: { revalidate } })
-      return data || { data: [] }
+      const data = await fetchWithRetry<{ data: Anime[]; pagination?: Pagination }>(url, {
+        // Keep Next.js friendly `next` option if using Next's fetch on server
+        // but if run in browser it's okay to pass it harmlessly
+        // @ts-ignore-next-line: Next fetch option passthrough (server/runtime)
+        next: { revalidate },
+      } as unknown as RequestInit)
+      return data ? { data: data.data || [], pagination: data.pagination ?? null } : { data: [] }
     }
 
-    // Buat array promise untuk setiap halaman
-    const promises = []
+    // Create promises for pages but scheduleRequest will throttle execution
+    const tasks: Promise<{ data: Anime[]; pagination?: Pagination } | null>[] = []
     for (let i = 1; i <= pages; i++) {
       const url = buildUrl(path, { ...params, page: i })
-      promises.push(fetchWithRetry<AnimeResponse>(url, { next: { revalidate } }))
+      tasks.push(
+        fetchWithRetry<{ data: Anime[]; pagination?: Pagination }>(url, {
+          // @ts-ignore-next-line
+          next: { revalidate },
+        } as unknown as RequestInit).then((r) => (r ? { data: r.data || [], pagination: r.pagination } : null))
+      )
     }
 
-    // Jalankan (scheduleRequest akan membuatnya sequential otomatis)
-    const results = await Promise.all(promises)
-    
-    const allData = results.flatMap((r) => r?.data || [])
-    const lastResult = results.findLast((r) => r?.pagination) 
-    
-    return { 
-      data: allData, 
-      pagination: lastResult?.pagination 
+    const results = await Promise.all(tasks)
+    const allData = results.flatMap((r) => (r ? r.data : []))
+    // find last pagination entry if exists
+    const lastWithPagination = findLast(
+      (results.filter(Boolean) as ({ data: Anime[]; pagination?: Pagination } | null)[]).filter(Boolean) as {
+        data: Anime[]
+        pagination?: Pagination
+      }[],
+      (r) => !!r.pagination
+    )
+
+    return {
+      data: allData,
+      pagination: lastWithPagination?.pagination ?? null,
     }
-  } catch (error) {
-    console.error('Fetch list error:', error)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Fetch list error:', err)
     return { data: [] }
   }
 }
 
 // =========================
-// 3. API FUNCTIONS
+// 6) API FUNCTIONS
 // =========================
 
-// A. Detail Anime
 export async function getAnimeDetail(mal_id: number): Promise<Anime | null> {
   const res = await fetchWithRetry<{ data: Anime }>(`/anime/${mal_id}/full`, {
+    // @ts-ignore-next-line
     next: { revalidate: 3600 },
-  })
+  } as unknown as RequestInit)
   return res?.data || null
 }
 
-// B. Characters / Reviews / Statistics
 export async function getAnimeCharacters(mal_id: number): Promise<Character[]> {
   const res = await fetchWithRetry<{ data: Character[] }>(`/anime/${mal_id}/characters`, {
+    // @ts-ignore-next-line
     next: { revalidate: 3600 },
-  })
-  
+  } as unknown as RequestInit)
+
   if (!res?.data) return []
-  
+
   return res.data
     .sort((a, b) => (a.role === 'Main' ? -1 : 1))
     .slice(0, 12)
@@ -308,27 +446,27 @@ export async function getAnimeCharacters(mal_id: number): Promise<Character[]> {
 export async function getAnimeReviews(mal_id: number): Promise<Review[]> {
   const res = await fetchWithRetry<{ data: Review[] }>(
     `/anime/${mal_id}/reviews?preliminary=true&spoiler=false`,
-    { next: { revalidate: 3600 } }
+    // @ts-ignore-next-line
+    { next: { revalidate: 3600 } } as unknown as RequestInit
   )
   return res?.data ? res.data.slice(0, 6) : []
 }
 
 export async function getAnimeStatistics(mal_id: number): Promise<Statistics | null> {
   const res = await fetchWithRetry<{ data: Statistics }>(`/anime/${mal_id}/statistics`, {
+    // @ts-ignore-next-line
     next: { revalidate: 3600 },
-  })
+  } as unknown as RequestInit)
   return res?.data || null
 }
 
-// C. Manga Detail
 export async function getMangaDetail(mal_id: number): Promise<Manga | null> {
   const res = await fetchWithRetry<{ data: Manga }>(`/manga/${mal_id}/full`, {
+    // @ts-ignore-next-line
     next: { revalidate: 3600 },
-  })
+  } as unknown as RequestInit)
   return res?.data || null
 }
-
-// D. Lists
 
 export async function getTopAnime(): Promise<AnimeResponse> {
   return fetchAnimeList('/top/anime', { limit: 25 }, 2)
@@ -338,89 +476,139 @@ export async function getPopularAnime(): Promise<AnimeResponse> {
   return fetchAnimeList('/top/anime', { filter: 'bypopularity', limit: 25 }, 2)
 }
 
-// E. Season
-
 export async function getSeasonNow(): Promise<AnimeResponse> {
   const res = await fetchAnimeList('/seasons/now', { limit: 25 }, 2, 86400)
-
-  if (!res || !Array.isArray(res.data)) {
-    return { data: [] }
-  }
-
-  return res
+  return res || { data: [] }
 }
 
 export async function getSeasonUpcoming(): Promise<AnimeResponse> {
   return fetchAnimeList('/seasons/upcoming', { limit: 25 }, 3, 86400)
 }
 
-// F. Search
-export async function searchAnime(query: string, page = 1, signal?: AbortSignal): Promise<AnimeResponse> {
+export async function searchAnime(query: string, page = 1): Promise<AnimeResponse> {
   const url = buildUrl('/anime', {
     q: query,
     page,
     limit: 25,
-    sfw: true
+    sfw: true,
   })
-  
-  const res = await fetchWithRetry<AnimeResponse>(url, { next: { revalidate: 300 } })
-  return res || { data: [] }
+  const res = await fetchWithRetry<{ data: Anime[] }>(url, {
+    // @ts-ignore-next-line
+    next: { revalidate: 300 },
+  } as unknown as RequestInit)
+  return res ? { data: res.data || [] } : { data: [] }
 }
 
-// G. Genres
 export async function getGenres(): Promise<Genre[]> {
   const res = await fetchWithRetry<{ data: Genre[] }>('/genres/anime', {
+    // @ts-ignore-next-line
     next: { revalidate: 86400 },
-  })
+  } as unknown as RequestInit)
   return res?.data || []
 }
 
-// Optimized: Fetch 5 halaman dengan Queue System
+// Optimized: Fetch up to LIMIT_PAGES but dedupe results and return aggregated pagination metadata
 export async function getAnimeByGenre(genreId: number): Promise<AnimeResponse> {
   const LIMIT_PAGES = 5
-  
   try {
-    const promises = []
-    
-    // Kita request 5 halaman sekaligus.
-    // Berkat scheduleRequest, ini tidak akan ditembak bersamaan.
+    const tasks: Promise<{ data: Anime[]; pagination?: Pagination } | null>[] = []
     for (let page = 1; page <= LIMIT_PAGES; page++) {
       const url = buildUrl('/anime', {
         genres: genreId,
-        page: page,
+        page,
         limit: 25,
         order_by: 'start_date',
         sort: 'desc',
-        sfw: true
+        sfw: true,
       })
-
-      promises.push(fetchWithRetry<AnimeResponse>(url, { next: { revalidate: 3600 } }))
+      tasks.push(
+        fetchWithRetry<{ data: Anime[]; pagination?: Pagination }>(url, {
+          // @ts-ignore-next-line
+          next: { revalidate: 3600 },
+        } as unknown as RequestInit).then((r) => (r ? { data: r.data || [], pagination: r.pagination } : null))
+      )
     }
 
-    const results = await Promise.all(promises)
-    const combinedData = results.flatMap(r => r?.data || [])
+    const results = await Promise.all(tasks)
+    const combinedData = results.flatMap((r) => (r ? r.data : []))
 
-    // Dedup: Hilangkan duplikat
+    // dedupe by mal_id
     const uniqueMap = new Map<number, Anime>()
-    combinedData.forEach(item => {
-        if(!uniqueMap.has(item.mal_id)) {
-            uniqueMap.set(item.mal_id, item)
-        }
-    })
-    
-    const uniqueData = Array.from(uniqueMap.values())
+    for (const a of combinedData) {
+      if (!uniqueMap.has(a.mal_id)) uniqueMap.set(a.mal_id, a)
+    }
 
     return {
-      data: uniqueData,
+      data: Array.from(uniqueMap.values()),
       pagination: {
         last_visible_page: LIMIT_PAGES,
         has_next_page: true,
         current_page: 1,
-      }
+      },
     }
-
   } catch (e) {
-    console.error("Error fetching genre:", e)
+    // eslint-disable-next-line no-console
+    console.error('Error fetching genre:', e)
     return { data: [] }
   }
+}
+
+// =========================
+// 7) Utility: allow runtime tuning
+// =========================
+
+export function tuneRateLimit(options: {
+  rateLimitMs?: number
+  maxConcurrent?: number
+  requestTimeoutMs?: number
+  defaultRetries?: number
+  initialBackoffMs?: number
+}) {
+  if (options.rateLimitMs !== undefined) {
+    // eslint-disable-next-line no-console
+    console.warn('[tuneRateLimit] Overriding RATE_LIMIT_MS at runtime (dev only)')
+    RATE_LIMIT_MS = options.rateLimitMs
+  }
+  if (options.maxConcurrent !== undefined) {
+    // eslint-disable-next-line no-console
+    console.warn('[tuneRateLimit] Overriding MAX_CONCURRENT at runtime (dev only)')
+    MAX_CONCURRENT = options.maxConcurrent
+  }
+  if (options.requestTimeoutMs !== undefined) {
+    // eslint-disable-next-line no-console
+    console.warn('[tuneRateLimit] Overriding REQUEST_TIMEOUT_MS at runtime (dev only)')
+    REQUEST_TIMEOUT_MS = options.requestTimeoutMs
+  }
+  if (options.defaultRetries !== undefined) {
+    // eslint-disable-next-line no-console
+    console.warn('[tuneRateLimit] Overriding DEFAULT_RETRIES at runtime (dev only)')
+    DEFAULT_RETRIES = options.defaultRetries
+  }
+  if (options.initialBackoffMs !== undefined) {
+    // eslint-disable-next-line no-console
+    console.warn('[tuneRateLimit] Overriding INITIAL_BACKOFF at runtime (dev only)')
+    INITIAL_BACKOFF = options.initialBackoffMs
+  }
+}
+
+// =========================
+// 8) Export debug helpers (optional)
+// =========================
+
+export const __api_debug = {
+  get RATE_LIMIT_MS() {
+    return RATE_LIMIT_MS
+  },
+  get MAX_CONCURRENT() {
+    return MAX_CONCURRENT
+  },
+  get REQUEST_TIMEOUT_MS() {
+    return REQUEST_TIMEOUT_MS
+  },
+  get DEFAULT_RETRIES() {
+    return DEFAULT_RETRIES
+  },
+  get INITIAL_BACKOFF() {
+    return INITIAL_BACKOFF
+  },
 }

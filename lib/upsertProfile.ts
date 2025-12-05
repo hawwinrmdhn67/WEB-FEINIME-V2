@@ -7,7 +7,7 @@ type UserLike = {
   user_metadata?: any
 }
 
-export async function upsertProfile(user: UserLike | null) {
+export async function upsertProfile(user: UserLike | null, username?: string | null) {
   const supabase = getBrowserSupabase()
   if (!supabase) {
     console.warn('upsertProfile: no browser supabase client available')
@@ -33,13 +33,21 @@ export async function upsertProfile(user: UserLike | null) {
   const full_name = user.user_metadata?.full_name || user.user_metadata?.name || null
   const avatar_url = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
 
-  const payload = {
+  // prefer explicit username param, else try user_metadata
+  const rawUsername = username ?? user.user_metadata?.username ?? null
+  const normalizedUsername = typeof rawUsername === 'string' && rawUsername.trim() !== ''
+    ? rawUsername.trim().toLowerCase()
+    : null
+
+  const payload: any = {
     id: user.id,
     email: user.email ?? null,
     full_name,
     avatar_url,
     updated_at: new Date().toISOString()
   }
+
+  if (normalizedUsername) payload.username = normalizedUsername
 
   try {
     const res = await supabase

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2, User as UserIcon } from 'lucide-react'
@@ -20,6 +20,10 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+
+  // username availability states
+  const [checkingUsername, setCheckingUsername] = useState(false)
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
 
   // --- Validation rules ---------------------------------------------------
   const usernameValid = useMemo(() => {
@@ -52,10 +56,60 @@ export default function RegisterPage() {
 
   const confirmMatches = password === confirm
 
+  // require usernameAvailable === true explicitly
   const formValid =
-    emailValid && passwordValid && confirmMatches && usernameValid && !loading
+    emailValid &&
+    passwordValid &&
+    confirmMatches &&
+    usernameValid &&
+    usernameAvailable === true &&
+    !loading
 
   // ------------------------------------------------------------------------
+
+  // Debounced username availability check
+  useEffect(() => {
+    const u = username.trim()
+    // reset availability if username too short or invalid
+    if (u.length < 3 || !usernameValid) {
+      setUsernameAvailable(null)
+      setCheckingUsername(false)
+      return
+    }
+
+    let cancelled = false
+    const delay = setTimeout(async () => {
+      setCheckingUsername(true)
+      try {
+        const res = await fetch('/api/check-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u })
+        })
+
+        if (!res.ok) {
+          // On server error, don't block the user — set null so form can't be submitted until explicit check on submit
+          setUsernameAvailable(null)
+          return
+        }
+
+        const data = await res.json().catch(() => ({ exists: false }))
+        if (!cancelled) {
+          setUsernameAvailable(!data.exists)
+        }
+      } catch (err) {
+        console.error('check-username failed', err)
+        if (!cancelled) setUsernameAvailable(null)
+      } finally {
+        if (!cancelled) setCheckingUsername(false)
+      }
+    }, 500) // 500ms debounce
+
+    return () => {
+      cancelled = true
+      clearTimeout(delay)
+    }
+  }, [username, usernameValid])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,6 +125,43 @@ export default function RegisterPage() {
       setMessage('Username may contain letters, numbers, _ . - and be 3-20 chars.')
       return
     }
+    // if usernameAvailable is null, try to check synchronously before submit
+    if (usernameAvailable === null) {
+      setCheckingUsername(true)
+      try {
+        const res = await fetch('/api/check-username', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username.trim() })
+        })
+        if (!res.ok) {
+          setMessage('Could not validate username availability. Please try again.')
+          setCheckingUsername(false)
+          return
+        }
+        const { exists } = await res.json().catch(() => ({ exists: false }))
+        if (exists) {
+          setMessage('Username is already taken. Please choose another.')
+          setUsernameAvailable(false)
+          setCheckingUsername(false)
+          return
+        }
+        setUsernameAvailable(true)
+      } catch (err) {
+        console.error('sync check username failed', err)
+        setMessage('Could not validate username availability. Please try again.')
+        setCheckingUsername(false)
+        return
+      } finally {
+        setCheckingUsername(false)
+      }
+    }
+
+    if (usernameAvailable === false) {
+      setMessage('Username already registered. Try another one.')
+      return
+    }
+
     if (!emailValid) {
       setMessage('Please enter a valid email address.')
       return
@@ -98,6 +189,7 @@ export default function RegisterPage() {
         // if server returns non-OK, read message for better UX
         const errJson = await checkRes.json().catch(() => ({}))
         setMessage(errJson?.message || errJson?.error || 'Failed to validate email availability.')
+        setLoading(false)
         return
       }
 
@@ -105,6 +197,7 @@ export default function RegisterPage() {
 
       if (exists) {
         setMessage('Email already registered. Try logging in or reset password.')
+        setLoading(false)
         return
       }
 
@@ -112,6 +205,7 @@ export default function RegisterPage() {
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required for registration.')
+        setLoading(false)
         return
       }
 
@@ -128,6 +222,7 @@ export default function RegisterPage() {
       if (signUpError) {
         console.error('signUp error', signUpError)
         setMessage(signUpError.message || 'Registration failed.')
+        setLoading(false)
         return
       }
 
@@ -162,6 +257,7 @@ export default function RegisterPage() {
 
       setSuccess(true)
       setMessage('Registration successful. Please check your email for confirmation.')
+      // navigate to login after success
       setTimeout(() => router.push('/login'), 1000)
     } catch (err: any) {
       console.error('signUp exception', err)
@@ -224,8 +320,22 @@ export default function RegisterPage() {
                     } focus:outline-none focus:ring-1 focus:ring-primary text-sm`}
                   />
                 </div>
-                {!usernameValid && (
+
+                {/* username feedback */}
+                {username.length > 0 && checkingUsername && (
+                  <p className="text-xs text-muted-foreground mt-1">Checking username...</p>
+                )}
+
+                {username.length > 0 && !usernameValid && (
                   <p className="text-xs text-red-500 mt-1">Username 3–20 chars. Allowed: letters, numbers, _ . -</p>
+                )}
+
+                {username.length > 0 && usernameValid && usernameAvailable === false && (
+                  <p className="text-xs text-red-500 mt-1">Username is already taken.</p>
+                )}
+
+                {username.length > 0 && usernameValid && usernameAvailable === true && (
+                  <p className="text-xs text-green-500 mt-1">Username is available.</p>
                 )}
               </div>
 
@@ -386,7 +496,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-
       <Footer />
     </main>
   )

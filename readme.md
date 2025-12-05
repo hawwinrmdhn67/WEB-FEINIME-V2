@@ -121,6 +121,8 @@ npm install @supabase/supabase-js
 
 npm install @supabase/supabase-js@latest
 
+npm install @supabase/ssr @supabase/supabase-js
+
 ```
 
 ### 4\. Jalankan Development Server

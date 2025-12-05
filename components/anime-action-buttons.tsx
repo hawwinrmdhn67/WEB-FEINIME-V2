@@ -54,24 +54,15 @@ export default function AnimeActionButtons({
       await removeFromMyList(animeId)
       showToast('Removed from My List', 'error')
     } else {
-      // <-- Here we normalize payload to match context signature
-      await addToMyList(
-        {
-          mal_id: animeId,
-          title: title,
-          image_url: imageUrl,
-          total_episodes: totalEpisodes ?? null
-        },
-        'Plan to Watch'
-      )
-
+      // Pass object payload to match context signature
+      await addToMyList({ mal_id: animeId })
       showToast('Added to My List', 'success')
     }
   }
 
   // ===================== SHARE HANDLER =====================
   const handleShare = async () => {
-    const currentUrl = window.location.href
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
     try {
       if (navigator.share) {
         await navigator.share({ title: `Watch ${title} on Feinime`, url: currentUrl })
@@ -138,7 +129,7 @@ export default function AnimeActionButtons({
         {trailerUrl ? (
           <button
             className={primaryBtnClass}
-            onClick={() => window.open(trailerUrl, '_blank')}
+            onClick={() => typeof window !== 'undefined' && window.open(trailerUrl, '_blank')}
           >
             <Play size={18} /> Watch Trailer
           </button>
