@@ -1,42 +1,124 @@
-import { Eye, CheckCircle, PauseCircle, XCircle, Clock } from 'lucide-react'
-import { Statistics } from '@/lib/api' // Pastikan impor tipe data Statistics sudah benar
+'use client'
 
-// --- KOMPONEN STATISTICS ---
-export const StatsSection = ({ stats }: { stats: Statistics | null }) => {
-    if (!stats) return null
-    const formatNumber = (num: number) => new Intl.NumberFormat('en-US').format(num)
+import {
+  Eye,
+  CheckCircle2,
+  PauseCircle,
+  XCircle,
+  Clock,
+} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { getAnimeStatistics } from '@/lib/api'
 
-    return (
-        <section className="px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-bold text-foreground mb-4 border-l-4 border-primary pl-3">Statistics</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {/* Card Stat: Added no-ring/no-outline focus styles */}
-                <div className="bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-0 focus:ring-offset-0 z-10 gpu-accelerate">
-                    <Eye className="text-blue-500 mb-2" size={24} />
-                    <span className="text-xs text-muted-foreground uppercase font-bold">Watching</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(stats.watching)}</span>
-                </div>
-                <div className="bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-0 focus:ring-offset-0 z-10 gpu-accelerate">
-                    <CheckCircle className="text-green-500 mb-2" size={24} />
-                    <span className="text-xs text-muted-foreground uppercase font-bold">Completed</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(stats.completed)}</span>
-                </div>
-                <div className="bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-0 focus:ring-offset-0 z-10 gpu-accelerate">
-                    <PauseCircle className="text-yellow-500 mb-2" size={24} />
-                    <span className="text-xs text-muted-foreground uppercase font-bold">On Hold</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(stats.on_hold)}</span>
-                </div>
-                <div className="bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-0 focus:ring-offset-0 z-10 gpu-accelerate">
-                    <XCircle className="text-red-500 mb-2" size={24} />
-                    <span className="text-xs text-muted-foreground uppercase font-bold">Dropped</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(stats.dropped)}</span>
-                </div>
-                <div className="bg-card p-4 rounded-xl flex flex-col items-center text-center transition-colors shadow-sm hover:shadow-md focus:outline-none focus:ring-0 focus:ring-offset-0 z-10 gpu-accelerate">
-                    <Clock className="text-purple-500 mb-2" size={24} />
-                    <span className="text-xs text-muted-foreground uppercase font-bold">Plan to Watch</span>
-                    <span className="text-lg font-bold text-foreground">{formatNumber(stats.plan_to_watch)}</span>
-                </div>
-            </div>
-        </section>
-    )
+interface Props {
+  animeId: number
+}
+
+interface Stats {
+  watching: number
+  completed: number
+  on_hold: number
+  dropped: number
+  plan_to_watch: number
+}
+
+
+export function StatsSection({ animeId }: Props) {
+  const [stats, setStats] = useState<Stats | null>(null)
+
+  useEffect(() => {
+    getAnimeStatistics(animeId).then(res => {
+      if (res) {
+        setStats({
+          watching: res.watching ?? 0,
+          completed: res.completed ?? 0,
+          on_hold: res.on_hold ?? 0,
+          dropped: res.dropped ?? 0,
+          plan_to_watch: res.plan_to_watch ?? 0,
+        })
+      }
+    })
+  }, [animeId])
+
+  if (!stats) return null
+
+  return (
+    <section className="px-4 sm:px-6 lg:px-8">
+      <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-3">
+        Statistics
+      </h2>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <StatCard
+          label="Watching"
+          value={stats.watching}
+          icon={<Eye size={22} />}
+          color="blue"
+        />
+        <StatCard
+          label="Completed"
+          value={stats.completed}
+          icon={<CheckCircle2 size={22} />}
+          color="green"
+        />
+        <StatCard
+          label="On Hold"
+          value={stats.on_hold}
+          icon={<PauseCircle size={22} />}
+          color="yellow"
+        />
+        <StatCard
+          label="Dropped"
+          value={stats.dropped}
+          icon={<XCircle size={22} />}
+          color="red"
+        />
+        <StatCard
+          label="Plan to Watch"
+          value={stats.plan_to_watch}
+          icon={<Clock size={22} />}
+          color="purple"
+        />
+      </div>
+    </section>
+  )
+}
+
+function StatCard({
+  label,
+  value,
+  icon,
+  color,
+}: {
+  label: string
+  value: number
+  icon: React.ReactNode
+  color: 'blue' | 'green' | 'yellow' | 'red' | 'purple'
+}) {
+  const colorMap = {
+    blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
+    green: 'bg-green-100 text-green-600 dark:bg-green-900/30',
+    yellow: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30',
+    red: 'bg-red-100 text-red-600 dark:bg-red-900/30',
+    purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30',
+  }
+
+  return (
+    <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5">
+      <div className="flex items-center gap-4 min-w-0">
+        <div className={`p-3 rounded-full ${colorMap[color]}`}>
+          {icon}
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground uppercase font-bold">
+            {label}
+          </p>
+          <p className="text-base md:text-lg font-semibold text-foreground truncate">
+            {value.toLocaleString()}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
 }

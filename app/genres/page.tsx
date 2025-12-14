@@ -1,101 +1,124 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getAnimeByGenre, Anime } from '@/lib/api'
 import { malGenres, Genre } from '@/lib/genres'
 import { Navbar } from '@/components/navbar'
-import dynamic from 'next/dynamic'
+import { AnimeCard } from '@/components/anime-card'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-interface AnimeCardProps {
-  anime: Anime
-}
+const MAX_PAGE = 10
 
-const AnimeCard = dynamic<AnimeCardProps>(
-  () => import('@/components/anime-card').then(mod => mod.AnimeCard),
-  { ssr: false }
-)
+// SAME STYLE AS "ADD MY LIST"
+const glassButtonStyle = `
+  gap-2 border-input backdrop-blur-sm transition-all duration-200
+  text-foreground bg-background/60
+  hover:bg-primary hover:text-primary-foreground
+  hover:shadow-md
+  dark:bg-background/40
+  dark:hover:bg-white/20 dark:hover:text-white
+`
 
 export default function GenresPage() {
-  // OPTIMALISASI 1: Inisialisasi state genres dan selectedGenre di luar useEffect.
-  const [genres, setGenres] = useState<Genre[]>(malGenres)
-  const [selectedGenre, setSelectedGenre] = useState<number | null>(
-    malGenres.length > 0 ? malGenres[0].mal_id : null
+  const [genres] = useState<Genre[]>(malGenres)
+
+  // max 3 genres
+  const [selectedGenres, setSelectedGenres] = useState<number[]>(
+    malGenres[0] ? [malGenres[0].mal_id] : []
   )
-  
+
+  const [page, setPage] = useState(1)
   const [animes, setAnimes] = useState<Anime[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadingFooter, setLoadingFooter] = useState(true) // NEW
+
+  // loading dipisah
+  const [loadingPage, setLoadingPage] = useState(true)
+  const [loadingGrid, setLoadingGrid] = useState(true)
+
+  const toggleGenre = (genreId: number) => {
+    setPage(1)
+    setSelectedGenres(prev => {
+      if (prev.includes(genreId)) return prev.filter(id => id !== genreId)
+      if (prev.length >= 3) return prev
+      return [...prev, genreId]
+    })
+  }
 
   useEffect(() => {
-    if (!selectedGenre) return
-    const fetchByGenre = async () => {
-      setLoading(true)
+    const fetchData = async () => {
+      setLoadingPage(true)
+      setLoadingGrid(true)
+
       try {
-        const res = await getAnimeByGenre(selectedGenre)
+        const res = await getAnimeByGenre(
+          selectedGenres.join(','),
+          page
+        )
         setAnimes(res.data || [])
-      } catch (error) {
-        console.error("Failed to fetch anime by genre:", error)
+      } catch {
         setAnimes([])
       } finally {
-        setLoading(false)
+        setLoadingGrid(false)
+        setLoadingPage(false)
       }
     }
-    fetchByGenre()
-  }, [selectedGenre])
 
-  // Turn off footer skeleton after main loading finished
-  useEffect(() => {
-    if (!loading) {
-      const t = setTimeout(() => setLoadingFooter(false), 120)
-      return () => clearTimeout(t)
-    }
-  }, [loading])
+    fetchData()
+  }, [selectedGenres, page])
 
-  const currentGenreName = genres.find(g => g.mal_id === selectedGenre)?.name
+  const selectedNames = genres
+    .filter(g => selectedGenres.includes(g.mal_id))
+    .map(g => g.name)
+    .join(', ')
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
 
-        {/* HEADER: Loading vs Content */}
-        {loading ? (
+        {/* HEADER */}
+        {loadingPage ? (
           <SkeletonLoader type="page-header" />
         ) : (
           <div className="text-center md:text-left mb-10">
-             <h1 className="text-3xl md:text-4xl font-bold mb-3">Browse by Genre</h1>
-             <p className="text-muted-foreground text-base md:text-lg">
-               Explore anime series categorized by your favorite genres
-             </p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+              Browse by Genre
+            </h1>
+            <p className="text-muted-foreground">
+              Select up to 3 genres
+            </p>
           </div>
         )}
 
         {/* GENRE BUTTONS */}
-        {loading ? (
-          <div className="flex flex-wrap gap-2 mb-12">
-            {[...Array(42)].map((_, i) => (
+        {loadingPage ? (
+          <div className="mb-12 flex flex-wrap gap-2">
+            {Array.from({ length: 36 }).map((_, i) => (
               <div
                 key={i}
-                className="h-8 w-20 bg-muted animate-pulse rounded-full"
-              ></div>
+                className="h-9 w-24 rounded-full bg-muted animate-pulse"
+              />
             ))}
           </div>
         ) : (
           <div className="mb-12 flex flex-wrap gap-2">
-            {genres.map((genre) => {
-              const isSelected = selectedGenre === genre.mal_id
+            {genres.map(genre => {
+              const isSelected = selectedGenres.includes(genre.mal_id)
+              const isDisabled = !isSelected && selectedGenres.length >= 3
+
               return (
                 <button
                   key={genre.mal_id}
-                  onClick={() => setSelectedGenre(genre.mal_id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ease-out border ${
-                    isSelected
-                      ? 'bg-primary border-primary text-primary-foreground shadow-md scale-105'
-                      : 'bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-secondary/50'
-                  }`}
+                  onClick={() => toggleGenre(genre.mal_id)}
+                  disabled={isDisabled}
+                  className={`
+                    px-4 py-2 rounded-full text-sm font-medium border
+                    ${glassButtonStyle}
+                    ${isSelected ? 'bg-primary text-primary-foreground border-primary shadow-md' : ''}
+                    ${isDisabled ? 'opacity-40 cursor-not-allowed hover:shadow-none' : ''}
+                  `}
                 >
                   {genre.name}
                 </button>
@@ -104,16 +127,17 @@ export default function GenresPage() {
           </div>
         )}
 
-        {/* CONTENT */}
-        {loading ? (
+        {/* GRID */}
+        {loadingGrid ? (
           <>
-            <div className="h-6 w-44 bg-muted animate-pulse rounded mb-6"></div>
+            <div className="h-6 w-52 bg-muted animate-pulse rounded mb-6" />
             <SkeletonLoader type="genres" count={12} />
           </>
-        ) : animes.length > 0 ? (
+        ) : (
           <>
-            {/* Genre Name Title */}
-            <h2 className="text-2xl font-semibold mb-6">{currentGenreName} Anime</h2>
+            <h2 className="text-2xl font-semibold mb-6">
+              {selectedNames} Anime
+            </h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
               {animes.map(anime => (
@@ -121,15 +145,48 @@ export default function GenresPage() {
               ))}
             </div>
           </>
-        ) : (
-          <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border">
-            <p className="text-muted-foreground">No anime found for this genre</p>
-          </div>
         )}
+
+        {/* ✅ PAGINATION — SELALU RENDER (FIRST LOAD AMAN) */}
+        <div className="flex justify-center items-center gap-4 mt-12">
+          {loadingGrid ? (
+            <>
+              <div className="h-10 w-24 rounded-md bg-muted animate-pulse" />
+              <div className="h-4 w-20 rounded bg-muted animate-pulse" />
+              <div className="h-10 w-24 rounded-md bg-muted animate-pulse" />
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className={`flex items-center px-4 py-2 rounded-md border ${glassButtonStyle}
+                  disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                <ChevronLeft size={18} />
+                Prev
+              </button>
+
+              <span className="text-sm text-muted-foreground">
+                Page {page} / {MAX_PAGE}
+              </span>
+
+              <button
+                onClick={() => setPage(p => Math.min(MAX_PAGE, p + 1))}
+                disabled={page === MAX_PAGE || animes.length === 0}
+                className={`flex items-center px-4 py-2 rounded-md border ${glassButtonStyle}
+                  disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                Next
+                <ChevronRight size={18} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* FOOTER / SKELETON FOOTER */}
-      {loadingFooter ? <SkeletonLoader type="footer" /> : <Footer />}
+      {loadingPage ? <SkeletonLoader type="footer" /> : <Footer />}
     </main>
   )
 }
+  

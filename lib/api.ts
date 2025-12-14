@@ -508,48 +508,32 @@ export async function getGenres(): Promise<Genre[]> {
 }
 
 // Optimized: Fetch up to LIMIT_PAGES but dedupe results and return aggregated pagination metadata
-export async function getAnimeByGenre(genreId: number): Promise<AnimeResponse> {
-  const LIMIT_PAGES = 5
-  try {
-    const tasks: Promise<{ data: Anime[]; pagination?: Pagination } | null>[] = []
-    for (let page = 1; page <= LIMIT_PAGES; page++) {
-      const url = buildUrl('/anime', {
-        genres: genreId,
-        page,
-        limit: 25,
-        order_by: 'start_date',
-        sort: 'desc',
-        sfw: true,
-      })
-      tasks.push(
-        fetchWithRetry<{ data: Anime[]; pagination?: Pagination }>(url, {
-          // @ts-ignore-next-line
-          next: { revalidate: 3600 },
-        } as unknown as RequestInit).then((r) => (r ? { data: r.data || [], pagination: r.pagination } : null))
-      )
-    }
+export async function getAnimeByGenre(
+  genreIds: number | string,
+  page = 1
+): Promise<AnimeResponse> {
+  const genreParam = String(genreIds)
 
-    const results = await Promise.all(tasks)
-    const combinedData = results.flatMap((r) => (r ? r.data : []))
+  const url = buildUrl('/anime', {
+    genres: genreParam,
+    page,
+    limit: 25,
+    order_by: 'score',
+    sort: 'desc',
+    sfw: true,
+  })
 
-    // dedupe by mal_id
-    const uniqueMap = new Map<number, Anime>()
-    for (const a of combinedData) {
-      if (!uniqueMap.has(a.mal_id)) uniqueMap.set(a.mal_id, a)
-    }
+  const res = await fetchWithRetry<{
+    data: Anime[]
+    pagination?: Pagination
+  }>(url, {
+    // @ts-ignore
+    next: { revalidate: 3600 },
+  } as RequestInit)
 
-    return {
-      data: Array.from(uniqueMap.values()),
-      pagination: {
-        last_visible_page: LIMIT_PAGES,
-        has_next_page: true,
-        current_page: 1,
-      },
-    }
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching genre:', e)
-    return { data: [] }
+  return {
+    data: res?.data || [],
+    pagination: res?.pagination ?? null,
   }
 }
 
