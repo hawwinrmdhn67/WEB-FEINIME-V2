@@ -11,14 +11,21 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 const MAX_PAGE = 10
 
-// SAME STYLE AS "ADD MY LIST"
 const glassButtonStyle = `
-  gap-2 border-input backdrop-blur-sm transition-all duration-200
-  text-foreground bg-background/60
-  hover:bg-primary hover:text-primary-foreground
-  hover:shadow-md
-  dark:bg-background/40
-  dark:hover:bg-white/20 dark:hover:text-white
+  flex items-center gap-2
+  px-4 py-2 rounded-full text-sm font-medium
+  border transition-all duration-200
+  backdrop-blur-sm
+
+  bg-card
+  text-foreground
+  border-border
+
+  hover:bg-primary
+  hover:text-primary-foreground
+  hover:border-primary
+
+  dark:hover:bg-primary
 `
 
 export default function GenresPage() {
@@ -114,10 +121,17 @@ export default function GenresPage() {
                   onClick={() => toggleGenre(genre.mal_id)}
                   disabled={isDisabled}
                   className={`
-                    px-4 py-2 rounded-full text-sm font-medium border
                     ${glassButtonStyle}
-                    ${isSelected ? 'bg-primary text-primary-foreground border-primary shadow-md' : ''}
-                    ${isDisabled ? 'opacity-40 cursor-not-allowed hover:shadow-none' : ''}
+
+                    ${isSelected
+                      ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                      : ''
+                    }
+
+                    ${isDisabled
+                      ? 'opacity-40 cursor-not-allowed hover:bg-card hover:text-foreground'
+                      : ''
+                    }
                   `}
                 >
                   {genre.name}

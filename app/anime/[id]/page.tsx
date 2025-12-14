@@ -264,9 +264,3 @@ function AiringItem({
     </div>
   )
 }
-
-function AiringDivider() {
-  return (
-    <div className="hidden sm:block h-10 w-px bg-border dark:bg-white/10" />
-  )
-}

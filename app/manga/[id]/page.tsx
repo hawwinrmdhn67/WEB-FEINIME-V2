@@ -13,7 +13,6 @@ import {
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { Footer } from '@/components/feinime-footer'
-import { AiringItem, AiringDivider } from '@/components/airing-info'
 
 interface MangaPageProps {
   params: Promise<{ id: string }>
@@ -192,45 +191,45 @@ export default async function MangaPage({ params }: MangaPageProps) {
         </section>
 
         {/* PUBLISHING INFO */}
-<section className="px-4 sm:px-6 lg:px-8">
-  <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-3">
-    Publishing Info
-  </h2>
+        <section className="px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold mb-4 border-l-4 border-primary pl-3">
+            Publishing Info
+          </h2>
 
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    
-    {/* STATUS */}
-    <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5">
-      <AiringItem
-        label="Status"
-        value={status}
-        icon={<BookOpen size={22} />}
-        color="green"
-      />
-    </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            {/* STATUS */}
+            <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5">
+              <AiringItem
+                label="Status"
+                value={status}
+                icon={<BookOpen size={22} />}
+                color="green"
+              />
+            </div>
 
-    {/* PUBLISHED FROM */}
-    <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5">
-      <AiringItem
-        label="Published From"
-        value={publishedFrom}
-        icon={<Calendar size={22} />}
-        color="blue"
-      />
-    </div>
+            {/* PUBLISHED FROM */}
+            <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5">
+              <AiringItem
+                label="Published From"
+                value={publishedFrom}
+                icon={<Calendar size={22} />}
+                color="blue"
+              />
+            </div>
 
-    {/* PUBLISHED TO */}
-    <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5">
-      <AiringItem
-        label="Published To"
-        value={publishedTo}
-        icon={<Calendar size={22} />}
-        color="orange"
-      />
-    </div>
+            {/* PUBLISHED TO */}
+            <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5">
+              <AiringItem
+                label="Published To"
+                value={publishedTo}
+                icon={<Calendar size={22} />}
+                color="orange"
+              />
+            </div>
 
-  </div>
-</section>
+          </div>
+        </section>
 
       </div>
 
@@ -238,3 +237,38 @@ export default async function MangaPage({ params }: MangaPageProps) {
     </main>
   )
 }
+
+function AiringItem({
+  label,
+  value,
+  icon,
+  color,
+}: {
+  label: string
+  value: string
+  icon: React.ReactNode
+  color: 'green' | 'blue' | 'orange'
+}) {
+  const colorMap = {
+    green: 'bg-green-100 text-green-600 dark:bg-green-900/30',
+    blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
+    orange: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30',
+  }
+
+  return (
+    <div className="flex items-center gap-4 min-w-0">
+      <div className={`p-3 rounded-full ${colorMap[color]}`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground uppercase font-bold">
+          {label}
+        </p>
+        <p className="text-base md:text-lg font-semibold text-foreground truncate">
+          {value}
+        </p>
+      </div>
+    </div>
+  )
+}
+

@@ -8,7 +8,6 @@ import { SkeletonLoader } from './skeleton-loader'
 import { searchAnime } from '@/lib/api'
 import { Button } from './ui/button'
 import { ArrowDownCircle } from 'lucide-react'
-import { SkeletonGrid } from './anime-grid'
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
