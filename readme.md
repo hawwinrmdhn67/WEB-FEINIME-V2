@@ -107,6 +107,8 @@ npm install
 
 ```bash
 
+npm install next@latest react@latest react-dom@latest | Update versi next js ke yg terbaru |
+
 npm install lodash.debounce axios
 
 npm install --save-dev @types/lodash.debounce @types/react
