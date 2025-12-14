@@ -11,7 +11,7 @@ Feinime V2 adalah platform website anime modern yang dirancang untuk menampilkan
 
 Preview website bisa cek dibawah :
 
-https://web-feinimev-2-uishadcn.vercel.app/
+https://feinime.vercel.app/
 
 ---
 
