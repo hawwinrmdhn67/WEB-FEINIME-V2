@@ -99,34 +99,38 @@ export default async function AnimePage({ params }: AnimePageProps) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <Star size={14} className="text-yellow-500" /> Rating
-              </div>
-              <span className="text-lg font-bold">{score}</span>
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <Star size={14} className="text-yellow-500" />
+              Rating
             </div>
-
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <Film size={14} className="text-blue-500" /> Episodes
-              </div>
-              <span className="text-lg font-bold">{episodes}</span>
-            </div>
-
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <BookOpen size={14} className="text-red-500" /> Source
-              </div>
-              <span className="text-lg font-bold">{source}</span>
-            </div>
-
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <Calendar size={14} className="text-purple-500" /> Year
-              </div>
-              <span className="text-lg font-bold">{year}</span>
-            </div>
+            <span className="text-lg font-bold">{score}</span>
           </div>
+
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <Film size={14} className="text-blue-500" />
+              Episodes
+            </div>
+            <span className="text-lg font-bold">{episodes}</span>
+          </div>
+
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <BookOpen size={14} className="text-red-500" />
+              Source
+            </div>
+            <span className="text-lg font-bold">{source}</span>
+          </div>
+
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <Calendar size={14} className="text-purple-500" />
+              Year
+            </div>
+            <span className="text-lg font-bold">{year}</span>
+          </div>
+        </div>
 
           <AnimeActionButtons
             animeId={animeId}

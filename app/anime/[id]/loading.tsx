@@ -99,57 +99,6 @@ export default function LoadingAnimePage() {
           </div>
         </section>
 
-        {/* CHARACTERS */}
-        <section className="px-4 sm:px-6 lg:px-8">
-          <h2 className="h-8 w-40 bg-muted rounded mb-4" />
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-xl overflow-hidden">
-                <div className="aspect-[3/4] w-full bg-muted" />
-                <div className="p-3 space-y-2">
-                  <div className="h-4 w-3/4 bg-muted rounded" />
-                  <div className="h-3 w-1/2 bg-muted rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* REVIEWS (2 Columns — EXACT MATCH) */}
-        <section className="px-4 sm:px-6 lg:px-8">
-          <h2 className="h-8 w-40 bg-muted rounded mb-4" />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-xl p-5 shadow flex flex-col gap-4">
-                
-                {/* Header */}
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-muted rounded-full" />
-                    <div>
-                      <div className="h-4 w-28 bg-muted rounded mb-1" />
-                      <div className="h-3 w-20 bg-muted rounded" />
-                    </div>
-                  </div>
-
-                  <div className="w-10 h-7 bg-muted rounded-md" />
-                </div>
-
-                {/* Text */}
-                <div className="space-y-2">
-                  <div className="h-3 w-full bg-muted rounded" />
-                  <div className="h-3 w-11/12 bg-muted rounded" />
-                  <div className="h-3 w-3/4 bg-muted rounded" />
-                </div>
-
-                {/* Read Full Review */}
-                <div className="h-5 w-32 bg-muted rounded" />
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* RELATED CONTENT (exact grouping layout) */}
         <section className="px-4 sm:px-6 lg:px-8">
           <h2 className="h-8 w-40 bg-muted rounded mb-4" />

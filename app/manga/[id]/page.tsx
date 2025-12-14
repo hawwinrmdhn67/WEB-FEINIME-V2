@@ -115,41 +115,45 @@ export default async function MangaPage({ params }: MangaPageProps) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <Star size={14} className="text-yellow-500" /> Rating
-              </div>
-              <span className="text-lg font-bold">{score}</span>
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <Star size={14} className="text-yellow-500" />
+              Rating
             </div>
-
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <Book size={14} className="text-blue-500" /> Chapters
-              </div>
-              <span className="text-lg font-bold">
-                {chapters} Ch / {volumes} Vol
-              </span>
-            </div>
-
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <Users size={14} className="text-red-500" /> Author
-              </div>
-              <span
-                className="text-lg font-bold truncate block w-full min-w-0"
-                title={authors}
-              >
-                {authors}
-              </span>
-            </div>
-
-            <div className={infoCardStyle}>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-                <Activity size={14} className="text-green-500" /> Status
-              </div>
-              <span className="text-lg font-bold">{status}</span>
-            </div>
+            <span className="text-lg font-bold">{score}</span>
           </div>
+
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <Book size={14} className="text-blue-500" />
+              Chapters
+            </div>
+            <span className="text-lg font-bold">
+              {chapters} Ch / {volumes} Vol
+            </span>
+          </div>
+
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <Users size={14} className="text-red-500" />
+              Author
+            </div>
+            <span
+              className="text-lg font-bold truncate block w-full min-w-0"
+              title={authors}
+            >
+              {authors}
+            </span>
+          </div>
+
+          <div className={infoCardStyle}>
+            <div className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">
+              <Activity size={14} className="text-green-500" />
+              Status
+            </div>
+            <span className="text-lg font-bold">{status}</span>
+          </div>
+        </div>
 
           {malUrl && (
             <div className="flex justify-center md:justify-start mt-4">
