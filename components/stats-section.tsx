@@ -48,35 +48,35 @@ export function StatsSection({ animeId }: Props) {
       </h2>
 
       {/* 🔥 FIX SEJAJAR */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <StatCard
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatsItem
           label="Watching"
           value={stats.watching}
-          icon={<Eye size={18} />}
+          icon={<Eye size={22} />}
           color="blue"
         />
-        <StatCard
+        <StatsItem
           label="Completed"
           value={stats.completed}
-          icon={<CheckCircle size={18} />}
+          icon={<CheckCircle size={22} />}
           color="green"
         />
-        <StatCard
+        <StatsItem
           label="On Hold"
           value={stats.on_hold}
-          icon={<PauseCircle size={18} />}
+          icon={<PauseCircle size={22} />}
           color="orange"
         />
-        <StatCard
+        <StatsItem
           label="Dropped"
           value={stats.dropped}
-          icon={<XCircle size={18} />}
+          icon={<XCircle size={22} />}
           color="red"
         />
-        <StatCard
+        <StatsItem
           label="Plan to Watch"
           value={stats.plan_to_watch}
-          icon={<Clock size={18} />}
+          icon={<Clock size={22} />}
           color="purple"
         />
       </div>
@@ -84,7 +84,7 @@ export function StatsSection({ animeId }: Props) {
   )
 }
 
-function StatCard({
+function StatsItem({
   label,
   value,
   icon,
@@ -96,34 +96,25 @@ function StatCard({
   color: 'blue' | 'green' | 'orange' | 'red' | 'purple'
 }) {
   const colorMap = {
-    blue: 'bg-blue-500/10 text-blue-500',
-    green: 'bg-green-500/10 text-green-500',
-    orange: 'bg-orange-500/10 text-orange-500',
-    red: 'bg-red-500/10 text-red-500',
-    purple: 'bg-purple-500/10 text-purple-500',
+    blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30',
+    green: 'bg-green-100 text-green-600 dark:bg-green-900/30',
+    orange: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30',
+    red: 'bg-red-100 text-red-600 dark:bg-red-900/30',
+    purple: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30',
   }
 
   return (
-    <div
-      className="
-        bg-card/80 backdrop-blur
-        border border-black/10 dark:border-white/10
-        rounded-2xl
-        px-6 py-5
-        min-h-[110px]
-        flex items-center
-      "
-    >
-      <div className="flex items-center gap-4 min-w-0">
+    <div className="bg-card border border-black/10 dark:border-white/10 rounded-2xl px-6 py-5 w-full h-full">
+      <div className="flex items-center gap-4">
         <div className={`p-3 rounded-full ${colorMap[color]}`}>
           {icon}
         </div>
 
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground uppercase font-bold">
+        <div>
+          <p className="text-xs uppercase font-bold text-muted-foreground">
             {label}
           </p>
-          <p className="text-base md:text-lg font-semibold text-foreground tabular-nums truncate">
+          <p className="text-base md:text-lg font-semibold text-foreground tabular-nums">
             {value.toLocaleString()}
           </p>
         </div>
