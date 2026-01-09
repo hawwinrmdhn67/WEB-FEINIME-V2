@@ -26,9 +26,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased bg-background text-foreground">
@@ -38,14 +38,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* 🔥 AUTO SCROLL SETIAP PINDAH PAGE */}
+          {/* ✅ AUTO SCROLL KE ATAS SAAT REFRESH */}
           <ScrollToTop />
 
+          {/* global auth callback handler */}
           <AuthCallbackHandler />
 
-          <div className="fixed top-0 left-0 w-full z-50">
+          {/* Navbar client-only */}
             <NavbarClient />
-          </div>
 
           <AnimeListProvider>
             {children}

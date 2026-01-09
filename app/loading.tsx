@@ -4,7 +4,6 @@ import { SkeletonLoader } from '@/components/skeleton-loader'
 export default function Loading() {
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
 
       {/* MAIN CONTENT */}
       <div className="flex-1">

@@ -4,11 +4,6 @@ export default function LoadingAnimePage() {
   return (
     <main className="min-h-screen bg-background overflow-x-hidden animate-pulse">
 
-      {/* NAVBAR */}
-      <div className="fixed top-0 left-0 w-full z-50">
-        <Navbar />
-      </div>
-
       {/* HERO SKELETON */}
       <div className="relative h-112 md:h-128 w-full overflow-hidden">
         <div className="w-full h-full bg-muted dark:bg-muted/50 blur-sm opacity-60" />

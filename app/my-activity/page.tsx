@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Clock, Bookmark, Share2, ArrowRight, Loader2 } from 'lucide-react'
-import { Navbar } from '@/components/navbar'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
 
@@ -73,8 +72,6 @@ export default function MyActivityPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
-
       {/* MAIN WRAPPER */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
 

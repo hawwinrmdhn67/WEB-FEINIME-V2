@@ -1,7 +1,6 @@
 'use client'
 
 import { Anime } from '@/lib/api'
-import { Navbar } from '@/components/navbar'
 import { AnimeCard } from '@/components/anime-card'
 import { Footer } from '@/components/feinime-footer'
 
@@ -15,7 +14,6 @@ export default function TrendingClient({ initialAnimes }: Props) {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 

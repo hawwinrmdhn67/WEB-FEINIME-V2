@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { getBrowserSupabase } from '@/lib/supabaseClient'
-import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/feinime-footer'
 
 export default function LoginPage() {
@@ -200,7 +199,6 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
 
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md mx-auto">

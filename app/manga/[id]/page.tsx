@@ -1,5 +1,4 @@
 import { getMangaDetail } from '@/lib/api'
-import { Navbar } from '@/components/navbar'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import {
@@ -72,10 +71,6 @@ export default async function MangaPage({ params }: MangaPageProps) {
   /* ================= RENDER ================= */
   return (
     <main className="min-h-screen bg-background overflow-x-hidden">
-      <div className="fixed top-0 left-0 w-full z-50">
-        <Navbar />
-      </div>
-
       {/* HERO */}
       <div className="relative h-112 md:h-128 w-full overflow-hidden">
         <Image

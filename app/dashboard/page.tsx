@@ -3,7 +3,6 @@
 import { useState, useEffect, JSX } from 'react'
 import Link from 'next/link' 
 import { User, Calendar, ListPlus, Bookmark, Share2, ArrowRight } from 'lucide-react' 
-import { Navbar } from '@/components/navbar' 
 import { getSeasonUpcoming, Anime } from '@/lib/api' 
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
@@ -167,7 +166,6 @@ export default function UserDashboard() {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar /> 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
         

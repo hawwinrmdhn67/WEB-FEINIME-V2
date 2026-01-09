@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { getAnimeByGenre, Anime } from '@/lib/api'
 import { malGenres, Genre } from '@/lib/genres'
-import { Navbar } from '@/components/navbar'
 import { AnimeCard } from '@/components/anime-card'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
@@ -84,7 +83,6 @@ export default function GenresPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
 

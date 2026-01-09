@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, Loader2, User as UserIcon } from 'lucide-react'
 import { getBrowserSupabase } from '@/lib/supabaseClient'
 import { upsertProfile } from '@/lib/upsertProfile'
-import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/feinime-footer'
 
 export default function RegisterPage() {
@@ -292,7 +291,6 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-md mx-auto">
           <div className="bg-card border border-border/50 rounded-2xl shadow-md p-6 sm:p-8">

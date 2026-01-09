@@ -1,7 +1,6 @@
 'use client'
 
 import { Anime } from '@/lib/api'
-import { Navbar } from '@/components/navbar'
 import { AnimeCard } from '@/components/anime-card'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import Link from 'next/link'
@@ -34,7 +33,6 @@ export default function Home({
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <Navbar />
 
       {/* HERO & TOP CHARTS */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">

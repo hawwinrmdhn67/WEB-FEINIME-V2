@@ -2,24 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { getPopularAnime, Anime } from '@/lib/api'
-import { Navbar } from '@/components/navbar'
-import dynamic from 'next/dynamic'
+import { AnimeCard } from '@/components/anime-card'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
-
-interface AnimeCardProps {
-  anime: Anime
-}
-
-const AnimeCard = dynamic<AnimeCardProps>(
-  () => import('@/components/anime-card').then(mod => mod.AnimeCard),
-  { ssr: false }
-)
 
 export default function PopularPage() {
   const [animes, setAnimes] = useState<Anime[]>([])
   const [loading, setLoading] = useState(true)
-  const [loadingFooter, setLoadingFooter] = useState(true) // NEW
 
   useEffect(() => {
     const fetchPopular = async () => {
@@ -37,20 +26,10 @@ export default function PopularPage() {
     fetchPopular()
   }, [])
 
-  // Turn off footer skeleton after main loading finished
-  useEffect(() => {
-    if (!loading) {
-      const t = setTimeout(() => setLoadingFooter(false), 120)
-      return () => clearTimeout(t)
-    }
-  }, [loading])
-
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
         {/* HEADER */}
         {loading ? (
           <SkeletonLoader type="page-header" />
@@ -70,19 +49,21 @@ export default function PopularPage() {
           <SkeletonLoader type="popular" count={12} />
         ) : animes.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {animes.map((anime) => (
+            {animes.map(anime => (
               <AnimeCard key={anime.mal_id} anime={anime} />
             ))}
           </div>
         ) : (
           <div className="text-center py-20 bg-secondary/20 rounded-xl border border-dashed border-border">
-            <p className="text-muted-foreground">No popular anime found</p>
+            <p className="text-muted-foreground">
+              No popular anime found
+            </p>
           </div>
         )}
       </div>
 
-      {/* FOOTER / SKELETON FOOTER */}
-      {loadingFooter ? <SkeletonLoader type="footer" /> : <Footer />}
+      {/* FOOTER */}
+      <Footer />
     </main>
   )
 }
