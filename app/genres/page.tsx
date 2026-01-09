@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { getAnimeByGenre, Anime } from '@/lib/api'
 import { malGenres, Genre } from '@/lib/genres'
 import { Navbar } from '@/components/navbar'
@@ -16,32 +16,24 @@ const glassButtonStyle = `
   px-4 py-2 rounded-full text-sm font-medium
   border transition-all duration-200
   backdrop-blur-sm
-
-  bg-card
-  text-foreground
-  border-border
-
-  hover:bg-primary
-  hover:text-primary-foreground
-  hover:border-primary
-
+  bg-card text-foreground border-border
+  hover:bg-primary hover:text-primary-foreground hover:border-primary
   dark:hover:bg-primary
 `
 
 export default function GenresPage() {
   const [genres] = useState<Genre[]>(malGenres)
-
-  // max 3 genres
   const [selectedGenres, setSelectedGenres] = useState<number[]>(
     malGenres[0] ? [malGenres[0].mal_id] : []
   )
 
   const [page, setPage] = useState(1)
   const [animes, setAnimes] = useState<Anime[]>([])
-
-  // loading dipisah
   const [loadingPage, setLoadingPage] = useState(true)
   const [loadingGrid, setLoadingGrid] = useState(true)
+
+  // 🔑 REF UNTUK SCROLL
+  const gridTopRef = useRef<HTMLHeadingElement>(null)
 
   const toggleGenre = (genreId: number) => {
     setPage(1)
@@ -52,6 +44,7 @@ export default function GenresPage() {
     })
   }
 
+  // FETCH DATA
   useEffect(() => {
     const fetchData = async () => {
       setLoadingPage(true)
@@ -73,6 +66,16 @@ export default function GenresPage() {
 
     fetchData()
   }, [selectedGenres, page])
+
+  useEffect(() => {
+    if (loadingGrid) return
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth', 
+    })
+  }, [page, loadingGrid])
 
   const selectedNames = genres
     .filter(g => selectedGenres.includes(g.mal_id))
@@ -122,12 +125,10 @@ export default function GenresPage() {
                   disabled={isDisabled}
                   className={`
                     ${glassButtonStyle}
-
                     ${isSelected
                       ? 'bg-primary text-primary-foreground border-primary shadow-md'
                       : ''
                     }
-
                     ${isDisabled
                       ? 'opacity-40 cursor-not-allowed hover:bg-card hover:text-foreground'
                       : ''
@@ -149,7 +150,10 @@ export default function GenresPage() {
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-semibold mb-6">
+            <h2
+              ref={gridTopRef}
+              className="text-2xl font-semibold mb-6 scroll-mt-24"
+            >
               {selectedNames} Anime
             </h2>
 
@@ -161,7 +165,7 @@ export default function GenresPage() {
           </>
         )}
 
-        {/* ✅ PAGINATION — SELALU RENDER (FIRST LOAD AMAN) */}
+        {/* PAGINATION */}
         <div className="flex justify-center items-center gap-4 mt-12">
           {loadingGrid ? (
             <>
@@ -203,4 +207,3 @@ export default function GenresPage() {
     </main>
   )
 }
-  
