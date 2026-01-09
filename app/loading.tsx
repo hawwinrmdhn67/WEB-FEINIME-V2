@@ -1,4 +1,3 @@
-import { Navbar } from '@/components/navbar'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 
 export default function Loading() {

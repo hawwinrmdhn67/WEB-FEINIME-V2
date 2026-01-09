@@ -1,6 +1,5 @@
 // app/trending/loading.tsx
 import { SkeletonLoader } from '@/components/skeleton-loader'
-import { Navbar } from '@/components/navbar'
 
 export default function Loading() {
   return (

@@ -1,5 +1,3 @@
-import { Navbar } from '@/components/navbar'
-
 export default function LoadingAnimePage() {
   return (
     <main className="min-h-screen bg-background overflow-x-hidden animate-pulse">
