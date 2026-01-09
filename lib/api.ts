@@ -268,6 +268,15 @@ export async function getMangaDetail(
   return res?.data || null
 }
 
+/** ✅ SSR SAFE – UPCOMING SEASON (PAGE 1 ONLY) */
+export async function getSeasonUpcoming(): Promise<AnimeResponse> {
+  return fetchAnimeList(
+    "/seasons/upcoming",
+    { limit: 50, sfw: true },
+    3600
+  )
+}
+
 // =========================
 // FETCH WITH RETRY (FINAL)
 // =========================
