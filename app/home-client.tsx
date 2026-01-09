@@ -188,7 +188,13 @@ export default function Home({
             ? <SkeletonLoader type="seasonal" count={12} /> 
             : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
-                {seasonalAnimeLimited.map(anime => <AnimeCard key={anime.mal_id} anime={anime} />)}
+                {seasonalAnimeLimited.map(anime => 
+                <AnimeCard
+                  key={anime.mal_id}
+                  anime={anime}
+                  variant="home"
+                />
+                )}
               </div>
             )
           }
@@ -213,7 +219,13 @@ export default function Home({
             ? <SkeletonLoader type="popular" count={12} /> 
             : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
-                {popularAnimeLimited.map(anime => <AnimeCard key={anime.mal_id} anime={anime} />)}
+                {popularAnimeLimited.map(anime => 
+                <AnimeCard
+                    key={anime.mal_id}
+                    anime={anime}
+                    variant="home"
+                  />
+                )}
               </div>
             )
           }

@@ -7,6 +7,7 @@ import { Anime } from "@/lib/api";
 interface AnimeCardProps {
   anime: Anime;
   rank?: number;
+  variant?: 'default' | 'home'
   className?: string;
   imgClassName?: string;
 }
@@ -20,35 +21,35 @@ const FALLBACK_IMAGE =
 
 const getStatusBadgeClass = (status?: string) => {
   const base =
-    "font-semibold px-2 py-0.5 rounded-full text-[10px] sm:text-xs border transition-colors duration-300";
+    "inline-flex items-center font-semibold rounded-full " +
+    "px-2 py-0.5 text-[10px] " +
+    "sm:px-2.5 sm:py-1 sm:text-xs " +
+    "border whitespace-nowrap transition-colors duration-300";
 
   switch (status) {
     case "Currently Airing":
       return `${base}
-        bg-green-500/30
-        text-green-700 dark:text-green-300
-        border-green-500/50
+        bg-emerald-500/20
+        text-emerald-600 dark:text-emerald-300
+        border-emerald-500/40
       `;
-
     case "Finished Airing":
       return `${base}
-        bg-blue-500/30
-        text-blue-700 dark:text-blue-300
-        border-blue-500/50
+        bg-blue-500/20
+        text-blue-600 dark:text-blue-300
+        border-blue-500/40
       `;
-
     case "Not yet aired":
       return `${base}
-        bg-yellow-500/30
+        bg-yellow-500/20
         text-yellow-700 dark:text-yellow-300
-        border-yellow-500/50
+        border-yellow-500/40
       `;
-
     default:
       return `${base}
-        bg-muted/70
+        bg-muted/50
         text-muted-foreground
-        border-border/60
+        border-border/50
       `;
   }
 };
@@ -65,8 +66,11 @@ const BADGE_ICON_SIZE = 11;
 /* =========================
    Component
 ========================= */
-
-export function AnimeCard({ anime, rank }: AnimeCardProps) {
+export function AnimeCard({
+  anime,
+  rank,
+  variant = 'default',
+}: AnimeCardProps) {
   /* ---------- Derived Values ---------- */
 
   const imageUrl =
@@ -154,10 +158,41 @@ export function AnimeCard({ anime, rank }: AnimeCardProps) {
             <span className="opacity-90 text-[10px] sm:text-xs">
               {episodes}
             </span>
-
-            <span className={getStatusBadgeClass(status)}>
-              {status}
+            {status && (
+            <span
+              className={
+                variant === "home"
+                  ? getStatusBadgeClass(status)
+                  : getStatusBadgeClass(status)
+              }
+            >
+              {variant === "home"
+                ? status === "Currently Airing"
+                  ? "Airing"
+                  : status === "Finished Airing"
+                  ? "Finished"
+                  : status === "Not yet aired"
+                  ? "TBA"
+                  : status
+                : (
+                  <>
+                    <span className="sm:hidden">
+                      {status === "Currently Airing"
+                        ? "Airing"
+                        : status === "Finished Airing"
+                        ? "Finished"
+                        : status === "Not yet aired"
+                        ? "TBA"
+                        : status}
+                    </span>
+                    <span className="hidden sm:inline">
+                      {status}
+                    </span>
+                  </>
+                )
+              }
             </span>
+          )}
           </div>
         </div>
       </div>

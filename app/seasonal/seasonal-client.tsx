@@ -10,6 +10,11 @@ interface Props {
 }
 
 export default function SeasonalClient({ animes }: Props) {
+  // ✅ DEDUPE berdasarkan mal_id (ANTI duplicate key)
+  const uniqueAnimes = Array.from(
+    new Map(animes.map(anime => [anime.mal_id, anime])).values()
+  )
+
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
@@ -27,9 +32,9 @@ export default function SeasonalClient({ animes }: Props) {
         </div>
 
         {/* GRID */}
-        {animes.length > 0 ? (
+        {uniqueAnimes.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {animes.map(anime => (
+            {uniqueAnimes.map(anime => (
               <AnimeCard key={anime.mal_id} anime={anime} />
             ))}
           </div>
