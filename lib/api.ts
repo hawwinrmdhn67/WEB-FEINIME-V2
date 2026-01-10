@@ -1,21 +1,4 @@
-// lib/api.ts
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/**
- * Robust Jikan API helper (TypeScript)
- * - rate limiting + semaphore (serial by default)
- * - retries with exponential backoff + jitter
- * - global pause when many 429s happen
- * - safe JSON parsing
- *
- * Usage:
- * import { getTopAnime, getAnimeDetail, tuneRateLimit } from '@/lib/api'
- */
-
 const JIKAN_API_BASE = 'https://api.jikan.moe/v4'
-
-// =========================
-// 1) INTERFACES / TYPES
-// =========================
 
 export interface RelationEntry {
   mal_id: number
@@ -161,27 +144,12 @@ export interface AnimeResponse {
   pagination?: Pagination | null
 }
 
-// =========================
-// CONFIG
-// =========================
-
-// Maksimal request paralel (Jikan sangat ketat)
 const MAX_CONCURRENT = 1
-
-// Retry handling
 const DEFAULT_RETRIES = 3
-const INITIAL_BACKOFF = 500 // ms
-
-// Rate limit & timeout
-const RATE_LIMIT_MS = 350 // delay antar request
-const REQUEST_TIMEOUT_MS = 10_000 // 10 detik
-
-// Environment check (Next.js / SSR safe)
+const INITIAL_BACKOFF = 500 
+const RATE_LIMIT_MS = 350 
+const REQUEST_TIMEOUT_MS = 10_000 
 const IS_SERVER = typeof window === "undefined"
-
-// =========================
-// HELPERS
-// =========================
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const jitter = (ms: number) => ms + Math.random() * ms * 0.3
@@ -199,10 +167,6 @@ function buildUrl(
   }
   return url.toString()
 }
-
-// =========================
-// CONCURRENCY (SEMAPHORE)
-// =========================
 
 let active = 0
 const queue: Array<() => void> = []
@@ -268,7 +232,6 @@ export async function getMangaDetail(
   return res?.data || null
 }
 
-/** ✅ SSR SAFE – UPCOMING SEASON (PAGE 1 ONLY) */
 export async function getSeasonUpcoming(): Promise<AnimeResponse> {
   return fetchAnimeList(
     "/seasons/upcoming",
@@ -276,10 +239,6 @@ export async function getSeasonUpcoming(): Promise<AnimeResponse> {
     3600
   )
 }
-
-// =========================
-// FETCH WITH RETRY (FINAL)
-// =========================
 
 async function fetchWithRetry<T>(
   url: string,
@@ -323,14 +282,10 @@ async function fetchWithRetry<T>(
   }
 }
 
-// =========================
-// CORE LIST FETCHER
-// =========================
-
 async function fetchAnimeList(
   path: string,
   params: Record<string, any>,
-  revalidate = 600
+  _revalidate = 600
 ): Promise<AnimeResponse> {
   const url = buildUrl(path, params)
   const res = await fetchWithRetry<{ data: Anime[]; pagination?: Pagination }>(
@@ -339,21 +294,14 @@ async function fetchAnimeList(
   return res ? { data: res.data || [], pagination: res.pagination } : { data: [] }
 }
 
-// =========================
-// PUBLIC API (SSR SAFE)
-// =========================
-
-/** ✅ SSR SAFE – PAGE 1 ONLY */
 export async function getSeasonNow(): Promise<AnimeResponse> {
   return fetchAnimeList("/seasons/now", { limit: 25 }, 3600)
 }
 
-/** ✅ SSR SAFE – PAGE 1 ONLY */
 export async function getTopAnime(): Promise<AnimeResponse> {
   return fetchAnimeList("/top/anime", { limit: 25 }, 3600)
 }
 
-/** ✅ SSR SAFE – PAGE 1 ONLY */
 export async function getPopularAnime(): Promise<AnimeResponse> {
   return fetchAnimeList(
     "/top/anime",
@@ -362,7 +310,6 @@ export async function getPopularAnime(): Promise<AnimeResponse> {
   )
 }
 
-/** CLIENT PAGINATION */
 export async function getSeasonNowPage(
   page: number
 ): Promise<AnimeResponse> {
@@ -373,7 +320,6 @@ export async function getSeasonNowPage(
   )
 }
 
-/** SEARCH (CLIENT) */
 export async function searchAnime(
   query: string,
   page = 1
@@ -408,7 +354,6 @@ export async function getAnimeByGenre(
   }
 }
 
-/** DETAIL (SSR SAFE) */
 export async function getAnimeDetail(
   mal_id: number
 ): Promise<Anime | null> {

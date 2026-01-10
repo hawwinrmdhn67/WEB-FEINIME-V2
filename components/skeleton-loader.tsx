@@ -20,7 +20,7 @@ export type SkeletonType =
   | 'reviews'
   | 'characters'
   | 'related'
-  | 'footer' // FINAL FOOTER SKELETON
+  | 'footer'
 
 interface SkeletonLoaderProps {
   type: SkeletonType
@@ -39,9 +39,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'
       : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6'
 
-  // ============================================================
-  // HOME HERO
-  // ============================================================
   if (type === 'home-hero') {
     return (
       <div className="flex flex-col gap-4 h-full">
@@ -72,9 +69,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // HOME CAROUSEL
-  // ============================================================
   if (type === 'home') {
     return (
       <div className="flex gap-4 sm:gap-6 overflow-x-hidden px-4 sm:px-6 lg:px-8 py-10">
@@ -93,9 +87,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // PAGE HEADER
-  // ============================================================
   if (type === 'page-header' || type === 'trending-header') {
     return (
       <div className="flex flex-col gap-3 mb-10 animate-pulse items-start">
@@ -105,9 +96,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // SECTION HEADER
-  // ============================================================
   if (type === 'header-section') {
     return (
       <div className="flex items-center justify-between mb-6">
@@ -117,9 +105,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // SIDEBAR HEADER
-  // ============================================================
   if (type === 'header-side') {
     return (
       <div className="flex items-center justify-between mb-4 px-1">
@@ -132,9 +117,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // SIDEBAR TRENDING LIST
-  // ============================================================
   if (type === 'trending') {
     return (
       <div className="flex flex-col gap-3">
@@ -152,9 +134,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // ACTIVITY
-  // ============================================================
   if (type === 'activity') {
     return (
       <div className="flex flex-col gap-4">
@@ -172,9 +151,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // DETAIL: STATS
-  // ============================================================
   if (type === 'stats') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,9 +168,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // DETAIL: REVIEWS
-  // ============================================================
   if (type === 'reviews') {
     return (
       <div className="flex flex-col gap-4">
@@ -214,9 +187,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // DETAIL: CHARACTERS
-  // ============================================================
   if (type === 'characters') {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-pulse">
@@ -231,9 +201,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // DETAIL: RELATED CONTENT
-  // ============================================================
   if (type === 'related') {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-pulse">
@@ -250,18 +217,15 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // FINAL FOOTER (MATCHES YOUR FOOTER COMPONENT 100%)
-  // ============================================================
   if (type === 'footer') {
     return (
       <footer className="bg-surface border-t border-border mt-auto text-sm animate-pulse">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-12">
 
-          {/* GRID (2 → 4 → 6 kolom) */}
+          {/* GRID */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-y-10 gap-x-8 lg:gap-12 w-full">
 
-            {/* BRAND left col-span-2 */}
+            {/* BRAND */}
             <div className="col-span-2 lg:col-span-2 space-y-4 flex flex-col items-start mr-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-muted/80 border border-border/50" />
@@ -339,9 +303,6 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
     )
   }
 
-  // ============================================================
-  // DEFAULT GRID (universal card)
-  // ============================================================
   return (
     <div className={`grid ${gridCols} gap-4 md:gap-6`}>
       {Array.from({ length: count }).map((_, i) => (

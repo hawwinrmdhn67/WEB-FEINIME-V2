@@ -15,7 +15,6 @@ export default function ForgotPasswordPage() {
   const handleSendReset = async (e?: React.FormEvent) => {
     e?.preventDefault()
 
-    // Reset messages
     setMessage(null)
     setSuccess(false)
 
@@ -29,7 +28,6 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      // 1) cek ke API server apakah email terdaftar
       const checkRes = await fetch('/api/check-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,7 +35,6 @@ export default function ForgotPasswordPage() {
       })
 
       if (!checkRes.ok) {
-        // coba baca pesan dari response
         const errJson = await checkRes.json().catch(() => ({}))
         const serverMsg = errJson?.message || errJson?.error || 'Failed to validate email.'
         setMessage(serverMsg)
@@ -55,7 +52,6 @@ export default function ForgotPasswordPage() {
         return
       }
 
-      // 2) jika ada, lanjut kirim reset email via Supabase client
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required.')
@@ -71,12 +67,11 @@ export default function ForgotPasswordPage() {
 
       let error = null
 
-      // Modern API
       if (typeof supabase.auth.resetPasswordForEmail === 'function') {
         const res = await supabase.auth.resetPasswordForEmail(trimmed, { redirectTo })
         error = res.error
       }
-      // Fallback
+
       else if (typeof supabase.auth.signInWithOtp === 'function') {
         const res = await supabase.auth.signInWithOtp({
           email: trimmed,
@@ -84,7 +79,6 @@ export default function ForgotPasswordPage() {
         })
         error = res.error
       } else {
-        // Jika SDK berubah, tangani gracefully
         setMessage('Unsupported Supabase client version.')
         setSuccess(false)
         setLoading(false)
@@ -98,7 +92,7 @@ export default function ForgotPasswordPage() {
       } else {
         setMessage('Reset password email has been sent. Check your inbox.')
         setSuccess(true)
-        setEmail('') // opsional: bersihkan input setelah sukses
+        setEmail('') 
       }
     } catch (err: any) {
       console.error('Forgot password error:', err)

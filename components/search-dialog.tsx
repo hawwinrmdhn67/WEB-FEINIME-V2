@@ -8,8 +8,6 @@ export function SearchDialog() {
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
-
-  // --- Handle Submit ---
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
@@ -18,7 +16,6 @@ export function SearchDialog() {
     setIsOpen(false)
   }
 
-  // --- Shortcut: Ctrl + K / CMD + K ---
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
       const isCtrlOrCmd = e.ctrlKey || e.metaKey

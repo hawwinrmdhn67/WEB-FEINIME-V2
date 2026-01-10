@@ -7,9 +7,7 @@ import { getSeasonUpcoming, Anime } from '@/lib/api'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
 
-// ===================================
-// MOCK DATA
-// ===================================
+// Mock data
 const mockUser = {
   name: "hawwinrmdhn",
   email: "user@example.com",
@@ -39,9 +37,7 @@ const mockRecentActivity = [
   },
 ];
 
-// ===================================
-// HELPER COMPONENTS
-// ===================================
+// Helper Components
 const StatCard = ({ icon, title, value, description }: { icon: JSX.Element, title: string, value: string | number, description: string }) => (
   <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between mb-3">
@@ -72,9 +68,6 @@ const UpcomingListItem = ({ title, date, image, id }: { title: string, date: str
   </Link>
 )
 
-// ===================================
-// SKELETON CONTENT
-// ===================================
 const DashboardContentSkeleton = () => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-pulse">
     <div className="lg:col-span-2 space-y-8">
@@ -132,14 +125,11 @@ const DashboardContentSkeleton = () => (
   </div>
 )
 
-// ===================================
-// MAIN COMPONENT
-// ===================================
 export default function UserDashboard() { 
   const [userName] = useState(mockUser.name)
   const [upcomingAnime, setUpcomingAnime] = useState<Anime[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [loadingFooter, setLoadingFooter] = useState(true) // NEW
+  const [loadingFooter, setLoadingFooter] = useState(true) 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -156,7 +146,6 @@ export default function UserDashboard() {
     fetchData()
   }, [])
 
-  // Matikan skeleton footer setelah loading selesai
   useEffect(() => {
     if (!isLoading) {
       const t = setTimeout(() => setLoadingFooter(false), 150)

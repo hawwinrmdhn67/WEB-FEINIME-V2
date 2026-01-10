@@ -10,13 +10,12 @@ import { Footer } from '@/components/feinime-footer'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('') // still named email for minimal change
+  const [email, setEmail] = useState('') 
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-
-  // cleanup session but suppress logout toast so user doesn't see "Logout successful"
+  
   const cleanupSession = async () => {
     const supabase = getBrowserSupabase()
     try {
@@ -45,15 +44,12 @@ export default function LoginPage() {
     } catch (err) {}
   }
 
-  // --- minimal helpers to support username OR email input ---
   const looksLikeEmail = (v: string) => /\S+@\S+\.\S+/.test(v.trim())
 
-  // expects a server route /api/resolve-username that returns { email } or 4xx/5xx with { error }
   const resolveIdentifierToEmail = async (identifier: string) => {
     const trimmed = identifier.trim()
     if (looksLikeEmail(trimmed)) return trimmed
 
-    // not an email -> treat as username, resolve on server
     try {
       const res = await fetch('/api/lookup-username', {
         method: 'POST',
@@ -73,7 +69,6 @@ export default function LoginPage() {
       throw new Error(err?.message ?? 'Failed to resolve username')
     }
   }
-  // ----------------------------------------------------------
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,10 +87,8 @@ export default function LoginPage() {
         return
       }
 
-      // cleanup any stale session but suppress its logout toast
       await cleanupSession()
 
-      // Resolve identifier (email or username) to an email address
       let emailToUse = ''
       try {
         emailToUse = await resolveIdentifierToEmail(email)
@@ -113,15 +106,13 @@ export default function LoginPage() {
       if (error) {
         try { if (typeof window !== 'undefined') window.localStorage.removeItem('feinime:show_login_toast') } catch {}
         setMessage(error.message || 'Login failed')
-        setPassword('') // clear password after failed attempt
+        setPassword('') 
         setLoading(false)
         return
       }
 
-      // success -> set the login toast flag now (Navbar will show toast after it receives SIGNED_IN)
       try { if (typeof window !== 'undefined') window.localStorage.setItem('feinime:show_login_toast', '1') } catch {}
 
-      // redirect to home (replace so user can't go back to login)
       router.replace('/#')
     } catch (err: any) {
       console.error('unexpected auth exception', err)
@@ -142,12 +133,10 @@ export default function LoginPage() {
         return
       }
 
-      // set a flag so after OAuth redirect we can show a toast from Navbar
       setLoginToastFlag()
 
       const redirectTo = process.env.NEXT_PUBLIC_SUPABASE_REDIRECT || (typeof window !== 'undefined' ? window.location.origin : undefined)
       await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
-      // note: this will redirect the page
     } catch (err: any) {
       console.error('Google OAuth start failed', err)
       setMessage(err?.message ?? 'Failed to start Google OAuth')
@@ -171,7 +160,6 @@ export default function LoginPage() {
         return
       }
 
-      // Resolve identifier to email first
       let emailToUse = ''
       try {
         emailToUse = await resolveIdentifierToEmail(email)

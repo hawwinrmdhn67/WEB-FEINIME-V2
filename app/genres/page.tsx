@@ -30,8 +30,6 @@ export default function GenresPage() {
   const [animes, setAnimes] = useState<Anime[]>([])
   const [loadingPage, setLoadingPage] = useState(true)
   const [loadingGrid, setLoadingGrid] = useState(true)
-
-  // 🔑 REF UNTUK SCROLL
   const gridTopRef = useRef<HTMLHeadingElement>(null)
 
   const toggleGenre = (genreId: number) => {
@@ -42,8 +40,7 @@ export default function GenresPage() {
       return [...prev, genreId]
     })
   }
-
-  // FETCH DATA
+  
   useEffect(() => {
     const fetchData = async () => {
       setLoadingPage(true)

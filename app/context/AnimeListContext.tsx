@@ -133,7 +133,7 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
             setMyList([])
           }
         })
-        // normalize subscription shape
+
         if (ret && (ret as any).data?.subscription) subscription = (ret as any).data.subscription
         else if ((ret as any).subscription) subscription = (ret as any).subscription
         else subscription = ret
@@ -177,7 +177,6 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
       const sb = getBrowserSupabase()
       if (!sb) return
 
-      // check if exists (one per user+mal_id)
       const { data: existing, error: existErr } = await sb
         .from('user_anime_list')
         .select('id')
@@ -190,7 +189,6 @@ export function AnimeListProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (existing && (existing as any).length > 0) {
-        // already in My List
         await fetchList(userId)
         return
       }

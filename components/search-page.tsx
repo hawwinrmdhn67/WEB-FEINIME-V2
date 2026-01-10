@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Navbar } from './navbar'
 import { AnimeCard, Anime } from './anime-card'
 import { SkeletonLoader } from './skeleton-loader'
 import { searchAnime } from '@/lib/api'
@@ -80,7 +79,6 @@ export default function SearchPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 

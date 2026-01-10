@@ -38,7 +38,7 @@ export default function Loading() {
         </div>
       </div>
 
-      {/* ✅ FOOTER SKELETON */}
+      {/* FOOTER SKELETON */}
       <SkeletonLoader type="footer" />
     </main>
   )

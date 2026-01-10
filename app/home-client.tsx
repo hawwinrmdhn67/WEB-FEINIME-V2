@@ -19,7 +19,6 @@ export default function Home({
   seasonalAnime,
   popularAnime,
 }: Props) {
-  // ⛔ UI TIDAK DIUBAH
   const loadingTop = topAnimeData.length === 0
   const loadingOthers = seasonalAnime.length === 0 && popularAnime.length === 0
   const loadingFooter = loadingTop || loadingOthers
@@ -38,7 +37,7 @@ export default function Home({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Hero Section (Main Content) */}
+          {/* Hero Section */}
           <div className="lg:col-span-8 flex flex-col gap-6">
             {loadingTop 
               ? <SkeletonLoader type="home-hero" count={2} /> 
@@ -57,7 +56,7 @@ export default function Home({
                     {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-                    {/* --- BADGE TRENDING (POJOK KIRI ATAS GAMBAR) --- */}
+                    {/* BADGE TRENDING */}
                     <div className="absolute top-3 left-3 z-20 flex flex-col items-start gap-2">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background/80 backdrop-blur-md text-primary text-[11px] font-bold border border-primary/20 shadow-md uppercase tracking-wide">
                         <TrendingUp size={12} className="stroke-[3px]" />
@@ -71,7 +70,7 @@ export default function Home({
                     <div className="flex flex-col flex-grow">
                       
                       <div className="mb-3">
-                        {/* Type Badge (TV/Movie) tetap di text area agar rapi */}
+                        {/* Type Badge (TV/Movie) */}
                         <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-wider mb-1">
                           <span className="bg-secondary/50 px-2 py-0.5 rounded text-secondary-foreground border border-border/50">
                             {anime.type}
@@ -115,7 +114,7 @@ export default function Home({
             }
           </div>
 
-          {/* --- B. SIDEBAR TOP CHARTS (Kanan - 4 Kolom) --- */}
+          {/* SIDEBAR TOP CHARTS  */}
           <div className="lg:col-span-4 flex flex-col h-full"> 
             
             {/* Header Sidebar Logic */}
@@ -162,12 +161,7 @@ export default function Home({
         </div>
       </div>
 
-      {/* ===========================
-          SECTION 2: SEASONAL & POPULAR
-         =========================== */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-16">
-        
-        {/* --- SEASONAL --- */}
         <section>
           {/* Header Logic */}
           {loadingOthers ? (
@@ -198,7 +192,6 @@ export default function Home({
           }
         </section>
 
-        {/* --- POPULAR --- */}
         <section>
           {/* Header Logic */}
           {loadingOthers ? (
@@ -230,7 +223,7 @@ export default function Home({
         </section>
       </div>
 
-      {/* FOOTER / SKELETON FOOTER */}
+      {/* FOOTER SKELETON  */}
       {loadingFooter ? <SkeletonLoader type="footer" /> : <Footer />}
     </main>
   )

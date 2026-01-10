@@ -1,7 +1,5 @@
-// components/theme-provider.tsx
 "use client"
 
-import * as React from "react"
 import { ThemeProvider as NextThemesProvider } from "next-themes"
 
 export function ThemeProvider({ children, ...props }: any) {
@@ -10,7 +8,7 @@ export function ThemeProvider({ children, ...props }: any) {
       attribute="class" 
       defaultTheme="system" 
       enableSystem
-      disableTransitionOnChange // <-- Fitur Anti-Lag bawaan
+      disableTransitionOnChange 
       {...props}
     >
       {children}

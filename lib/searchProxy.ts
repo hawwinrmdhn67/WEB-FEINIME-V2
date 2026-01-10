@@ -8,7 +8,7 @@ const queue: {
   reject: (err: any) => void
 }[] = []
 let processing = false
-const MIN_REQUEST_INTERVAL = 1000 // 1 detik per request
+const MIN_REQUEST_INTERVAL = 1000 
 
 async function processQueue() {
   if (processing) return

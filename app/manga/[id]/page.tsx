@@ -25,7 +25,6 @@ export default async function MangaPage({ params }: MangaPageProps) {
   const manga = await getMangaDetail(mangaId).catch(() => null)
   if (!manga) notFound()
 
-  /* ================= FORMAT DATA ================= */
   const imageUrl = manga.images?.jpg?.large_image_url || '/placeholder.svg'
   const titleEnglish = manga.title_english || '-'
   const score = manga.score != null ? manga.score.toFixed(1) : 'N/A'
@@ -67,8 +66,7 @@ export default async function MangaPage({ params }: MangaPageProps) {
     hover:bg-primary hover:text-primary-foreground
     dark:hover:bg-white/20 dark:hover:text-white
   `
-
-  /* ================= RENDER ================= */
+  
   return (
     <main className="min-h-screen bg-background overflow-x-hidden">
       {/* HERO */}

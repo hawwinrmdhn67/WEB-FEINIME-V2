@@ -13,10 +13,7 @@ export function Footer() {
     <footer role="contentinfo" className="bg-surface border-t border-border mt-auto text-sm">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-10 sm:py-12">
 
-        {/* GRID SYSTEM: 
-           - Mobile: 2 kolom
-           - Desktop: 6 kolom 
-        */}
+        {/* GRID SYSTEM */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-y-10 gap-x-8 lg:gap-12 items-start w-full">
 
           {/* BRAND SECTION */}
@@ -104,7 +101,7 @@ export function Footer() {
             </ul>
           </div>
 
-           {/* Kolom 4 (Legal) */}
+           {/* Kolom 4 */}
            <div>
             <h4 className="font-semibold text-foreground tracking-wide mb-4">Legal</h4>
             <ul className="space-y-2.5">

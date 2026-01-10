@@ -6,7 +6,7 @@ import { Clock, Bookmark, Share2, ArrowRight, Loader2 } from 'lucide-react'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
 
-// MOCK DATA
+// Mock data
 interface ActivityItem {
   id: number
   type: 'add' | 'share'
@@ -43,7 +43,7 @@ export default function MyActivityPage() {
   const [visibleCount, setVisibleCount] = useState(5)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [loadingFooter, setLoadingFooter] = useState(true) // 🆕 FOOTER LOADING
+  const [loadingFooter, setLoadingFooter] = useState(true)
 
   const visibleActivities = mockAllActivities.slice(0, visibleCount)
   const showLoadMore = visibleCount < mockAllActivities.length
@@ -181,7 +181,7 @@ export default function MyActivityPage() {
 
       </div>
 
-      {/* FOOTER SKELETON → FOOTER */}
+      {/* FOOTER SKELETON */}
       {loadingFooter ? <SkeletonLoader type="footer" /> : <Footer />}
     </main>
   )

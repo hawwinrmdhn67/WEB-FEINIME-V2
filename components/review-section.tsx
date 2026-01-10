@@ -56,10 +56,10 @@ export function ReviewsSection({ animeId }: Props) {
         )}
       </h2>
 
-      {/* ⏳ Skeleton */}
+      {/* Skeleton */}
       {loading && <ReviewsSkeleton />}
 
-      {/* 📄 Data */}
+      {/* Data */}
       {!loading && reviews.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {reviews.map((review, idx) => (
@@ -70,10 +70,6 @@ export function ReviewsSection({ animeId }: Props) {
     </section>
   )
 }
-
-/* ===========================
-   COMPONENTS
-=========================== */
 
 function ReviewCard({ review }: { review: Review }) {
   return (
@@ -152,10 +148,6 @@ function RatingBadge({ score }: { score: number }) {
     </div>
   )
 }
-
-/* ===========================
-   SKELETON
-=========================== */
 
 function ReviewsSkeleton() {
   return (

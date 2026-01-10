@@ -9,8 +9,7 @@ export default function LoadingAnimePage() {
       </div>
 
       {/* HEADER SECTION */}
-      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 
-                      -mt-32 md:-mt-48 grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
+      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 md:-mt-48 grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
 
         {/* POSTER */}
         <div className="relative w-full max-w-[240px] mx-auto md:mx-0 aspect-[2/3]">

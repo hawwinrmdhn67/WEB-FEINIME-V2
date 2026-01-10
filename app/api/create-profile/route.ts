@@ -1,4 +1,3 @@
-// app/api/create-profile/route.ts
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabaseAdmin'
 
@@ -19,7 +18,6 @@ export async function POST(req: Request) {
       ? rawUsername.trim().toLowerCase()
       : null
 
-    // Optional: enforce username format
     if (username && !/^[a-z0-9_.-]{3,20}$/.test(username)) {
       return NextResponse.json({ error: 'Invalid username format' }, { status: 400 })
     }
@@ -27,7 +25,6 @@ export async function POST(req: Request) {
     const supabase = getSupabaseAdmin()
 
     if (username) {
-      // check unique (case-insensitive)
       const { data: existing, error: existErr } = await supabase
         .from('profiles')
         .select('id')

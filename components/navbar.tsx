@@ -1,4 +1,3 @@
-// components/navbar.tsx
 'use client'
 
 import React, { JSX, useEffect, useRef, useState } from 'react'
@@ -22,31 +21,21 @@ export function Navbar(): JSX.Element {
   const router = useRouter()
   const pathname = usePathname()
   const isDesktop = useIsDesktop()
-
-  // UI
   const [isOpen, setIsOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [results, setResults] = useState<Anime[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
-
-  // Auth
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [authLoaded, setAuthLoaded] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
-
-  // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([])
-
   const lastToastRef = useRef<{ text: string; ts: number } | null>(null)
   const authToastTimerRef = useRef<number | null>(null)
   const initialAuthHandledRef = useRef(false)
-
-  // store the previous session state so we can tell whether a SIGNED_OUT came from a logged-in user
   const prevSessionRef = useRef<Session | null>(null)
-
   const abortControllerRef = useRef<AbortController | null>(null)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
 
@@ -73,7 +62,6 @@ export function Navbar(): JSX.Element {
     }
   }
 
-  // Auth init + subscribe
   useEffect(() => {
     let mounted = true
     let unsubRef: any = null
@@ -85,23 +73,18 @@ export function Navbar(): JSX.Element {
         return
       }
 
-      // try getSessionFromUrl for OAuth / recovery flows (safe if missing)
       try {
         const maybeFn = (supabase.auth as any)?.getSessionFromUrl
         if (typeof maybeFn === 'function') await maybeFn.call(supabase.auth)
       } catch {}
 
-      // fetch session
       try {
         const { data } = await supabase.auth.getSession()
         if (!mounted) return
         setSession(data.session ?? null)
         setUser(data.session?.user ?? null)
-
-        // initialize prevSessionRef so we know whether there's a prior logged-in user
         prevSessionRef.current = data.session ?? null
 
-        // pending login handling (on initial load) — keep previous behaviour: show toast on pending login
         try {
           if (typeof window !== 'undefined' && window.localStorage && data.session) {
             const suppressed = window.localStorage.getItem('feinime:suppress_login_toast') === '1'
@@ -113,7 +96,7 @@ export function Navbar(): JSX.Element {
           }
         } catch {}
       } catch {
-        // fallback: try getUser
+
         try {
           const { data: u } = await supabase.auth.getUser()
           if (!mounted) return
@@ -130,25 +113,18 @@ export function Navbar(): JSX.Element {
         if (mounted) setAuthLoaded(true)
       }
 
-      // subscribe to auth changes
       try {
         const listener = supabase.auth.onAuthStateChange((event, s) => {
-          // s is the new session
           const previousSession = prevSessionRef.current
           const wasLoggedIn = !!(previousSession && previousSession.user)
-          // update local state with new session
           setSession(s ?? null)
           setUser((s as any)?.user ?? null)
-
-          // avoid initial flash (first event emitted by subscription after init)
           if (!initialAuthHandledRef.current) {
             initialAuthHandledRef.current = true
-            // update prevSessionRef for future events
             prevSessionRef.current = s ?? null
             return
           }
 
-          // SIGNED_IN handling — show login toast/banner if pending
           if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
             try {
               if (typeof window !== 'undefined' && window.localStorage) {
@@ -166,32 +142,26 @@ export function Navbar(): JSX.Element {
             return
           }
 
-          // SIGNED_OUT handling — only show logout toast if there was a previous logged-in session
           if (event === 'SIGNED_OUT') {
             try {
               if (typeof window !== 'undefined' && window.localStorage) {
                 const suppressLogout = window.localStorage.getItem('feinime:suppress_logout_toast') === '1'
 
                 if (suppressLogout) {
-                  // explicit suppression for silent cleanup flows (login page cleanupSession)
                   try { window.localStorage.removeItem('feinime:suppress_logout_toast') } catch {}
                   try { window.localStorage.removeItem('feinime:expected_signout') } catch {}
-                  // update prevSessionRef
                   prevSessionRef.current = null
                   return
                 }
 
-                // If user WAS logged in before this SIGNED_OUT event, show toast.
                 if (wasLoggedIn) {
                   scheduleAuthToast('Logout successful', 'success')
                 }
 
-                // cleanup other transient flags regardless
                 try { window.localStorage.removeItem('feinime:expected_signout') } catch {}
                 try { window.localStorage.removeItem('feinime:show_login_toast') } catch {}
                 try { window.localStorage.removeItem('feinime:suppress_login_toast') } catch {}
               } else {
-                // no window/localStorage — fallback: rely on wasLoggedIn only
                 if (wasLoggedIn) scheduleAuthToast('Logout successful', 'success')
               }
             } catch {}
@@ -199,12 +169,10 @@ export function Navbar(): JSX.Element {
             return
           }
 
-          // other events (optional)
           if (event === 'PASSWORD_RECOVERY') {
             scheduleAuthToast('Password recovery requested', 'info')
           }
 
-          // update prevSessionRef at end for any other event
           prevSessionRef.current = s ?? null
         })
 
@@ -223,7 +191,6 @@ export function Navbar(): JSX.Element {
     }
   }, [])
 
-  // Search effect
   useEffect(() => {
     if (!searchQuery.trim()) {
       setResults([])
@@ -260,7 +227,6 @@ export function Navbar(): JSX.Element {
     }
   }, [searchQuery])
 
-  // close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false)
@@ -279,7 +245,6 @@ export function Navbar(): JSX.Element {
     router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
   }
 
-  // logout dari user menu — DO NOT set suppress flag here so SIGNED_OUT will show toast
   const handleLogout = async () => {
     const sb = getBrowserSupabase()
     try {

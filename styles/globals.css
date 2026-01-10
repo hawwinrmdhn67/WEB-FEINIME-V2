@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ================= LIGHT MODE ================= */
+/* LIGHT MODE  */
 :root {
   --background: oklch(0.97 0 0);
   --foreground: oklch(0.16 0 0);
@@ -51,7 +51,7 @@
   --sidebar-ring: oklch(0.16 0 0);
 }
 
-/* ================= DARK MODE ================= */
+/* DARK MODE */
 .dark {
   --background: oklch(0.18 0 0);
   --foreground: oklch(0.95 0 0);
@@ -97,7 +97,7 @@
   --sidebar-ring: oklch(0.50 0 0);
 }
 
-/* ================= THEME VARIABEL ================= */
+/* THEME VARIABEL */
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
@@ -146,7 +146,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ================= BASE ================= */
+/* BASE */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -156,9 +156,8 @@
   }
 }
 
-/* ================= COMPONENTS ================= */
+/* COMPONENTS */
 @layer components {
-  /* Card dengan hover yang tetap melengkung */
   .card {
     @apply bg-card text-card-foreground rounded-lg overflow-hidden shadow-sm transition-shadow transition-transform duration-300 ease-in-out;
   }
@@ -192,23 +191,23 @@
   .dark .subtle-hover:hover {
     box-shadow: 0 4px 12px rgba(255,255,255,0.1);
   }
-  /* Home status badge (compact) */
-.home-status-badge {
-  @apply
-    inline-flex items-center
-    rounded-full
-    px-2 py-0.5
-    text-[10px]
-    font-medium
-    bg-emerald-500/15
-    text-emerald-600
-    border border-emerald-500/30
-    whitespace-nowrap;
-}
+  /* Home status badge */
+  .home-status-badge {
+    @apply
+      inline-flex items-center
+      rounded-full
+      px-2 py-0.5
+      text-[10px]
+      font-medium
+      bg-emerald-500/15
+      text-emerald-600
+      border border-emerald-500/30
+      whitespace-nowrap;
+  }
 
-.dark .home-status-badge {
-  @apply text-emerald-300;
-}
+  .dark .home-status-badge {
+    @apply text-emerald-300;
+  }
 
   @keyframes shimmer {
     0% { transform: translateX(-100%); }

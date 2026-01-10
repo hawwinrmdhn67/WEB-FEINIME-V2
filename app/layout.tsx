@@ -1,4 +1,3 @@
-// app/layout.tsx
 import type { Metadata } from 'next'
 import NavbarClient from '@/components/navbar-client'
 import { Geist, Geist_Mono } from 'next/font/google'
@@ -7,8 +6,6 @@ import '@/styles/globals.css'
 import { AnimeListProvider } from './context/AnimeListContext'
 import AuthCallbackHandler from '@/components/auth-callback-handler'
 import type React from 'react'
-
-// ✅ TAMBAHAN
 import { ScrollToTop } from '@/components/scroll-top'
 
 const _geist = Geist({ subsets: ['latin'] })
@@ -38,15 +35,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* ✅ AUTO SCROLL KE ATAS SAAT REFRESH */}
           <ScrollToTop />
-
-          {/* global auth callback handler */}
           <AuthCallbackHandler />
-
-          {/* Navbar client-only */}
-            <NavbarClient />
-
+          <NavbarClient />
           <AnimeListProvider>
             {children}
           </AnimeListProvider>

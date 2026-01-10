@@ -20,18 +20,15 @@ export default function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  // username availability states
   const [checkingUsername, setCheckingUsername] = useState(false)
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
 
-  // --- Validation rules ---------------------------------------------------
   const usernameValid = useMemo(() => {
     const u = username.trim()
     return u.length === 0 || (/^[a-zA-Z0-9_.-]{3,20}$/.test(u) && u.length >= 3)
   }, [username])
 
   const emailValid = useMemo(() => {
-    // simple RFC-like check
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
   }, [email])
 
@@ -55,7 +52,6 @@ export default function RegisterPage() {
 
   const confirmMatches = password === confirm
 
-  // require usernameAvailable === true explicitly
   const formValid =
     emailValid &&
     passwordValid &&
@@ -64,12 +60,8 @@ export default function RegisterPage() {
     usernameAvailable === true &&
     !loading
 
-  // ------------------------------------------------------------------------
-
-  // Debounced username availability check
   useEffect(() => {
     const u = username.trim()
-    // reset availability if username too short or invalid
     if (u.length < 3 || !usernameValid) {
       setUsernameAvailable(null)
       setCheckingUsername(false)
@@ -87,7 +79,6 @@ export default function RegisterPage() {
         })
 
         if (!res.ok) {
-          // On server error, don't block the user — set null so form can't be submitted until explicit check on submit
           setUsernameAvailable(null)
           return
         }
@@ -102,7 +93,7 @@ export default function RegisterPage() {
       } finally {
         if (!cancelled) setCheckingUsername(false)
       }
-    }, 500) // 500ms debounce
+    }, 500) 
 
     return () => {
       cancelled = true
@@ -115,7 +106,6 @@ export default function RegisterPage() {
     setMessage(null)
     setSuccess(false)
 
-    // Basic client validation first
     if (!username.trim()) {
       setMessage('Please enter a username (3-20 characters).')
       return
@@ -124,7 +114,6 @@ export default function RegisterPage() {
       setMessage('Username may contain letters, numbers, _ . - and be 3-20 chars.')
       return
     }
-    // if usernameAvailable is null, try to check synchronously before submit
     if (usernameAvailable === null) {
       setCheckingUsername(true)
       try {
@@ -177,7 +166,6 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // 1) Check if email already exists (reuse your check-email-reset endpoint which returns { exists })
       const checkRes = await fetch('/api/check-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -185,7 +173,6 @@ export default function RegisterPage() {
       })
 
       if (!checkRes.ok) {
-        // if server returns non-OK, read message for better UX
         const errJson = await checkRes.json().catch(() => ({}))
         setMessage(errJson?.message || errJson?.error || 'Failed to validate email availability.')
         setLoading(false)
@@ -200,7 +187,6 @@ export default function RegisterPage() {
         return
       }
 
-      // 2) If email free, sign up with Supabase
       const supabase = getBrowserSupabase()
       if (!supabase) {
         setMessage('Client environment required for registration.')
@@ -214,7 +200,6 @@ export default function RegisterPage() {
         options: { data: { username: username.trim() } }
       })
 
-      // supabase v2 returns { data, error }
       const signUpError = (signUpRes as any)?.error
       const signUpData = (signUpRes as any)?.data
 
@@ -228,7 +213,6 @@ export default function RegisterPage() {
       const user = signUpData?.user ?? null
       const session = signUpData?.session ?? null
 
-      // upsert profile if session exists (immediate logged in)
       if (user && session) {
         await upsertProfile({
           id: user.id,
@@ -236,7 +220,6 @@ export default function RegisterPage() {
           user_metadata: user.user_metadata
         } as any)
       } else if (user && !session) {
-        // create-profile server side for confirmed-but-no-session flow
         try {
           await fetch('/api/create-profile', {
             method: 'POST',
@@ -256,7 +239,6 @@ export default function RegisterPage() {
 
       setSuccess(true)
       setMessage('Registration successful. Please check your email for confirmation.')
-      // navigate to login after success
       setTimeout(() => router.push('/login'), 1000)
     } catch (err: any) {
       console.error('signUp exception', err)

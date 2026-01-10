@@ -1,6 +1,5 @@
-// Simple rate limiter for API requests
 let lastRequestTime = 0
-const MIN_REQUEST_INTERVAL = 250 // 250ms between requests (respects 60 req/min limit)
+const MIN_REQUEST_INTERVAL = 250 
 
 export async function rateLimit() {
   const now = Date.now()

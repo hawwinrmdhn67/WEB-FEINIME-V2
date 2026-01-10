@@ -1,4 +1,3 @@
-// lib/upsertProfile.ts
 import { getBrowserSupabase } from './supabaseClient'
 
 type UserLike = {
@@ -32,8 +31,6 @@ export async function upsertProfile(user: UserLike | null, username?: string | n
 
   const full_name = user.user_metadata?.full_name || user.user_metadata?.name || null
   const avatar_url = user.user_metadata?.avatar_url || user.user_metadata?.picture || null
-
-  // prefer explicit username param, else try user_metadata
   const rawUsername = username ?? user.user_metadata?.username ?? null
   const normalizedUsername = typeof rawUsername === 'string' && rawUsername.trim() !== ''
     ? rawUsername.trim().toLowerCase()

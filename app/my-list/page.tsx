@@ -17,14 +17,13 @@ const supabase = createClient(
 )
 
 export default function MyListPage() {
-  const { myList } = useAnimeList() // local fallback list
+  const { myList } = useAnimeList() 
   const [animeList, setAnimeList] = useState<Anime[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingFooter, setLoadingFooter] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // helper: fetch Jikan details for a list of mal_id entries
   async function fetchDetailsFor(malIds: number[]) {
     if (!malIds || malIds.length === 0) {
       setAnimeList([])
@@ -46,7 +45,6 @@ export default function MyListPage() {
     }
   }
 
-  // main effect: check auth, then load list (from Supabase if logged in, else from local context)
   useEffect(() => {
     let mounted = true
 
@@ -55,7 +53,6 @@ export default function MyListPage() {
       setError(null)
 
       try {
-        // get user session
         const {
           data: { user }
         } = await supabase.auth.getUser()
@@ -64,8 +61,6 @@ export default function MyListPage() {
 
         if (user) {
           setIsAuthenticated(true)
-          // Query your table that stores user's anime list
-          // Replace 'user_anime_list' with your actual table name if different
           const { data, error: fetchErr } = await supabase
             .from('user_anime_list')
             .select('mal_id, status')
@@ -79,12 +74,10 @@ export default function MyListPage() {
           } else if (!data || data.length === 0) {
             setAnimeList([])
           } else {
-            // data is array of { mal_id, status }
             const malIds = data.map((row: any) => Number(row.mal_id)).filter(Boolean)
             await fetchDetailsFor(malIds)
           }
         } else {
-          // not logged in -> fallback to local myList from context
           setIsAuthenticated(false)
           if (myList && myList.length > 0) {
             const malIds = myList.map(i => Number(i.mal_id)).filter(Boolean)
@@ -106,10 +99,8 @@ export default function MyListPage() {
     return () => {
       mounted = false
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myList]) // re-run when local list changes (or when user logs in/out and context updates)
+  }, [myList]) 
 
-  // footer skeleton small delay so it doesn't blink
   useEffect(() => {
     if (!loading) {
       const t = setTimeout(() => setLoadingFooter(false), 120)
@@ -137,7 +128,7 @@ export default function MyListPage() {
           )}
         </div>
 
-        {/* show call-to-action if not authenticated */}
+        {/* AUTHENTICATION */}
         {isAuthenticated === false && (
           <div className="mb-6 flex items-center justify-center">
             <div className="rounded-md bg-secondary/10 px-4 py-2 text-sm">

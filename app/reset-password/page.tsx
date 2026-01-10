@@ -1,4 +1,3 @@
-// app/reset-password/page.tsx
 'use client'
 
 import React, { useEffect, useState } from 'react'
@@ -18,7 +17,6 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  // read token
   useEffect(() => {
     if (typeof window === 'undefined') return
 

@@ -1,4 +1,3 @@
-// app/api/lookup-username/route.ts
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -22,8 +21,6 @@ export async function POST(req: Request) {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    // Prefer lookup in `profiles` table if you have one. Fallback to auth.admin.listUsers
-    // 1) Try profiles table (recommended)
     try {
       const { data: profileData, error: profileErr } = await supabaseAdmin
         .from('profiles')
@@ -33,16 +30,12 @@ export async function POST(req: Request) {
         .maybeSingle()
 
       if (!profileErr && profileData) {
-        // If you stored email in profiles
         return NextResponse.json({ ok: true, email: profileData.email ?? null })
       }
     } catch (e) {
-      // ignore and fallback
       console.warn('profiles lookup failed, fallback to auth.users', e)
     }
 
-    // 2) Fallback: search auth.users by user_metadata or email (if you stored username in user_metadata)
-    // Note: admin listUsers returns { users: User[] }
     const usersRes = await fetch(`${url}/auth/v1/admin/users`, {
       method: 'GET',
       headers: {
@@ -60,8 +53,7 @@ export async function POST(req: Request) {
     const json = await usersRes.json().catch(() => null)
 
     const users = Array.isArray(json?.users) ? json.users : json ?? []
-
-    // try match username against user.user_metadata.username or .name or email local-part
+    
     const matched = users.find((u: any) => {
       const um = u.user_metadata ?? {}
       const userMetaUsername = (um.username || um.name || '').toString().toLowerCase()

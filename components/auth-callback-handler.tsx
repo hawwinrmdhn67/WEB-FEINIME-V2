@@ -1,4 +1,3 @@
-// components/AuthCallbackHandler.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -34,7 +33,6 @@ export default function AuthCallbackHandler() {
       try {
         const authAny = (supabase as any).auth;
 
-        // 1) Try SDK helper first (if present)
         if (typeof authAny?.getSessionFromUrl === 'function') {
           await authAny.getSessionFromUrl({ storeSession: true });
           console.log('[auth] used getSessionFromUrl');
@@ -42,7 +40,6 @@ export default function AuthCallbackHandler() {
           await authAny.exchangeCodeForSession();
           console.log('[auth] used exchangeCodeForSession');
         } else {
-          // 2) Fallback: parse fragment manually and set session
           const parsed = parseHash(hash);
           const access_token = parsed['access_token'] ?? parsed['accessToken'] ?? '';
           const refresh_token = parsed['refresh_token'] ?? parsed['refreshToken'] ?? '';
@@ -50,15 +47,12 @@ export default function AuthCallbackHandler() {
 
           if (access_token) {
             if (typeof authAny?.setSession === 'function') {
-              // supabase-js v1/v2 have setSession on auth
               await authAny.setSession({
                 access_token,
                 refresh_token,
               });
               console.log('[auth] setSession via auth.setSession fallback');
             } else if (typeof authAny?.session === 'function') {
-              // older SDKs may differ; attempt to set localStorage directly (last-resort)
-              // Build an object close to expected shape
               const fakeSession = {
                 access_token,
                 refresh_token,
@@ -66,8 +60,6 @@ export default function AuthCallbackHandler() {
                 provider_token: parsed['provider_token'],
               };
               try {
-                // store in localStorage key used by supabase-js v1/v2
-                // Key formats can differ; try common ones
                 localStorage.setItem('supabase.auth.token', JSON.stringify({ currentSession: fakeSession }));
                 console.warn('[auth] stored fallback session to localStorage; reload may be needed');
               } catch (e) {
@@ -83,7 +75,6 @@ export default function AuthCallbackHandler() {
       } catch (err) {
         console.error('Error processing auth callback:', err);
       } finally {
-        // Always clear fragment from URL
         const clean = window.location.pathname + window.location.search;
         history.replaceState(null, '', clean);
       }

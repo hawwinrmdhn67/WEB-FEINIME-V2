@@ -30,20 +30,17 @@ export default function SupabaseOAuthCallbackPage() {
       try {
         const url = new URL(window.location.href)
 
-        // 1) PKCE / code flow -> ?code=xxxx
         const code = url.searchParams.get('code')
         if (code) {
           const { data, error } = await supabase.auth.exchangeCodeForSession(code)
           if (error) throw error
 
           const redirect = url.searchParams.get('redirect') || '/'
-          // Remove query params from URL (prevent leaking code)
           window.history.replaceState({}, document.title, url.pathname)
           router.replace(redirect)
           return
         }
 
-        // 2) Implicit flow (access token in fragment) -> #access_token=...
         const fragment = window.location.hash
         if (fragment && fragment.includes('access_token')) {
           const parsed = parseHashFragment(fragment)
@@ -52,7 +49,6 @@ export default function SupabaseOAuthCallbackPage() {
 
           if (!access_token) throw new Error('No access_token found in callback URL')
 
-          // Build payload ensuring types match setSession signature (refresh_token fallback empty string)
           const payload = {
             access_token,
             refresh_token: refresh_token ?? ''
@@ -61,14 +57,12 @@ export default function SupabaseOAuthCallbackPage() {
           const { data, error } = await supabase.auth.setSession(payload)
           if (error) throw error
 
-          // Clear fragment from URL and redirect
           window.history.replaceState({}, document.title, url.pathname + url.search)
           const redirect = url.searchParams.get('redirect') || '/'
           router.replace(redirect)
           return
         }
 
-        // Nothing to handle
         router.replace('/')
       } catch (err: any) {
         console.error('OAuth callback error:', err)

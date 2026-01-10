@@ -34,16 +34,13 @@ export default function AnimeActionButtons({
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
   const [toasts, setToasts] = useState<ToastMessage[]>([])
 
-  // ===================== TOAST HANDLER =====================
   const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now()
     setToasts(prev => [...prev, { id, text, type }])
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
   }
 
-  // ===================== TOGGLE FAVORITE =====================
   const toggleFavorite = async () => {
-    // jika belum login -> redirect ke /login (jangan tunjukkan toast)
     if (!isAuthenticated) {
       const returnTo = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/'
       router.push(`/login?redirect=${encodeURIComponent(returnTo)}`)
@@ -54,13 +51,11 @@ export default function AnimeActionButtons({
       await removeFromMyList(animeId)
       showToast('Removed from My List', 'error')
     } else {
-      // Pass object payload to match context signature
       await addToMyList({ mal_id: animeId })
       showToast('Added to My List', 'success')
     }
   }
 
-  // ===================== SHARE HANDLER =====================
   const handleShare = async () => {
     const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
     try {
@@ -78,7 +73,6 @@ export default function AnimeActionButtons({
     }
   }
 
-  // ===================== BUTTON STYLE =====================
   const baseButtonClass =
     "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
 
@@ -98,7 +92,6 @@ export default function AnimeActionButtons({
 
   return (
     <>
-      {/* ===================== TOAST CONTAINER ===================== */}
       <div className="fixed top-20 right-6 z-50 flex flex-col gap-2 max-w-xs">
         <AnimatePresence>
           {toasts.map(t => (
@@ -123,7 +116,6 @@ export default function AnimeActionButtons({
         </AnimatePresence>
       </div>
 
-      {/* ===================== BUTTONS ===================== */}
       <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start w-full">
         {/* TRAILER */}
         {trailerUrl ? (

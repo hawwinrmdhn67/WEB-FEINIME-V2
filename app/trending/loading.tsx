@@ -1,4 +1,3 @@
-// app/trending/loading.tsx
 import { SkeletonLoader } from '@/components/skeleton-loader'
 
 export default function Loading() {
@@ -13,7 +12,7 @@ export default function Loading() {
         </div>
       </div>
 
-      {/* ✅ FOOTER SKELETON */}
+      {/* FOOTER SKELETON */}
       <SkeletonLoader type="footer" />
     </main>
   )

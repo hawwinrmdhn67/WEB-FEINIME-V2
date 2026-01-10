@@ -49,10 +49,10 @@ export function CharacterList({ animeId }: Props) {
         Characters
       </h2>
 
-      {/* ⏳ Skeleton */}
+      {/* Skeleton */}
       {loading && <CharactersSkeleton />}
 
-      {/* 📄 Data */}
+      {/* Data */}
       {!loading && characters.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {characters.map((char, index) => (
@@ -67,10 +67,6 @@ export function CharacterList({ animeId }: Props) {
     </section>
   )
 }
-
-/* ===========================
-   CARD
-=========================== */
 
 function CharacterCard({
   char,
@@ -133,10 +129,6 @@ function CharacterCard({
   )
 }
 
-/* ===========================
-   BADGE
-=========================== */
-
 function RoleBadge({ role }: { role: string }) {
   const isMain = role === 'Main'
 
@@ -157,10 +149,6 @@ function RoleBadge({ role }: { role: string }) {
     </span>
   )
 }
-
-/* ===========================
-   SKELETON
-=========================== */
 
 function CharactersSkeleton() {
   return (

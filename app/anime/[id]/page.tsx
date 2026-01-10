@@ -10,8 +10,6 @@ import {
 import { notFound } from 'next/navigation'
 import AnimeActionButtons from '@/components/anime-action-buttons'
 import { Footer } from '@/components/feinime-footer'
-
-// CLIENT COMPONENTS (fetch sendiri)
 import { CharacterList } from '@/components/character-list'
 import { ReviewsSection } from '@/components/review-section'
 import { StatsSection } from '@/components/stats-section'
@@ -26,11 +24,9 @@ export default async function AnimePage({ params }: AnimePageProps) {
   const animeId = Number(id)
   if (Number.isNaN(animeId)) notFound()
 
-  // ✅ FETCH RINGAN (1 API SAJA)
   const anime = await getAnimeDetail(animeId).catch(() => null)
   if (!anime) notFound()
 
-  // ===== FORMAT DATA (SAMA DENGAN UI KAMU) =====
   const imageUrl = anime.images?.jpg?.large_image_url || '/placeholder.svg'
   const titleEnglish = anime.title_english || '-'
   const score = anime.score != null ? anime.score.toFixed(1) : 'N/A'
@@ -205,7 +201,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
         </div>
         </section>
 
-        {/* ⚡ CLIENT FETCH (LAZY) */}
+        {/* CLIENT FETCH */}
         <StatsSection animeId={animeId} />
         <CharacterList animeId={animeId} />
         <ReviewsSection animeId={animeId} />

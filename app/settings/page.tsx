@@ -10,9 +10,7 @@ import { Navbar } from '@/components/navbar'
 import { SkeletonLoader } from '@/components/skeleton-loader'
 import { Footer } from '@/components/feinime-footer'
 
-// ===================================
-// 1. DATA MOCK & TYPES
-// ===================================
+// Mock data & Types
 
 interface UserSettings {
   username: string
@@ -35,9 +33,7 @@ const settingSections = [
     { id: 'appearance', label: 'Appearance', icon: <Palette size={18} className="text-pink-500" />, desc: 'Theme settings' },
 ]
 
-// ===================================
-// 2. HELPER COMPONENTS
-// ===================================
+// Helper Components
 
 const ContentHeader = ({ title, icon }: { title: string, icon: React.ReactNode }) => (
     <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-muted/20">
@@ -69,12 +65,9 @@ const SaveButton = ({ isSaving, label = "Save Changes" }: { isSaving: boolean, l
     </div>
 )
 
-// ===================================
-// 3. SKELETON (CONTENT ONLY)
-// ===================================
 const SettingsContentSkeleton = () => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-pulse">
-        {/* Sidebar Skeleton (Left) */}
+        {/* Sidebar */}
         <div className="lg:col-span-1 space-y-6">
             <div className="bg-card rounded-xl border border-border shadow-sm p-4">
                 <div className="h-6 w-32 bg-muted dark:bg-muted/70 rounded mb-6"></div>
@@ -86,7 +79,7 @@ const SettingsContentSkeleton = () => (
             </div>
         </div>
 
-        {/* Content Area Skeleton (Right) */}
+        {/* Content */}
         <div className="lg:col-span-2">
             <div className="bg-card rounded-xl shadow-sm border border-border p-6 h-[400px]">
                 <div className="flex items-center gap-3 mb-8 pb-4 border-b border-border/50">
@@ -109,17 +102,12 @@ const SettingsContentSkeleton = () => (
     </div>
 )
 
-// ===================================
-// 4. MAIN COMPONENT
-// ===================================
-
 export default function UserSettingsPage() { 
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [activeSection, setActiveSection] = useState<string>('profile')
 
-  // --- State Khusus Change Password ---
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [passwordForm, setPasswordForm] = useState({
       current: '',
@@ -127,7 +115,6 @@ export default function UserSettingsPage() {
       confirm: ''
   })
 
-  // --- Fetch Data ---
   useEffect(() => {
     const fetchSettings = async () => {
       setLoading(true)
@@ -138,7 +125,6 @@ export default function UserSettingsPage() {
     fetchSettings()
   }, [])
 
-  // --- Handlers ---
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     const isCheckbox = (e.target as HTMLInputElement).type === 'checkbox'
@@ -176,7 +162,6 @@ export default function UserSettingsPage() {
       alert("Password successfully changed!")
   }
 
-  // --- Render Form Content ---
   const renderContent = () => {
     if (!settings) return null;
 
@@ -351,12 +336,9 @@ export default function UserSettingsPage() {
     <main className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar /> 
       
-      {/* CONTAINER: max-w-7xl dan py-12 (Konsisten dengan Dashboard & Activity) */}
+      {/* CONTAINER */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
-        
-        {/* ===================================
-            HEADER SECTION
-           =================================== */}
+
         {loading ? (
             <SkeletonLoader type="page-header" />
         ) : (
@@ -370,16 +352,12 @@ export default function UserSettingsPage() {
             </div>
         )}
 
-        {/* ===================================
-            CONTENT SECTION
-           =================================== */}
         {loading ? (
-            // Skeleton Khusus Settings (2 Kolom)
             <SettingsContentSkeleton />
         ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                {/* LEFT: SIDEBAR MENU */}
+                {/* SIDEBAR MENU */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-card rounded-xl border border-border shadow-sm p-4 sticky top-24">
                         <div className="flex items-center justify-between mb-4 px-1">
@@ -421,7 +399,7 @@ export default function UserSettingsPage() {
                     </div>
                 </div>
 
-                {/* RIGHT: CONTENT FORM */}
+                {/* CONTENT FORM */}
                 <div className="lg:col-span-2">
                     {renderContent()}
                 </div>

@@ -31,10 +31,6 @@ export function RelatedContent({ relations }: Props) {
   )
 }
 
-/* ===========================
-   CARD
-=========================== */
-
 function RelationCard({ relation }: { relation: Relation }) {
   return (
     <div
@@ -64,10 +60,6 @@ function RelationCard({ relation }: { relation: Relation }) {
   )
 }
 
-/* ===========================
-   ITEM
-=========================== */
-
 function RelationItem({
   entry,
 }: {
@@ -77,7 +69,6 @@ function RelationItem({
     'flex items-center justify-between gap-3 px-3 py-2 rounded-lg ' +
     'hover:bg-secondary/60 transition-colors group'
 
-  // ANIME
   if (entry.type === 'anime') {
     return (
       <Link href={`/anime/${entry.mal_id}`} className={baseClass}>
@@ -94,7 +85,6 @@ function RelationItem({
     )
   }
 
-  // MANGA
   if (entry.type === 'manga') {
     return (
       <Link href={`/manga/${entry.mal_id}`} className={baseClass}>
@@ -110,8 +100,7 @@ function RelationItem({
       </Link>
     )
   }
-
-  // EXTERNAL / OTHER
+  
   return (
     <a
       href={entry.url}

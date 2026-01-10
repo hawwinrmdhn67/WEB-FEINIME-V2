@@ -85,7 +85,7 @@ export default function LoadingMangaPage() {
 
       </div>
 
-      {/* FOOTER SKELETON (gunakan SkeletonLoader agar konsisten dengan halaman lain) */}
+      {/* FOOTER */}
       <SkeletonLoader type="footer" />
     </main>
   )

@@ -12,10 +12,6 @@ interface AnimeCardProps {
   imgClassName?: string;
 }
 
-/* =========================
-   Helpers & Constants
-========================= */
-
 const FALLBACK_IMAGE =
   "https://placehold.co/300x450/333333/FFFFFF?text=No+Image";
 
@@ -63,15 +59,11 @@ const GLASS_BADGE_CLASSES =
 
 const BADGE_ICON_SIZE = 11;
 
-/* =========================
-   Component
-========================= */
 export function AnimeCard({
   anime,
   rank,
   variant = 'default',
 }: AnimeCardProps) {
-  /* ---------- Derived Values ---------- */
 
   const imageUrl =
     anime.images?.jpg?.large_image_url ||
@@ -101,8 +93,6 @@ export function AnimeCard({
   const TypeIcon =
     type.toLowerCase() === "movie" ? Clapperboard : Tv;
 
-  /* ---------- Render ---------- */
-
   return (
     <Link
       href={`/anime/${anime.mal_id}`}
@@ -110,7 +100,7 @@ export function AnimeCard({
     >
       <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border/40 bg-card shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
         
-        {/* ================= Image Section ================= */}
+        {/* Image Section */}
         <div className="relative aspect-[2/3] w-full overflow-hidden rounded-t-xl">
           <img
             src={imageUrl}
@@ -148,7 +138,7 @@ export function AnimeCard({
           )}
         </div>
 
-        {/* ================= Content Section ================= */}
+        {/* Content Section */}
         <div className="flex flex-1 flex-col border-t border-border/40 bg-card p-3">
           <h3 className="mb-2 line-clamp-2 text-sm font-semibold text-foreground transition-colors group-hover:text-primary sm:text-base">
             {anime.title}

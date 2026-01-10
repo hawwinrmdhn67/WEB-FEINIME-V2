@@ -8,7 +8,6 @@ interface SkeletonGridProps {
 }
 
 export function SkeletonGrid({ count = 8, type = 'trending' }: SkeletonGridProps) {
-  // Tentukan grid columns sesuai type
   const getGridCols = () => {
     switch (type) {
       case 'search':

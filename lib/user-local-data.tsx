@@ -1,9 +1,8 @@
-// lib/userLocalData.ts
 export type HistoryItem = {
   mal_id: number
   title: string
   image: string
-  viewed_at: string // ISO
+  viewed_at: string
 }
 
 export type UserData = {
